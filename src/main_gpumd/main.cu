@@ -1,0 +1,84 @@
+/*
+    Copyright 2017 Zheyong Fan and GPUMD development team
+    This file is part of GPUMD.
+    GPUMD is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    GPUMD is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+    You should have received a copy of the GNU Lesser General Public License
+    along with GPUMD.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#include "deposition.cuh"
+#include "run.cuh"
+#include "utilities/error.cuh"
+#include "utilities/gpu_macro.cuh"
+#include "utilities/main_common.cuh"
+#include "utilities/run_input.cuh"
+#include <chrono>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <cstring>
+
+void print_welcome_information();
+
+int main(int argc, char* argv[])
+{
+  print_welcome_information();
+  print_compile_information();
+  print_gpu_information();
+
+  print_line_1();
+  printf("Started running GPUMD.\n");
+  print_line_2();
+
+  CHECK(gpuDeviceSynchronize());
+  const auto time_begin = std::chrono::high_resolution_clock::now();
+
+  RunInput run_input("run.in");
+  Deposition deposition;
+  if (!deposition.has_deposition(run_input)) {
+    Run run(run_input);
+  } else {
+    deposition.initialize(run_input);
+    for (int i = 0; i < deposition.num_subruns; ++i) {
+      RunInput subrun_input = deposition.prepare_subrun(i);
+      Run run(subrun_input);
+    }
+  }
+
+  CHECK(gpuDeviceSynchronize());
+  const auto time_finish = std::chrono::high_resolution_clock::now();
+  const std::chrono::duration<double> time_used = time_finish - time_begin;
+
+  print_line_1();
+  printf("Time used = %f s.\n", time_used.count());
+  print_line_2();
+
+  print_line_1();
+  printf("Finished running GPUMD.\n");
+  print_line_2();
+
+  // F21: propagate a guard-aborted run to the exit status (0 = ok, 2 = the R19
+  // spin guard cut the trajectory short).  Returning 0 for a truncated run was
+  // measured to break every wrapper script in tools/.
+  extern int g_run_status;
+  return (g_run_status != 0) ? g_run_status : EXIT_SUCCESS;
+}
+
+void print_welcome_information()
+{
+  printf("\n");
+  printf("***************************************************************\n");
+  printf("*                 Welcome to use GPUMD                        *\n");
+  printf("*     (Graphics Processing Units Molecular Dynamics)          *\n");
+  printf("*                   version 5.9.1                             *\n");
+  printf("*              This is the gpumd executable                   *\n");
+  printf("***************************************************************\n");
+  printf("\n");
+}

@@ -1,0 +1,131 @@
+/*
+    Copyright 2017 Zheyong Fan and GPUMD development team
+    This file is part of GPUMD.
+    GPUMD is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    GPUMD is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+    You should have received a copy of the GNU Lesser General Public License
+    along with GPUMD.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+#include "potential.cuh"
+#include "utilities/common.cuh"
+#include "utilities/gpu_vector.cuh"
+#include "gradients.cuh"
+#include <memory>
+#include <vector>
+class Parameters;
+class Dataset;
+
+struct GNEP_Data {
+  GPU_Vector<int> NN_radial;  // radial neighbor number
+  GPU_Vector<int> NL_radial;  // radial neighbor list
+  GPU_Vector<int> NN_angular; // angular neighbor number
+  GPU_Vector<int> NL_angular; // angular neighbor list
+  GPU_Vector<float> x12_radial;
+  GPU_Vector<float> y12_radial;
+  GPU_Vector<float> z12_radial;
+  GPU_Vector<float> x12_angular;
+  GPU_Vector<float> y12_angular;
+  GPU_Vector<float> z12_angular;
+  GPU_Vector<float> descriptors; // descriptors
+  GPU_Vector<float> Fp;          // gradient of descriptors
+  GPU_Vector<float> Fp2;         // second gradient of descriptors
+  GPU_Vector<float> sum_fxyz;  // Snlm
+  GPU_Vector<float> sum_s2xyz; // Snlm_xyz
+  GPU_Vector<float> sum_s2xyz123; // Snlm_xyz * xyz
+  GPU_Vector<float> parameters; // parameters to be optimized
+};
+
+struct GNEPDeviceCapacity {
+  int max_atoms = 0;
+  int max_training_atoms = 0;
+  int max_configurations = 0;
+  int max_radial_pairs = 0;
+  int max_angular_pairs = 0;
+};
+
+class GNEP : public Potential
+{
+public:
+  struct ParaMB {
+    bool use_typewise_cutoff_zbl = false;
+    float typewise_cutoff_zbl_factor = 0.65f;
+    float rc_radial[NUM_ELEMENTS];  // radial cutoff
+    float rc_angular[NUM_ELEMENTS]; // angular cutoff
+    int basis_size_radial = 0;
+    int basis_size_angular = 0;
+    int n_max_radial = 0;  // n_radial = 0, 1, 2, ..., n_max_radial
+    int n_max_angular = 0; // n_angular = 0, 1, 2, ..., n_max_angular
+    int L_max = 0;         // l = 1, 2, ..., L_max
+    int dim_angular;
+    int num_types = 0;
+    int num_types_sq = 0;
+    int num_c_radial = 0;
+    int N_times_max_NN_radial;
+    int N_times_max_NN_angular;
+  };
+
+  struct ANN {
+    int dim = 0;                    // dimension of the descriptor
+    int num_neurons1 = 0;           // number of neurons in the hidden layer
+    int num_ann = 0;                // number of ANN
+    int num_para = 0;               // number of parameters
+    const float* w0[NUM_ELEMENTS]; // weight from the input layer to the hidden layer
+    const float* b0[NUM_ELEMENTS]; // bias for the hidden layer
+    const float* w1[NUM_ELEMENTS]; // weight from the hidden layer to the output layer
+    const float* c;
+  };
+
+  struct ZBL {
+    bool enabled = false;
+    bool flexibled = false;
+    float rc_inner = 1.0f;
+    float rc_outer = 2.0f;
+    int num_types;
+    float para[550];
+    int atomic_numbers[NUM_ELEMENTS];
+  };
+
+  struct DeviceContext {
+    explicit DeviceContext(int id) : device_id(id) {}
+    ~DeviceContext();
+    int device_id;
+    ANN ann;
+    GNEP_Data data;
+    Gradients gradients;
+  };
+
+  GNEP(
+    Parameters& para,
+    const std::vector<GNEPDeviceCapacity>& capacities);
+  void find_force(
+    Parameters& para,
+    const float* parameters,
+    bool require_grad,
+    std::vector<Dataset>& dataset,
+    bool calculate_q_scaler,
+    bool calculate_neighbor,
+    int device_begin,
+    int device_count,
+    int global_num_configurations,
+    int global_num_atoms,
+    int global_virial_components);
+
+  virtual Gradients& getGradients(int device_id) override
+  {
+    return contexts.at(device_id)->gradients;
+  }
+
+private:
+  ParaMB paramb;
+  std::vector<std::unique_ptr<DeviceContext>> contexts;
+  ZBL zbl;
+  void update_potential(Parameters& para, const float* parameters, ANN& ann);
+};

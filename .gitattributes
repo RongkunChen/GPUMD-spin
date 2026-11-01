@@ -1,0 +1,18 @@
+# 默认：自动判定文本/二进制，入库统一归一化
+* text=auto
+
+# shell 脚本必须 LF，否则 Linux 下 "\r": command not found
+*.sh text eol=lf
+
+# Windows 脚本保持 CRLF
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# 补丁按字节原样保存，避免归一化后 apply 失败
+*.patch -text
+
+# 结构 / 输入 / 模型文件统一 LF，减少跨平台 diff 噪音
+*.xyz text eol=lf
+*.in text eol=lf
+*.nep.txt text eol=lf

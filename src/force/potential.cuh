@@ -1,0 +1,114 @@
+/*
+    Copyright 2017 Zheyong Fan and GPUMD development team
+    This file is part of GPUMD.
+    GPUMD is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    GPUMD is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+    You should have received a copy of the GNU Lesser General Public License
+    along with GPUMD.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+#include "model/box.cuh"
+#include "model/group.cuh"
+#include "utilities/gpu_vector.cuh"
+
+class Potential
+{
+public:
+
+  int N1;
+  int N2;
+  double rc; // maximum cutoff distance
+  int nep_model_type = -1; // -1 for non-NEP, 0 for potential, 3 for temperature
+  int ilp_flag = 0; // 0 for non_ilp, 1 for ilp
+  Potential(void);
+  virtual ~Potential(void);
+
+  virtual void compute(
+    Box& box,
+    const GPU_Vector<int>& type,
+    const GPU_Vector<double>& position,
+    GPU_Vector<double>& potential,
+    GPU_Vector<double>& force,
+    GPU_Vector<double>& virial) = 0;
+
+  virtual void compute(
+    const float /* temperature */,
+    Box& /* box */,
+    const GPU_Vector<int>& /* type */,
+    const GPU_Vector<double>& /* position */,
+    GPU_Vector<double>& /* potential */,
+    GPU_Vector<double>& /* force */,
+    GPU_Vector<double>& /* virial */){}
+
+  // Spin Route B: hand the MD spin array and the torque output buffer to a
+  // spin-aware potential. The default is a no-op for every other potential.
+  virtual void set_spin(const float* /* spin */, float* /* torque */) {}
+
+  // Round 9 (task 48): optional 9N output buffer for the magnetic heat-current
+  // tensor A_j. Only the spin-aware NEP implements it.
+  virtual void set_spin_flux_output(double* /* A */) {}
+
+  // add group message for ILPs
+  virtual void compute_ilp(
+    Box& /* box */,
+    const GPU_Vector<int>& /* type */,
+    const GPU_Vector<double>& /* position */,
+    GPU_Vector<double>& /* potential */,
+    GPU_Vector<double>& /* force */,
+    GPU_Vector<double>& /* virial */,
+    const std::vector<Group>& /* group */){}
+
+  virtual const GPU_Vector<int>& get_NN_radial_ptr()
+  {
+    static GPU_Vector<int> dummy_NN;
+    return dummy_NN; // Return the const reference to NN_radial
+  }
+
+  virtual const GPU_Vector<int>& get_NL_radial_ptr()
+  {
+    static GPU_Vector<int> dummy_NL;
+    return dummy_NL; // Return the const reference to NL_radial
+  }
+
+  virtual GPU_Vector<float>& get_charge_reference()
+  {
+    static GPU_Vector<float> dummy_charge;
+    return dummy_charge;
+  }
+
+  virtual GPU_Vector<float>& get_bec_reference()
+  {
+    static GPU_Vector<float> dummy_bec;
+    return dummy_bec;
+  }
+
+protected:
+  void find_properties_many_body(
+    Box& box,
+    const int* NN,
+    const int* NL,
+    const double* f12x,
+    const double* f12y,
+    const double* f12z,
+    const GPU_Vector<double>& position_per_atom,
+    GPU_Vector<double>& force_per_atom,
+    GPU_Vector<double>& virial_per_atom);
+
+  void find_properties_many_body(
+    Box& box,
+    const int* NN,
+    const int* NL,
+    const float* f12x,
+    const float* f12y,
+    const float* f12z,
+    const GPU_Vector<double>& position_per_atom,
+    GPU_Vector<double>& force_per_atom,
+    GPU_Vector<double>& virial_per_atom);
+};

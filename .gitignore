@@ -1,0 +1,34 @@
+# ---- 编译产物 ----
+build/
+obj/
+bin/
+*.exe
+*.dll
+*.lib
+*.a
+*.o
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.cu.o
+
+# ---- Python ----
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# ---- 编辑器 / 操作系统 ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---- GPUMD 运行输出 ----
+thermo.out
+restart.bin
+dump_*.out
+*.out.tmp

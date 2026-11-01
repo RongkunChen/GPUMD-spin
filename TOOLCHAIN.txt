@@ -1,0 +1,11 @@
+package:   GPUMD-spin-r17-offline-src-build
+built_at:  2026-10-29 11:48:14
+nvcc:      Cuda compilation tools, release 12.8, V12.8.61
+gpu:       NVIDIA GeForce RTX 4060 Ti, 610.60
+arch used: sm_89
+baseline:  GPUMD-spin-r16.zip
+
+本包不含可执行文件；编译方法与校验判据见 BUILD-FROM-SOURCE.md。
+参考输出 golden/ 由以下二进制的构建产物生成：
+  src/nep.exe   a8808b0e03c089de6f74bac33936f03d701c99aa817d603d41ff37213f725661
+  src/gpumd.exe 36fd483281d84437c8f030aa80eedade136a241e7ad1b4a8d43aebea0afeee78

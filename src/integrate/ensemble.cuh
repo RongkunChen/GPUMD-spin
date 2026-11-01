@@ -1,0 +1,226 @@
+/*
+    Copyright 2017 Zheyong Fan and GPUMD development team
+    This file is part of GPUMD.
+    GPUMD is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    GPUMD is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+    You should have received a copy of the GNU Lesser General Public License
+    along with GPUMD.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+#include "force/force.cuh"
+#include "model/atom.cuh"
+#include "model/box.cuh"
+#include "model/group.cuh"
+#include "thermo.cuh"
+#include "utilities/gpu_vector.cuh"
+#include <vector>
+
+#define NOSE_HOOVER_CHAIN_LENGTH 4
+
+enum class EnsembleType
+{
+  UNKNOWN,
+  NVE,
+  NVT_BER,
+  NVT_NHC,
+  NVT_LAN,
+  NVT_BDP,
+  NVT_BAO,
+  NVT_QTB,
+  NPT_BER,
+  NPT_SCR,
+  MTTK,
+  NPT_QTB,
+  HEAT_NHC,
+  HEAT_LAN,
+  HEAT_BDP,
+  HEAT_TTM,
+  TTM,
+  HEAT_HYBRID,
+  HEAT_NHC_POWER,
+  RPMD,
+  TRPMD,
+  PIMD,
+  MSST,
+  TI_SPRING,
+  WALL_PISTON,
+  NPHUG,
+  TI,
+  WALL_MIRROR,
+  TI_RS,
+  TI_AS,
+  WALL_HARMONIC,
+  TI_LIQUID,
+  TI_NEP
+};
+
+inline bool is_standard_nvt(const EnsembleType type)
+{
+  return type == EnsembleType::NVT_BER || type == EnsembleType::NVT_NHC ||
+         type == EnsembleType::NVT_LAN || type == EnsembleType::NVT_BDP ||
+         type == EnsembleType::NVT_BAO || type == EnsembleType::NVT_QTB;
+}
+
+inline bool is_standard_npt(const EnsembleType type)
+{
+  return type == EnsembleType::NPT_BER || type == EnsembleType::NPT_SCR;
+}
+
+inline bool is_pimd(const EnsembleType type)
+{
+  return type == EnsembleType::RPMD || type == EnsembleType::TRPMD ||
+         type == EnsembleType::PIMD;
+}
+
+class Ensemble
+{
+public:
+  Ensemble(void);
+  virtual ~Ensemble(void);
+
+  virtual void compute1(
+    const double time_step,
+    const int step,
+    const int number_of_steps,
+    const std::vector<Group>& group,
+    Box& box,
+    Atom& atom,
+    GPU_Vector<double>& thermo) = 0;
+
+  virtual void compute2(
+    const double time_step,
+    const int step,
+    const int number_of_steps,
+    const std::vector<Group>& group,
+    Box& box,
+    Atom& atom,
+    GPU_Vector<double>& thermo,
+    Force& force) = 0;
+
+  virtual void initialize_run(
+    const double /* time_step */,
+    Atom& /* atom */,
+    Box& /* box */,
+    const std::vector<Group>& /* group */)
+  {
+  }
+
+  // Called once immediately before the first integration step. At this point,
+  // the initial force has been computed and first-step velocity/time-step
+  // adjustments have been applied.
+  virtual void initialize_before_first_step(
+    const double /* time_step */,
+    const int /* number_of_steps */,
+    const std::vector<Group>& /* group */,
+    Box& /* box */,
+    Atom& /* atom */,
+    GPU_Vector<double>& /* thermo */)
+  {
+  }
+
+  virtual void finalize_run(const Atom& /* atom */, const Box& /* box */) {}
+
+  void find_thermo(
+    const double volume,
+    const std::vector<Group>& group,
+    const GPU_Vector<double>& mass,
+    const GPU_Vector<double>& potential_per_atom,
+    const GPU_Vector<double>& velocity_per_atom,
+    const GPU_Vector<double>& virial_per_atom,
+    GPU_Vector<double>& thermo);
+
+  EnsembleType type = EnsembleType::UNKNOWN;
+  int source;
+  int sink;
+  int fixed_group = -1; // ID of the group in which the atoms will be fixed
+  int move_group = -1;  // ID of the group in which the atoms will move with a constant velocity
+  int fixed_grouping_method = 0;
+  int move_grouping_method = 0;
+  double move_velocity[3];
+  double temperature; // target temperature at a specific time
+  double delta_temperature;
+  double target_pressure[6];
+  int num_target_pressure_components;
+  double temperature_coupling;
+  double pressure_coupling[6];
+  int deform_x = 0;
+  int deform_y = 0;
+  int deform_z = 0;
+  int deform_xy = 0;
+  int deform_xz = 0;
+  int deform_yz = 0;
+
+  double energy_transferred[2]; // energy transferred from system to heat baths
+
+  std::vector<double> energy_transferred_n; // energy transferred from system to multiple heat baths
+
+protected:
+  // Reusable workspaces for local heat baths. The kinetic-energy arrays
+  // contain twice the physical kinetic energy.
+  std::vector<double> group_kinetic_energy_cpu_;
+  GPU_Vector<double> group_com_velocity_x_;
+  GPU_Vector<double> group_com_velocity_y_;
+  GPU_Vector<double> group_com_velocity_z_;
+  GPU_Vector<double> group_kinetic_energy_;
+  Thermo thermo_;
+
+  void initialize_group_kinetic_energy_workspace(const int number_of_groups);
+  void initialize_group_com_velocity_workspace(const int number_of_groups);
+
+  void velocity_verlet(
+    const bool is_step1,
+    const double time_step,
+    const std::vector<Group>& group,
+    const GPU_Vector<double>& mass,
+    const GPU_Vector<double>& force_per_atom,
+    GPU_Vector<double>& position_per_atom,
+    GPU_Vector<double>& velocity_per_atom);
+
+#ifdef USE_NEPCG
+  void velocity_verlet_cg(
+    const bool is_step1,
+    const double time_step,
+    const std::vector<Group>& group,
+    const GPU_Vector<double>& mass,
+    const GPU_Vector<double>& force_per_atom,
+    GPU_Vector<double>& position_per_atom,
+    GPU_Vector<double>& velocity_per_atom);
+#endif
+
+  void velocity_verlet_v(
+    const double time_step,
+    const std::vector<Group>& group,
+    Atom& atom);
+  void velocity_verlet_x(
+    const double time_step,
+    const std::vector<Group>& group,
+    Atom& atom);
+
+  void scale_velocity_global(const double factor, GPU_Vector<double>& velocity_per_atom);
+
+  void find_vc_and_ke(
+    const std::vector<Group>& group,
+    const GPU_Vector<double>& mass,
+    const GPU_Vector<double>& velocity_per_atom,
+    double* vcx,
+    double* vcy,
+    double* vcz,
+    double* ke);
+
+  void scale_velocity_local(
+    const double factor_1,
+    const double factor_2,
+    const double* vcx,
+    const double* vcy,
+    const double* vcz,
+    const double* ke,
+    const std::vector<Group>& group,
+    GPU_Vector<double>& velocity_per_atom);
+};

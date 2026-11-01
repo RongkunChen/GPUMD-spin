@@ -1,0 +1,92 @@
+/*
+    Copyright 2017 Zheyong Fan and GPUMD development team
+    This file is part of GPUMD.
+    GPUMD is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    GPUMD is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+    You should have received a copy of the GNU Lesser General Public License
+    along with GPUMD.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+#include "ensemble.cuh"
+#include <string>
+#include "utilities/gpu_macro.cuh"
+#ifdef USE_HIP
+  #include <hiprand/hiprand_kernel.h>
+#else
+  #include <curand_kernel.h>
+#endif
+
+class Ensemble_BAO : public Ensemble
+{
+public:
+  Ensemble_BAO(const std::vector<std::string>& tokens);
+  Ensemble_BAO(EnsembleType, int, int, int, int, int, int, double, double, double);
+
+  double get_temperature1() const;
+  double get_temperature2() const;
+
+  void initialize_run(
+    const double time_step, Atom& atom, Box& box, const std::vector<Group>& group) override;
+
+  void compute1(
+    const double time_step,
+    const int step,
+    const int number_of_steps,
+    const std::vector<Group>& group,
+    Box& box,
+    Atom& atom,
+    GPU_Vector<double>& thermo) override;
+
+  void compute2(
+    const double time_step,
+    const int step,
+    const int number_of_steps,
+    const std::vector<Group>& group,
+    Box& box,
+    Atom& atom,
+    GPU_Vector<double>& thermo,
+    Force& force) override;
+
+protected:
+  int N_source, N_sink, offset_source, offset_sink;
+  double c1, c2, c2_source, c2_sink;
+  GPU_Vector<gpurandState> curand_states;
+  GPU_Vector<gpurandState> curand_states_source;
+  GPU_Vector<gpurandState> curand_states_sink;
+
+  void operator_A(
+    const double time_step,
+    const std::vector<Group>& group,
+    const GPU_Vector<double>& mass,
+    const GPU_Vector<double>& force_per_atom,
+    GPU_Vector<double>& position_per_atom,
+    GPU_Vector<double>& velocity_per_atom);
+
+  void operator_B(
+    const double time_step,
+    const std::vector<Group>& group,
+    const GPU_Vector<double>& mass,
+    const GPU_Vector<double>& force_per_atom,
+    GPU_Vector<double>& position_per_atom,
+    GPU_Vector<double>& velocity_per_atom);
+
+  void integrate_nvt_lan(const GPU_Vector<double>& mass, GPU_Vector<double>& velocity_per_atom);
+
+  void integrate_heat_lan(
+    const std::vector<Group>& group,
+    const GPU_Vector<double>& mass,
+    GPU_Vector<double>& velocity_per_atom);
+
+private:
+  void parse(const std::vector<std::string>& tokens);
+
+  double temperature1_ = 0.0;
+  double temperature2_ = 0.0;
+};

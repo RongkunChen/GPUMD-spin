@@ -1,0 +1,71 @@
+/*
+    Copyright 2017 Zheyong Fan and GPUMD development team
+    This file is part of GPUMD.
+    GPUMD is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    GPUMD is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+    You should have received a copy of the GNU Lesser General Public License
+    along with GPUMD.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+#include "utilities/gpu_vector.cuh"
+#include <string>
+#include <vector>
+
+class Box;
+class Group;
+class Force;
+class Atom;
+
+struct D {
+  double data[9];
+};
+
+class Cohesive
+{
+public:
+  void parse(const std::vector<std::string>& tokens, int type);
+  void compute(
+    Box& box,
+    Atom& atom,
+    std::vector<Group>& group,
+    Force& force);
+
+private:
+  void parse_cohesive(const std::vector<std::string>& tokens);
+  void parse_elastic(const std::vector<std::string>& tokens);
+  void allocate_memory(const int num_atoms);
+  void compute_D();
+  void output(Box& box);
+  void deform_box(
+    const int N,
+    const D& cpu_d,
+    Box& old_box,
+    Box& new_box,
+    GPU_Vector<double>& position_per_atom,
+    const GPU_Vector<double>& old_box_inv);
+  std::vector<double> cpu_potential_total;
+  std::vector<double> cpu_potential_per_atom;
+  std::vector<D> cpu_D;
+  std::vector<std::vector<double>> M;
+  std::vector<std::vector<double>> MTM;
+  std::vector<double> MTE;
+  std::vector<double> C81;
+  GPU_Vector<double> new_position_per_atom;
+  GPU_Vector<double> old_box_inv;
+  GPU_Vector<double> new_box_h;
+  double C[6][6];
+  double strain;
+  double start_factor;
+  double end_factor;
+  double delta_factor;
+  int num_points;
+  int deform_d;
+  int deformation_type; // 0 = cohesive, 1 = elastic
+};

@@ -1,0 +1,162 @@
+--- a/src/main_gpumd/run.cu
++++ b/src/main_gpumd/run.cu
+@@ -562,28 +562,33 @@
+       integrate.find_thermo(
+         box.get_volume(),
+         group,
+         atom.mass,
+         atom.potential_per_atom,
+         atom.velocity_per_atom,
+         atom.virial_per_atom,
+         thermo);
+-      double current_thermo[2] = {0.0, 0.0};
+-      thermo.copy_to_host(current_thermo, 2);
++      // F26: find_thermo writes [T, KE, PE, virial ...]; the guard needs all
++      // three scalars, and it needs PE from slot 2.  It used to read slot 1,
++      // which is the kinetic energy, so the potential-energy signatures and the
++      // energy-conservation signature were all watching KE instead.
++      double current_thermo[3] = {0.0, 0.0, 0.0};
++      thermo.copy_to_host(current_thermo, 3);
+       double w_guard[3];
+       spin.read_work(w_guard);
+ 
+       const double n_inv = 1.0 / std::max(1, atom.number_of_atoms);
+       const double w_net = w_guard[0] + w_guard[1] + w_guard[2];
+       // Total energy = PE + the kinetic energy reconstructed from the
+       // temperature exactly the way Dump_Thermo does it.  thermo[] layout is
+       // [0] = T, [1] = PE (eV), [2..7] = virial in Voigt order.
+-      const double current_energy =
+-        current_thermo[1] + 1.5 * atom.number_of_atoms * K_B * current_thermo[0];
++      // F26: total energy is PE + KE, both already in thermo.  The old form
++      // added KE twice (thermo[1] + 3/2 N kB T = 2 KE for a classical system).
++      const double current_energy = current_thermo[2] + current_thermo[1];
+ 
+       // F20 (round 12): detect the frozen-lattice case (see the declaration of
+       // spin_guard_frozen_seen).  Every atom being fixed makes the lattice
+       // temperature undefined, so the temperature and energy-conservation
+       // criteria are switched off and the references are re-primed from the
+       // frozen configuration.
+       bool frozen_lattice = false;
+       {
+@@ -605,18 +610,18 @@
+       }
+ 
+       if (!spin_guard_primed) {
+         // F19: prime every reference from a *relaxed* configuration.  Sampling
+         // at step 0 reads the input positions, which for a DFT snapshot are far
+         // from the model minimum; the first ~1000 steps are then a legitimate
+         // relaxation transient that used to be mis-reported as a
+         // "potential-energy collapse" (reproduced on Fe, round 10).
+-        spin_guard_initial_pe = current_thermo[1];
+-        spin_guard_previous_pe = current_thermo[1];
++        spin_guard_initial_pe = current_thermo[2];
++        spin_guard_previous_pe = current_thermo[2];
+         spin_guard_previous_work = w_net;
+         spin_guard_reference_temperature = current_thermo[0];
+         spin_guard_reference_energy = current_energy;
+         spin_guard_injection_streak = 0;
+         spin_guard_primed = true;
+       }
+ 
+       const double injection_ratio =
+@@ -629,35 +634,48 @@
+       // 3456 atoms: w_net = -2.34e3 eV while the total energy moved by +5.9 eV).
+       // The definition is wrong, not the precision, so the criterion is removed
+       // instead of retuned.  Criteria (3) and (4) below read thermo.out directly
+       // and are kept.  Measurements: docs/07-fixes-r17.md.
+       const bool injection_bad = false;
+       (void)injection_ratio;
+       spin_guard_injection_streak = injection_bad ? spin_guard_injection_streak + 1 : 0;
+ 
+-      const double pe_drop_total = (spin_guard_initial_pe - current_thermo[1]) * n_inv;
+-      const double pe_drop_interval = (spin_guard_previous_pe - current_thermo[1]) * n_inv;
++      const double pe_drop_total = (spin_guard_initial_pe - current_thermo[2]) * n_inv;
++      const double pe_drop_interval = (spin_guard_previous_pe - current_thermo[2]) * n_inv;
+       const double work_interval = (w_net - spin_guard_previous_work) * n_inv;
+       const double energy_drift = (current_energy - spin_guard_reference_energy) * n_inv;
+       const bool conservative_run = (integrate.get_type() == EnsembleType::NVE);
++      // F26 (root cause): `Integrate::temperature` is never assigned for NVE and
++      // holds an indeterminate value.  In the released binary it happens to be a
++      // tiny POSITIVE denormal, so the old `if (!(t > 0))` fallback never fired,
++      // and max(1.5*t, t+300) collapsed to exactly 300 K -- every NVE run at
++      // T >= 300 K was stopped as a "lattice temperature excursion".  The floor
++      // of 1 K below is what makes the fallback actually take effect.
+       double target_temperature = integrate.get_temperature();
+-      if (!(target_temperature > 0.0)) {
++      if (!(target_temperature > 1.0)) {
+         target_temperature = spin_guard_reference_temperature;
++      }
++      if (!(target_temperature > 1.0)) {
++        target_temperature = current_thermo[0];
++      }
++      if (!(target_temperature > 1.0)) {
++        target_temperature = 300.0;
+       }
+       const double temperature_limit =
+         std::max(1.5 * target_temperature, target_temperature + 300.0);
+ 
+       // F20: in frozen-lattice mode thermo[0] is NaN by construction and the
+       // total energy is not a conserved quantity, so neither is a runaway
+       // signature.  Only the potential energy and the spin work budget are
+       // still meaningful there.
+       const bool non_finite =
+         (!frozen_lattice && !std::isfinite(current_thermo[0])) ||
+-        !std::isfinite(current_thermo[1]) || !std::isfinite(w_net);
++        !std::isfinite(current_thermo[1]) || !std::isfinite(current_thermo[2]) ||
++        !std::isfinite(w_net);
+       const bool temperature_bad = !frozen_lattice && current_thermo[0] > temperature_limit;
+       const bool potential_bad = pe_drop_total > 0.15 || pe_drop_interval > 0.05;
+       const bool injection_runaway = spin_guard_injection_streak >= 2;
+       // F19: a conservative run must conserve energy.  A drift above
+       // 0.02 eV/atom means the spin/lattice splitting is pumping the lattice
+       // (round 10: +0.21 and +0.77 eV/atom before the deferred CUDA 700).
+       const bool energy_bad =
+         conservative_run && !frozen_lattice && std::fabs(energy_drift) > 0.02;
+@@ -729,17 +747,17 @@
+                     energy_drift);
+             fclose(mark);
+           }
+         }
+         fflush(stdout);
+         break;
+       }
+ 
+-      spin_guard_previous_pe = current_thermo[1];
++      spin_guard_previous_pe = current_thermo[2];
+       spin_guard_previous_work = w_net;
+     }
+ 
+     int base = (10 <= number_of_steps) ? (number_of_steps / 10) : 1;
+     if (0 == (step + 1) % base) {
+       printf("    %d steps completed.\n", step + 1);
+       // F16 / R12: report the spin work budget alongside the progress line so
+       // the three terms can be seen growing instead of only at the end.
+--- a/src/integrate/integrate.cuh
++++ b/src/integrate/integrate.cuh
+@@ -31,19 +31,23 @@
+ 
+   EnsembleType type = EnsembleType::UNKNOWN;
+   int fixed_group = -1; // ID of the group in which the atoms will be fixed
+   int move_group = -1;  // ID of the group in which the atoms will move with a constant velocity
+   int fixed_grouping_method = 0;
+   int move_grouping_method = 0;
+   double move_velocity[3];
+ 
+-  double temperature1; // target initial temperature for a run
+-  double temperature2; // target final temperature for a run
+-  double temperature;  // target temperature at a specific time
++  // F27: these three used to be left indeterminate.  Nothing assigns them for
++  // NVE, so the R19 runaway guard read a denormal (measured 6.95e-310 in the
++  // r17 build) which is > 0 and therefore silently defeated the guard's
++  // fallback, collapsing its temperature limit to a constant 300 K.
++  double temperature1 = 0.0; // target initial temperature for a run
++  double temperature2 = 0.0; // target final temperature for a run
++  double temperature = 0.0;  // target temperature at a specific time
+   int num_target_pressure_components;
+   int deform_x = 0;
+   int deform_y = 0;
+   int deform_z = 0;
+   int deform_xy = 0;
+   int deform_xz = 0;
+   int deform_yz = 0;
+ 

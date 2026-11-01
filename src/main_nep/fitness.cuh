@@ -1,0 +1,99 @@
+/*
+    Copyright 2017 Zheyong Fan and GPUMD development team
+    This file is part of GPUMD.
+    GPUMD is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    GPUMD is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+    You should have received a copy of the GNU Lesser General Public License
+    along with GPUMD.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+#include "dataset.cuh"
+#include "energy_difference.cuh"
+#include "potential.cuh"
+#include "utilities/gpu_vector.cuh"
+#include <memory>
+#include <stdio.h>
+#include <string>
+#include <utility>
+#include <vector>
+
+class Parameters;
+
+class Fitness
+{
+public:
+  Fitness(Parameters& para);
+  ~Fitness();
+  void compute(
+    const int generation,
+    Parameters& para,
+    const float* population,
+    float* fitness_energy,
+    float* fitness_force,
+    float* fitness_virial,
+    float* fitness_charge,
+    float* fitness_bec,
+    float* fitness_ediff,
+    float* fitness_spin);
+  void report_error(
+    Parameters& para,
+    const int generation,
+    const float loss_total,
+    const float loss_L1,
+    const float loss_L2,
+    float* elite);
+  void predict(Parameters& para, float* elite);
+  void get_save_potential_label(Parameters& para, const int generation, std::string& filename);
+
+protected:
+  bool has_test_set = false;
+  int num_batches = 0;
+  int max_NN_radial;  // radial neighbor list size
+  int max_NN_angular; // angular neighbor list size
+  FILE* fid_loss_out = NULL;
+  EnergyDifference energy_difference;
+  std::unique_ptr<Potential> potential;
+  std::vector<std::vector<Dataset>> train_set;
+  std::vector<Dataset> test_set;
+  void output(
+    bool is_stress,
+    int num_components,
+    FILE* fid,
+    float* prediction,
+    float* reference,
+    Dataset& dataset,
+    const int nc);
+  void output_atomic(
+    int num_components,
+    FILE* fid,
+    float* prediction,
+    float* reference,
+    Dataset& dataset,
+    const int nc);
+  void copy_predictions_to_host(Parameters& para, Dataset& dataset);
+  void update_energy_force_virial(
+    FILE* fid_energy,
+    FILE* fid_force,
+    FILE* fid_virial,
+    FILE* fid_stress,
+    Dataset& dataset,
+    const int nc);
+  void update_charge(FILE* fid_charge, Dataset& dataset, const int nc);
+  void update_spin(FILE* fid_spin, Dataset& dataset, const int nc);
+  void update_bec(FILE* fid_bec, Dataset& dataset, const int nc);
+  void update_dipole(FILE* fid_dipole, Dataset& dataset, bool atomic, const int nc);
+  void update_polarizability(FILE* fid_polarizability, Dataset& dataset, bool atomic, const int nc);
+  // writes the predictions of the structures, in the order given, to <quantity>_<label>.out
+  void write_predictions(
+    Parameters& para,
+    const std::string& label,
+    const std::vector<std::pair<Dataset*, int>>& structures);
+  void write_nep_txt(FILE* fid_nep, Parameters& para, float* elite);
+};

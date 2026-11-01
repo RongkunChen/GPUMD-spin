@@ -1,0 +1,141 @@
+/*
+    Copyright 2017 Zheyong Fan and GPUMD development team
+    This file is part of GPUMD.
+    GPUMD is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    GPUMD is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+    You should have received a copy of the GNU Lesser General Public License
+    along with GPUMD.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#include "replicate.cuh"
+#include "utilities/gpu_macro.cuh"
+
+void parse_replicate(const std::vector<std::string>& tokens, int r[3])
+{
+  const int num_param = tokens.size();
+  if (num_param != 4) {
+    PRINT_INPUT_ERROR(
+      "Replicate should have 3 parameters: number of replications in a, b and c directions.");
+  }
+  for (int i = 0; i < 3; i++) {
+    if (!is_valid_int(tokens[i + 1], r + i))
+      PRINT_INPUT_ERROR("Number of replications should be an integer.");
+    if (r[i] <= 0)
+      PRINT_INPUT_ERROR("Number of replications should be positive.");
+  }
+}
+
+void Replicate(
+  const int r[3],
+  Box& box,
+  Atom& atoms,
+  std::vector<Group>& groups)
+{
+  // repeat atom and group
+  Atom new_atoms;
+  int n = atoms.number_of_atoms;
+  int N = n * r[0] * r[1] * r[2];
+
+  std::vector<Group> new_groups;
+  new_groups.resize(groups.size());
+  for (int m = 0; m < groups.size(); m++) {
+    new_groups[m].number = groups[m].number;
+    new_groups[m].cpu_label.resize(N);
+  }
+
+  new_atoms.number_of_atoms = N;
+  new_atoms.cpu_type.resize(N);
+  new_atoms.cpu_mass.resize(N);
+  new_atoms.cpu_charge.resize(N);
+  new_atoms.cpu_atom_symbol.resize(N);
+  new_atoms.cpu_position_per_atom.resize(N * 3);
+  new_atoms.cpu_velocity_per_atom.resize(N * 3);
+  // Spin Route B: cpu_spin is component-major (n + N*d), the same layout as
+  // Atom::spin.  Without replicating it the array keeps its old length 3*n
+  // while number_of_atoms becomes 3*N, and every spin-aware NEP evaluation
+  // then reads past the end of the buffer -- the run silently produces NaN.
+  if (atoms.has_spin) {
+    new_atoms.cpu_spin.resize(N * 3);
+  }
+  int cur = 0;
+  for (int i = 0; i < r[0]; i++) {
+    for (int j = 0; j < r[1]; j++) {
+      for (int k = 0; k < r[2]; k++) {
+        for (int nn = 0; nn < atoms.number_of_atoms; nn++) {
+          new_atoms.cpu_type[cur] = atoms.cpu_type[nn];
+          new_atoms.cpu_mass[cur] = atoms.cpu_mass[nn];
+          new_atoms.cpu_charge[cur] = atoms.cpu_charge[nn];
+          new_atoms.cpu_atom_symbol[cur] = atoms.cpu_atom_symbol[nn];
+          for (int m = 0; m < groups.size(); m++)
+            new_groups[m].cpu_label[cur] = groups[m].cpu_label[nn];
+          for (int d = 0; d < 3; d++) {
+            new_atoms.cpu_position_per_atom[cur + d * N] = atoms.cpu_position_per_atom[nn + d * n];
+            new_atoms.cpu_position_per_atom[cur + d * N] +=
+              i * box.cpu_h[d * 3] + j * box.cpu_h[d * 3 + 1] + k * box.cpu_h[d * 3 + 2];
+            new_atoms.cpu_velocity_per_atom[cur + d * N] = atoms.cpu_velocity_per_atom[nn + d * n];
+            if (atoms.has_spin) {
+              // The magnetic order is extended periodically, which is what a
+              // NEMD / SED supercell wants: every image carries the spin of the
+              // atom it replicates.
+              new_atoms.cpu_spin[cur + d * N] = atoms.cpu_spin[nn + d * n];
+            }
+          }
+          cur++;
+        }
+      }
+    }
+  }
+
+  // repeat box
+  for (int i = 0; i < 9; i++) {
+    int direction = i % 3;
+    box.cpu_h[i] *= r[direction];
+  }
+  box.get_inverse();
+  // copy to old
+  for (int m = 0; m < groups.size(); m++) {
+    groups[m].number = new_groups[m].number;
+    groups[m].cpu_label.assign(new_groups[m].cpu_label.begin(), new_groups[m].cpu_label.end());
+    groups[m].find_size(N, m);
+    groups[m].find_contents(N);
+  }
+  atoms.number_of_atoms = N;
+  atoms.cpu_type.assign(new_atoms.cpu_type.begin(), new_atoms.cpu_type.end());
+  atoms.cpu_mass.assign(new_atoms.cpu_mass.begin(), new_atoms.cpu_mass.end());
+  atoms.cpu_charge.assign(new_atoms.cpu_charge.begin(), new_atoms.cpu_charge.end());
+  atoms.cpu_atom_symbol.assign(new_atoms.cpu_atom_symbol.begin(), new_atoms.cpu_atom_symbol.end());
+  atoms.cpu_position_per_atom.assign(
+    new_atoms.cpu_position_per_atom.begin(), new_atoms.cpu_position_per_atom.end());
+  atoms.cpu_velocity_per_atom.assign(
+    new_atoms.cpu_velocity_per_atom.begin(), new_atoms.cpu_velocity_per_atom.end());
+  if (atoms.has_spin) {
+    atoms.cpu_spin.assign(new_atoms.cpu_spin.begin(), new_atoms.cpu_spin.end());
+    // Atom::spin (device) still holds the *old* 3*n floats.  It is resized and
+    // refilled here so that the potential never sees a stale, short array.
+    atoms.spin.resize(N * 3);
+    atoms.spin.copy_from_host(atoms.cpu_spin.data());
+    atoms.torque.resize(N * 3);
+  }
+  for (int& i : atoms.cpu_type_size)
+    i = i * r[0] * r[1] * r[2];
+
+  print_line_1();
+  printf("Replicate cell by %d * %d * %d.\n", r[0], r[1], r[2]);
+  printf("Number of atoms is %d.\n", atoms.number_of_atoms);
+  int number_of_types = atoms.cpu_type_size.size();
+  if (number_of_types == 1) {
+    printf("There is only one atom type.\n");
+  } else {
+    printf("There are %d atom types.\n", number_of_types);
+  }
+  for (int m = 0; m < number_of_types; m++) {
+    printf("    %d atoms of type %d.\n", atoms.cpu_type_size[m], m);
+  }
+  print_line_2();
+}

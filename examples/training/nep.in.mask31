@@ -1,0 +1,18 @@
+type 1 Fe
+cutoff 6.0 3.0
+n_max 4 4
+basis_size 8 8
+l_max 4 0 0
+neuron 30
+spin 1
+spin_blocks Sex San Sdm Sia Smag
+spin_mag_scale 0.25
+lambda_e 1.0
+lambda_f 1.0
+lambda_m 1.0
+batch 32
+population 20
+seed 20261031
+generation 200
+output_interval 50
+nep_compile off
