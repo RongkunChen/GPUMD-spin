@@ -1,5 +1,14 @@
 """Stage C: effective exchange constants and the magnon dispersion they imply.
 
+!! CORRECTION (see validation_summary.md section 15) !!
+The J_n printed by this script are correct, but the magnon conversion below is
+NOT: it uses omega = J(0)-J(q) (no spin factor) and the "correction" that was
+applied to D afterwards went the wrong way.  The right relation is
+    hbar*omega = S [J^S(0) - J^S(q)] = [J_fit(0) - J_fit(q)] / S
+so D = (1/(6S)) sum_n J_n z_n r_n^2 -- for the r18 model that is 297.5 meV.A^2,
+not 345.5 and not 433.7.  Use series_physics.fit_exchange(), which has the
+correct factor and also reports J in the standard convention.
+
 C1: spin-spiral energies of the production model -> Fourier components J_n of the
     angular energy functional.  Convention used throughout (as requested):
 

@@ -1,0 +1,34 @@
+{
+ "rows": [
+  {
+   "n": 250,
+   "mq": 2,
+   "q_per_A": 0.8866415447935633,
+   "eps": 0.005,
+   "ps": 3.0,
+   "dt": 0.05,
+   "frames": 6000,
+   "zero_crossings": 291,
+   "period_fs_crossings": 20.581433695314022,
+   "period_fs_fft": 21.18270079435128,
+   "omega_meV_crossings": 200.94167185941026,
+   "omega_meV_fft": 195.23797914866665,
+   "amplitude": 0.012228457700692828,
+   "dE_meV_per_atom": 130.558317184,
+   "cand_A_2S_dE": 318.823410563328,
+   "cand_B_2dE_overS": 213.8547374021294,
+   "ratio_A": 0.6123702735746454,
+   "ratio_B": 0.912946711026298,
+   "D_from_dynamics": 248.35227917851017
+  }
+ ],
+ "S": 1.221,
+ "m": 2.442,
+ "a0": 2.8346,
+ "n": 5,
+ "eps": 0.005,
+ "dt": 0.05,
+ "hbar_meV_ps": 0.6582119569,
+ "lattice": "frozen (fix 0 1, spin-only SLLG)",
+ "note": "period from a zero-padded FFT of S_x(t) of atom 0; the crossing count is an independent check"
+}

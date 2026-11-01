@@ -1,0 +1,37 @@
+{
+ "rows": [
+  {
+   "n": 5,
+   "mq": 1,
+   "q_per_A": 0.44332077239678164,
+   "period_ps": 29.381654552828433,
+   "omega_meV": 0.14075680078424588,
+   "dE_meV_per_atom": 34.73131752,
+   "formula_2S_dE": 84.81387738384,
+   "formula_2dE_overS": 56.88995498771498,
+   "ratio_to_2S_dE": 0.0016595963434996189,
+   "ratio_to_2dE_overS": 0.0024741942723393155,
+   "D_from_dynamics": 0.7161981994911815
+  },
+  {
+   "n": 5,
+   "mq": 2,
+   "q_per_A": 0.8866415447935633,
+   "period_ps": 20.070636685100325,
+   "omega_meV": 0.20605563049597553,
+   "dE_meV_per_atom": 130.55834770399997,
+   "formula_2S_dE": 318.82348509316796,
+   "formula_2dE_overS": 213.85478739393932,
+   "ratio_to_2S_dE": 0.000646300037890123,
+   "ratio_to_2dE_overS": 0.0009635305947881492,
+   "D_from_dynamics": 0.26211286192566563
+  }
+ ],
+ "S": 2.442,
+ "gamma_note": "gamma=3.0385 rad/ps per (meV/uB)",
+ "hbar_meV_ps": 0.6582119569,
+ "eps": 0.02,
+ "n": 5,
+ "a0": 2.8346,
+ "verdict": "neither formula matches -- investigate"
+}

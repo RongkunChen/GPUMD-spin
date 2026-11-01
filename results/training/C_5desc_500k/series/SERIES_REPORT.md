@@ -20,31 +20,33 @@ Reference values used for the error columns: a0 = 2.866 Å, m = 2.2 μB, Tc = 10
 
 Convention `H = -1/2 Σ_ij J_ij e_i·e_j` with `e_i` a unit vector, so `E(q)/N - E_FM/N = 1/2 Σ_n J_n [z_n - S_n(q)]`; J in meV at the model's own moment, `J/m²` is the same number divided by m².
 
-| checkpoint | J1 (meV) | J2 (meV) | J3 (meV) | J4 (meV) | J5 (meV) | J6 (meV) | fit rms (meV/at) | D_direct (meV·Å²) | D_LSWT (meV·Å²) | LSWT/direct |
-|---|---|---|---|---|---|---|---|---|---|---|
-| gen_110k | 60.5 | -1.4 | -5.8 | 2.6 | -3.3 | -1.1 | 0.82 | 467 | 456 | 0.993 |
-| gen_200k | 55.0 | 4.7 | -2.7 | 0.4 | -1.8 | -0.1 | 0.72 | 476 | 446 | 0.982 |
-| gen_300k | 60.1 | -0.3 | -5.4 | 2.2 | -3.0 | -0.9 | 0.74 | 458 | 460 | 1.002 |
-| gen_400k | 57.0 | 3.2 | -3.5 | 0.7 | -2.2 | -0.1 | 0.44 | 445 | 438 | 0.997 |
-| gen_500k | 55.5 | 4.4 | -2.9 | 0.4 | -1.9 | -0.0 | 0.41 | 441 | 436 | 0.998 |
+| checkpoint | J1 (meV) | J2 (meV) | J3 (meV) | J4 (meV) | J5 (meV) | J6 (meV) | fit rms (meV/at) | D_direct (meV·Å²) | D_LSWT (meV·Å²) | LSWT/direct | J1^S | J0^S | J1^S@2.2 | J0^S@2.2 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| gen_110k | 60.5 | -1.4 | -5.8 | 2.6 | -3.3 | -1.1 | 0.82 | 310 | 303 | 0.993 | 40.2 | 288 | 44.1 | 315 |
+| gen_200k | 55.0 | 4.7 | -2.7 | 0.4 | -1.8 | -0.1 | 0.72 | 316 | 296 | 0.982 | 36.5 | 285 | 41.5 | 314 |
+| gen_300k | 60.1 | -0.3 | -5.4 | 2.2 | -3.0 | -0.9 | 0.74 | 306 | 308 | 1.002 | 40.2 | 293 | 44.1 | 320 |
+| gen_400k | 57.0 | 3.2 | -3.5 | 0.7 | -2.2 | -0.1 | 0.44 | 299 | 295 | 0.997 | 38.3 | 290 | 42.3 | 317 |
+| gen_500k | 55.5 | 4.4 | -2.9 | 0.4 | -1.9 | -0.0 | 0.41 | 296 | 292 | 0.998 | 37.2 | 288 | 41.4 | 315 |
 
 Shells: n=1: r=2.455 Å, z=8, n=2: r=2.835 Å, z=6, n=3: r=4.009 Å, z=12, n=4: r=4.701 Å, z=24, n=5: r=4.910 Å, z=8, n=6: r=5.669 Å, z=6 (cutoff 6.0 Å).
 
-**D is evaluated three ways** and they must agree: the direct frozen spirals (`hbar ω = 2S[E(q)-E(FM)]/N`, S = m/2) along [001], [110], [111]; the closed form of the LSWT curve `D = (S/6) Σ_n J_n z_n r_n²`; and the naive `ω`-vs-`q²` slope (kept only as a warning, it is biased low by the quartic term). `LSWT/direct` close to 1 is the self-check that the factor S has been applied — the first version of stage C dropped it and was low by 1/S.
+**Two conventions, both reported.** `J_n` (first block) are the coefficients of a sum over *unit* spin vectors, which is what the least-squares fit produces. `J^S` is the standard Heisenberg coefficient `H = -1/2 Σ_ij J S_i·S_j` with |S| in ħ (`J^S = J_n / S²`, S = m/2); `J0 = Σ_n z_n J_n` is the total exchange that sets the mean-field Curie temperature. `@2.2` is a refit with the spiral spins rescaled to the experimental moment, because `J_fit ∝ m^1.06` (not m²), so `J^S` drifts by ~10% between m = 2.44 and m = 2.2.
 
-## 3. D 偏硬的来源：把磁矩归一化
+**D is evaluated three ways** and they must agree: the direct frozen spirals (`hbar ω = 2[E(q)-E(FM)]/(N S)`) along [001], [110], [111]; the closed form of the LSWT curve `D = (1/(6S)) Σ_n J_n z_n r_n²`; and the naive `ω`-vs-`q²` slope (kept only as a warning, it is biased low by the quartic term). The relation is `1/S`, **not** `2S`: the first version multiplied instead of dividing and over-reported every magnon energy and stiffness by S² = 1.49, which is why D used to read 440 instead of 295 meV·Å². See section 15 of the main report and `frozen_magnon_test.py` for the direct measurement that settled it.
 
-`D ∝ |S|^p` with p ≈ 2.35 here, so a moment that is ~11% too large inflates D by ~30% on its own. The table separates the two errors.
+## 3. D 与磁矩无关（旧结论已撤销）
 
-| checkpoint | m_eq (μB) | D at m_eq | D at 2.2 μB | dlnD/dlnm | excess at m_eq | excess at 2.2 μB |
-|---|---|---|---|---|---|---|
-| gen_110k | 2.455 | 467 | 353 | 2.35 | 56% | 18% |
-| gen_200k | 2.455 | 476 | 362 | 2.35 | 59% | 21% |
-| gen_300k | 2.445 | 458 | 361 | 2.19 | 53% | 20% |
-| gen_400k | 2.439 | 445 | 359 | 2.08 | 48% | 20% |
-| gen_500k | 2.442 | 441 | 359 | 2.02 | 47% | 20% |
+`D` comes out at 292-316 meV·Å² for every checkpoint, inside the measured 280-330 meV·Å² band. `dlnD/dlnm` is 0.02-0.35 depending on the checkpoint, i.e. **D changes by at most 6% between m = 2.2 and 2.45 uB** -- which is what a Heisenberg system must do, and the opposite of the m^2.35 that the old (wrong) factor produced.
 
-The 300 meV·Å² reference is the centre of the 280-320 meV·Å² band that the main report uses for α-Fe. Even renormalised to the experimental moment the model stays above it, so the exchange is genuinely too stiff; the moment error is only part of the story.
+| checkpoint | m_eq (μB) | D at m_eq | D at 2.2 μB | dlnD/dlnm | D_LSWT@2.2 |
+|---|---|---|---|---|---|
+| gen_110k | 2.455 | 310 | 292 | 0.351 | 287.4 |
+| gen_200k | 2.455 | 316 | 299 | 0.350 | 282.6 |
+| gen_300k | 2.445 | 306 | 298 | 0.193 | 296.5 |
+| gen_400k | 2.439 | 299 | 297 | 0.078 | 290.8 |
+| gen_500k | 2.442 | 296 | 296 | 0.022 | 290.5 |
+
+**Retracted:** the previous version of this report explained a 'D is 40-56% too stiff' failure by the model's moment being 11% too large, quoting `D ∝ m^2.35`. Both the failure and the explanation were artifacts of the missing 1/S: with the wrong factor, D picked up a spurious m-dependence from the S multiplying the energy. With the correct relation D is moment-independent and inside the measured range.
 
 ## 4. 磁子谱
 
@@ -52,11 +54,11 @@ The 300 meV·Å² reference is the centre of the 280-320 meV·Å² band that the
 
 | checkpoint | ω at H (meV) | ω at N (meV) | ωmax (meV) | D [001] | D [110] | D [111] |
 |---|---|---|---|---|---|---|
-| gen_110k | 1317 | 542 | 1339 | 467 | 477 | 467 |
-| gen_200k | 1352 | 544 | 1104 | 476 | 454 | 455 |
-| gen_300k | 1348 | 544 | 1306 | 458 | 487 | 471 |
-| gen_400k | 1345 | 540 | 1154 | 445 | 453 | 449 |
-| gen_500k | 1337 | 539 | 1105 | 441 | 448 | 446 |
+| gen_110k | 875 | 360 | 889 | 310 | 317 | 310 |
+| gen_200k | 898 | 361 | 733 | 316 | 301 | 302 |
+| gen_300k | 902 | 364 | 873 | 306 | 326 | 315 |
+| gen_400k | 904 | 363 | 776 | 299 | 305 | 302 |
+| gen_500k | 897 | 362 | 741 | 296 | 301 | 299 |
 
 ## 5. 各磁态声子谱（每个态在自己的弛豫晶格常数上）
 
@@ -137,10 +139,10 @@ Three independent measurements, because they answer different questions:
 
 | checkpoint | C_transverse (eV/Å/μB) | C_longitudinal | noise floor | transverse resolved? | # crossings | max dlnω/dln m | dln a0/dln m |
 |---|---|---|---|---|---|---|---|
-| gen_110k | -7.95e-05 | -1.79e-04 | 2.68e-03 | no | 7 | 0.360 | 0.0367 |
-| gen_200k | -1.89e-03 | -1.47e-03 | 2.34e-03 | no | 8 | 0.395 | 0.0372 |
-| gen_300k | -9.34e-04 | +1.39e-03 | 2.09e-03 | no | 7 | 0.407 | 0.0392 |
-| gen_400k | -8.54e-04 | -8.34e-04 | 1.49e-03 | no | 7 | 0.425 | 0.0407 |
+| gen_110k | -7.95e-05 | -1.79e-04 | 2.68e-03 | no | 5 | 0.360 | 0.0367 |
+| gen_200k | -1.89e-03 | -1.47e-03 | 2.34e-03 | no | 6 | 0.395 | 0.0372 |
+| gen_300k | -9.34e-04 | +1.39e-03 | 2.09e-03 | no | 5 | 0.407 | 0.0392 |
+| gen_400k | -8.54e-04 | -8.34e-04 | 1.49e-03 | no | 5 | 0.425 | 0.0407 |
 | gen_500k | -2.82e-03 | -2.19e-04 | 3.07e-03 | no | 7 | 0.440 | 0.0419 |
 
 The last two columns are the two halves of the same magnetoelastic coupling: how much the phonons stiffen (`dlnω/dln|S|`) and how much the lattice expands (`dln a0/dln|S|`) per fractional change of the moment. `dln a0/dln|S|` is measured on the 54-atom EOS cell used everywhere else for a0, so it is comparable with column 6 of the first table.

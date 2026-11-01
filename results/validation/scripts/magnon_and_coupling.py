@@ -1,6 +1,13 @@
 """Magnon spectrum from the model, magnon-phonon coupling, and whether the two
 branches repel each other.
 
+!! CORRECTION (see validation_summary.md section 15) !!
+`direct_magnon()` below uses hbar*omega = 2S[E(q)-E(FM)]/N.  The correct
+relation is 2[E(q)-E(FM)]/(N S), i.e. divide by S = m/2 instead of multiplying
+by it, so every frequency printed here is too large by S^2 = 1.49.  The
+magnon-phonon coupling and crossing sections are unaffected in structure but
+their frequency axis is scaled the same way.
+
 Three questions, three independent measurements:
 
 1. **Magnon dispersion from the model itself** (no exchange fit): a flat spiral
