@@ -1,0 +1,13 @@
+# F16 spin work budget, cumulative since the start of this run
+# step  W_rot(eV)  W_noise(eV)  W_ext(eV)
+300 -2253.125559 2211.798944 0
+600 -4489.437664 4406.749262 0
+900 -6742.637004 6620.438527 0
+1200 -9004.137643 8841.313182 0
+1500 -11257.37696 11053.57971 0
+1800 -13507.16761 13260.63944 0
+2100 -15757.29629 15469.35135 0
+2400 -18009.04909 17679.12662 0
+2700 -20265.37681 19893.46331 0
+# GUARD_STOP step=3000 reason=energy-conservation drift in a conservative run T=64.36271406 T_limit=541.574975 PE_drop_total_eV_per_atom=-2.057879754e-05 PE_drop_interval_eV_per_atom=-1.775778913e-05 dW_interval_eV_per_atom=-0.3199067369 injection_ratio=0.9816443069 dE_conservative_eV_per_atom=+0.02556061719
+3000 -22511.24443 22098.03494 0

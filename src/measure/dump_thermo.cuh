@@ -60,6 +60,7 @@ public:
 
 private:
   int dump_interval_ = 1;
+  bool header_written_ = false;   // F-25: one header per file per process
   FILE* fid_;
   char filename_[200];
 };

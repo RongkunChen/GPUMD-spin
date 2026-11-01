@@ -1,4 +1,4 @@
-# GPUMD-spin V3（`v3.1.0-r18`）
+# GPUMD-spin V3（`v3.1.0-r19`）
 
 磁自旋扩展的 NEP 势 + GPUMD 分子动力学：训练含自旋标签的势函数，跑有限温
 自旋动力学（SLLG / 保守自旋–晶格）、重启续算、副本交换，并给出可核对的
@@ -42,7 +42,7 @@ tools/          physics_validation/（长时间稳定性、热流审计）、num
 scripts/        批量运行脚本
 results/        实测产物：training/C_5desc_500k/（50 万代训练 + 逐检查点电池）、
                 validation/（BCC Fe 全物理验证 33 条 + 27 张图）、
-                tests/（smoke / acceptance / physics 的原始输出）
+                tests/（smoke / acceptance / physics 三套的原始输出）
 ```
 
 ## 能力一览
@@ -62,7 +62,7 @@ results/        实测产物：training/C_5desc_500k/（50 万代训练 + 逐检
 | 声子/磁子色散、Berry/Wilson 拓扑 | **未实现** |
 | 外磁场磁化曲线、矫顽力、$K_1$ | **不可用**（模型无单离子各向异性） |
 
-## 本版（r18）改了什么
+## 本版（r19）改了什么
 
 1. **修 F26/F27**：NVE 下 runaway guard 的限温恒为 300 K（`Integrate::temperature`
    未初始化，读到 denormal）。修复后 $T\ge300$ K 的 NVE 可以正常跑；
@@ -72,7 +72,12 @@ results/        实测产物：training/C_5desc_500k/（50 万代训练 + 逐检
    $T_c\approx950/850$ K。
 3. **时间步政策**：0.05 fs 参考 / 0.1 fs 平衡 / 0.2 fs 不建议；适用范围写死。
 4. **文档与示例补全**：`docs/theory/` 15 篇 + 缺陷日志 F19–F27 + 三个可跑的物理示例。
-5. **50 万代训练与全物理验证入库**（`results/`，2026-11-01 晚）：DEV E 6.36 meV/atom、
+5. **修 F-25**：`Measure::post_run()` 无条件 `actions_.clear()`，导致同一 `run.in` 的
+   第二个 `run` 块拿到空表、`thermo.out` 不再更新。改为保留 dump 类 action
+   （`Dump_Thermo` 增加 `header_written_` 防重复表头），`compute_*` 仍按段丢弃。
+   验收：单文件双段与"拆成两次调用"**逐位相同**，长期沿用的两段式绕法可退役。
+   详见 `validation_summary.md` §17。
+6. **50 万代训练与全物理验证入库**（`results/`，2026-11-01 晚）：DEV E 6.36 meV/atom、
    DEV F 0.0843 eV/Å；20 万代后饱和，拟合残差 −50%；D = 292–316 meV·Å²（落在实验
    280–330 内），磁矩 +11%、$T_c$ 912 K 仍卡住，AFM-A 出现 −1.6…−1.8 THz 软模。
    详见 `VALIDATION_REPORT.md` §9 与 `validation_summary.md` §15。
@@ -82,7 +87,7 @@ results/        实测产物：training/C_5desc_500k/（50 万代训练 + 逐检
 * **不输出任何热导率**：热流绝对归一化未验证（三套数字差 $10^7$），
   连续性判据在 PBC 下不成立。见 `docs/theory/11`、`12`。
 * **没有单离子各向异性**：固定晶格整体旋转自旋能量不变，$K_1$ 不可表示。
-* **同一 `run.in` 里 NVT→NVE 切换在 $N\ge432$ 会挂死**（未定位），拆成两次调用。
+* ~~同一 `run.in` 里 NVT→NVE 切换在 $N\ge432$ 会挂死~~ —— **r19 已修复**（F-25：`Measure::post_run` 清空了 measure，第二段不产数据）。单文件双段与两次调用结果逐位相同。
 
 ## 许可
 

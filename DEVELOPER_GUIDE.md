@@ -194,7 +194,7 @@ open(out, 'w', newline='').write(''.join(difflib.unified_diff(a, b, ...)))
 | 力与参考差很多 | 预测用的 `nep.in` 架构是否与训练一致 |
 | 重启不逐位一致 | 是否漏了第二次力计算；RNG 状态是否入盘 |
 | guard 乱报 | 看 `docs/theory/15` 的 F19/F20/F21/F26；判据语义比数值更容易错 |
-| 程序挂住 | NVT→NVE 同文件切换（F-25）；拆成两次调用 |
+| 第二段不产数据 | F-25（r19 已修复）：`Measure::post_run` 曾清空 actions_ |
 | 编译报 `nep_acc_t undefined` | typedef 必须在 `spin_descriptor_kernels.cuh` 且带守卫 |
 | `main_replica` 链接重复 `main` | 排除 `main_gpumd/main.obj` |
 
@@ -227,6 +227,6 @@ open(out, 'w', newline='').write(''.join(difflib.unified_diff(a, b, ...)))
 | 磁子谱 | 切空间投影 + $6N\times6N$ 复本征 | `docs/theory/09` §9.2、§9.6 |
 | Goldstone 零模计数 | 同上 | 同上 |
 | 热流归一化钉死 | 需要解析模型（LJ 晶体）对照 | `docs/theory/11` §11.6 |
-| NVT→NVE 挂死（F-25） | 未定位 | `docs/theory/15` |
+| NVT→NVE 第二段无输出（F-25） | r19 已修复（dump action 跨段保留） | `docs/theory/15` |
 | P3 全 double 求导链 | ~800 行、与训练器共用 | `docs/theory/14` §14.8 |
 | Binder cumulant / 有限尺寸标度 | 需要多尺寸 + 长采样 | `docs/theory/08` |

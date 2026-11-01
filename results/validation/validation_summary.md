@@ -955,3 +955,100 @@ hw = 2.0 * dE / S                 # meV
 **J 从来没有和实验不一致过；变的是"拿 J₀ 比 Tc 反推值"改成"拿 J₁ 比 KKR"，
 再加上 V3 自己把磁子换算的 S 挪错了位置。** 现在两处都已按正确口径重算：
 J₁ +8…14%、J₀ −5…−7%、D 在区间内，唯一剩下的真实差异是 J₂ 偏小。
+
+---
+
+## 17. F-25（同一 `run.in` 里 NVT→NVE 在 $N\ge432$ "挂死"）：核查、根因与修复
+
+### 17.1 先复现
+
+复现条件按 `docs/theory/15` 的记载：`run.in` 里先 `ensemble nvt_lan` 跑一段，再
+`ensemble nve` 跑一段；$N=432$ 与 $N=1024$ 各复现过，"进程存活、CPU 占用、26 分钟无输出"。
+本轮的复现矩阵（模型 = 500k 权重，`time_step 0.05`）：
+
+| 用例 | $N$=250 | $N$=432 | $N$=1024 |
+|---|---|---|---|
+| NVT 3000 + NVE 12000（一段文件） | rc=0，10 s | rc=0，10 s | rc=0，12 s |
+| NVT+NVT / NVE+NVE / 单块 | rc=0 | rc=0（NVE+NVE 有一次被 guard 停） | rc=0 |
+| 第二段 60000 步 | — | rc=0，105 s | — |
+| 第二段自旋 T=0、NVT_ber、dt=0.1 等变体 | — | 全部 rc=0 | — |
+
+**没有一次真正的挂死。** 但所有用例都出现同一个异常：`dump_thermo 100`、总步数 15000，
+`thermo.out` 只写了 **31 行**（应该 150 行）。
+
+### 17.2 根因在 measure，不在积分器
+
+```cpp
+// src/measure/measure.cu, r18
+void Measure::post_run(...) {
+  for (auto& action : actions_) action->post_run(...);
+  actions_.clear();            // <-- 第一个 run 块结束，measure 全被销毁
+}
+```
+
+`Perform_a_run()` 每次都以 `measure.pre_run()` 开始，但第一个 `run` 块结束时
+`actions_` 被清空，第二个块拿到的是一张**空表**：积分照跑、stdout 照打进度，而
+`thermo.out` / `traj.xyz` / `restart.xyz` 再也不会更新。
+
+这正好解释三条历史观察：
+
+* **"无任何输出"**：数据文件不动；stdout 若重定向到文件，`printf` 走块缓冲，
+  1 KB 以下的内容长时间不落盘，肉眼看同样是"没输出"。
+* **"$N\ge432$ 才复现"**：$N$ 越大单块跑得越久，越容易被提前判死。这不是 $N$ 的物理阈值，
+  是"等多久"的阈值——$N=128$ 只是先跑完了。
+* **"拆成两次调用就好"**：每个进程都从自己的第一个 `run` 块开始，measure 是新的。
+
+### 17.3 修法
+
+只改 measure 层，不碰积分器、不碰物理：
+
+1. `Measure::post_run()` 不再清空，而是把 **dump 类** action 保留下来
+   （`dump_thermo`、`dump_xyz`、`dump_exyz`、`dump_netcdf`、`dump_restart`）。
+   它们本来就是无状态追加写，`pre_run()` 以 `"a"` 重新打开文件。
+2. `Dump_Thermo` 增加 `header_written_`，同一次进程只写一次表头，避免第二段在数据中间
+   插一段 `# columns ...`。
+3. **时间平均类 `compute_*` 仍然在段末总结并丢弃**：它们的累加器按段定义，静默续用会把
+   两个不同的 ensemble 平均到一起，那是错误的物理。
+
+### 17.4 验收（`raw_data/nvt_nve_switch/`，可重跑 `verify_fix.py`）
+
+| 检查 | r18（修复前） | r19（修复后） |
+|---|---|---|
+| $N$=250 / 432 / 1024，NVT 3000 + NVE 12000，`dump_thermo 100` | 31 / 31 / 31 行 | **150 / 150 / 150 行** |
+| 同上 + `dump_xyz 500` | 第二段 0 帧 | **18/18 帧**（两段都有） |
+| 单块 NVT / NVE 各 2000 步，新旧二进制 | — | `thermo.out` **逐字节相同**（sha256 一致） |
+| 单文件双段 vs 两次调用（NVT 3000 → `dump_restart` → 新进程 NVE 6000） | — | 末态 T = 307.235765510 K、PE = −91.371205807 eV、KE = 17.156162707 eV，**两者完全相同（差 0）** |
+| 第二段 60000 步（"26 分钟无输出"的形态） | — | 105 s 正常结束 |
+| 切换处连续性（$N$=432） | — | T 301.9 → 298.8 K，PE −90.54 → −90.90 eV（±2 meV/atom，正常涨落） |
+
+最后一条是本次修复的判据：**单文件双段与"拆成两次调用"给出逐位相同的结果**，
+所以长期沿用的两段式绕法可以退役了。
+
+### 17.5 仍然要说清楚的三条
+
+* **没有复现出真正的死锁。** 在上面所有变体（自旋 T=0 / T=300、NVT_lan / NVT_ber、
+  dt = 0.05 / 0.1、第二段最长 60000 步、$N$ 从 250 到 1024）里进程都正常退出。历史记录
+  里的"26 分钟"与"$N\ge432$"和"第二段没有输出"是同一个现象；如果还有人在 r19 上遇到
+  真挂死，需要那份具体的 `run.in`。
+* **第二段的 NVE 守恒性取决于自旋温度**。若第二段仍保留 `spin_llg ... T=300`，
+  自旋热场会是净能量源/汇（F17/R12 的既有结论），$N$=432 上 6 ps 内总能量漂移
+  $-9.4\times10^{-3}$ eV/atom——这是自旋弛豫，不是积分器问题。把第二段改成
+  `alpha=0 T=0` 后漂移降到 $-3.6\times10^{-6}$ eV/atom/ps。
+* **`compute_*` 类测量在第二段仍然没有输出**，这是有意为之（见 17.3 第 3 条）。
+  需要分段的时间平均，仍应拆成两次调用。
+
+### 17.6 落盘位置
+
+```
+final_delivery_20261101_r18/
+  GPUMD-spin-V3-SOURCE-v3.1.0-r19.zip         508 files, 含 measure 层修复
+  GPUMD-spin-V3-WINDOWS-CUDA-v3.1.0-r19.zip   100 files, gpumd.exe sha256 1492eda5...
+  gpumd_r18_orig.exe.bak                      修复前二进制（留作回归对照）
+  staging/GPUMD-spin-V3-SOURCE-v3.1.0-r19/    CHANGELOG / KNOWN_LIMITATIONS /
+                                              USER_MANUAL / docs/theory/15 已同步
+validation/BCC_Fe_full_physics/raw_data/nvt_nve_switch/
+  verify_fix.py     验收脚本（N=250/432/1024 × 4 种块组合 + 轨迹）
+  regress.py        单块逐字节回归
+  probe.py          变体探针（自旋 T=0、NVT_ber、dt=0.1、长块）
+  N250/ N432/ N1024/   三个体系；new/ 为 r19 结果，其余为 r18 结果
+```

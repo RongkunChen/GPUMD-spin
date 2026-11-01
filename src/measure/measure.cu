@@ -399,6 +399,18 @@ void Measure::post_run(
   const double temperature)
 {
 
+  // F-25: a run.in with more than one `run` block (NVT then NVE is the case in
+  // the field reports) used to lose *every* measurement after the first block,
+  // because this function dropped all actions.  The second block then ran
+  // "bare": the process kept integrating and printing progress, but thermo.out,
+  // traj.xyz and friends stopped growing, which is indistinguishable from a
+  // hang unless you watch the wall clock.  Dump-style actions are stateless
+  // appenders -- they reopen their file in append mode in pre_run -- so they are
+  // kept and the multi-block workflow produces one continuous record.  Actions
+  // that accumulate a time average (compute_*) are still finalized and dropped:
+  // their accumulator is defined per block, and silently re-arming them would
+  // average two different ensembles together.
+  std::vector<std::unique_ptr<Action>> keep;
   for (auto& action : actions_) {
     action->post_run(
       atom,
@@ -407,9 +419,14 @@ void Measure::post_run(
       number_of_steps,
       time_step,
       temperature);
+    const std::string& nm = action->action_name;
+    if (
+      nm == "dump_thermo" || nm == "dump_xyz" || nm == "dump_exyz" ||
+      nm == "dump_netcdf" || nm == "dump_restart") {
+      keep.push_back(std::move(action));
+    }
   }
-
-  actions_.clear();
+  actions_.swap(keep);
 }
 
 void Measure::end_of_step(

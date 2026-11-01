@@ -125,10 +125,38 @@ DEV 能量 10.38 / 8.75 meV/atom（旧 15.23）。
 $N=128$ 不复现；拆成两次 `gpumd.exe` 调用（第一次 dump 末帧、第二次从该帧起跑）
 完全正常。
 
-**状态**：**未修**（根因未定位）。工程绕法写进文档与脚本：
-`tools/physics_validation/run_lt.py` 的 size/control 系列因此改成两段式两次调用。
+**状态**：**r19 已修复**。根因不在积分器，而在 measure：
 
-**这是一条真实的缺陷，不要用"可能是环境问题"掩盖它。**
+```cpp
+void Measure::post_run(...) {
+  for (auto& action : actions_) action->post_run(...);
+  actions_.clear();          // <-- 第一个 run 块结束就把所有 measure 删了
+}
+```
+
+第二个 `run` 块于是只做积分：`thermo.out` / `traj.xyz` / `restart.xyz` 都不再更新，
+而 stdout 仍在打印进度（重定向到文件时被块缓冲，肉眼更看不到）。"进程存活、CPU 占用、
+文件不动"被读成了挂死；$N$ 越大单块跑得越久、越容易被提前判死，所以阈值看上去在
+$N\approx432$——实际上是"等多长时间"的问题，不是 $N$ 的物理阈值。
+
+修复（r19，`src/measure/measure.cu` + `dump_thermo.cu[h]`）：
+`post_run()` 不再清空，dump 类 action（`dump_thermo`/`dump_xyz`/`dump_exyz`/
+`dump_netcdf`/`dump_restart`）跨段保留，`pre_run()` 以 `"a"` 重新打开文件；
+`dump_thermo` 用 `header_written_` 保证同一次进程只写一次表头。`compute_*` 仍在段末
+总结并丢弃（累加器按段定义，静默续用会把两个 ensemble 平均到一起）。
+
+验收（`validation/BCC_Fe_full_physics/raw_data/nvt_nve_switch/`）：
+
+| 检查 | 结果 |
+|---|---|
+| $N$=250/432/1024，NVT 3000 + NVE 12000，`dump_thermo 100` | 150/150 行（旧版 31 行） |
+| 同上 + `dump_xyz 500` | 18/18 帧 |
+| 单块 NVT / NVE 各 2000 步，新旧二进制 | `thermo.out` **逐字节相同** |
+| 单文件双段 vs 两次调用（重启文件接力） | 末态 T/PE/KE **完全相同** |
+| 第二段 60000 步 | 105 s 正常结束 |
+
+**这条缺陷的教训**：一个"没有输出"的进程既可能是死锁，也可能是"没人再写文件"。
+先看代码里谁负责写，再怀疑积分器。
 
 ---
 

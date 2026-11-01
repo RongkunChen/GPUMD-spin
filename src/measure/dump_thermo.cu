@@ -58,6 +58,13 @@ void Dump_Thermo::pre_run(
   Force& force)
 {
   fid_ = my_fopen("thermo.out", "a");
+  // F-25: with more than one `run` block this pre_run runs again; the file is
+  // opened in append mode, so write the header only the first time or a second
+  // header block lands in the middle of the data.
+  if (header_written_) {
+    return;
+  }
+  header_written_ = true;
   fprintf(fid_, "# dump_thermo %d\n", dump_interval_);
   fprintf(fid_, "# format_version 1\n");
   fprintf(fid_, "# num_atoms %d\n", atom.number_of_atoms);

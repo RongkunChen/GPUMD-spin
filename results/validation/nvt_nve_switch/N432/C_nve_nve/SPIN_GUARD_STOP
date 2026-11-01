@@ -1,0 +1,7 @@
+step=3000
+requested=3000
+delivered_fraction=1.000000
+reason=energy-conservation drift in a conservative run
+T_K=64.36271406
+PE_drop_total_eV_per_atom=-2.057879754e-05
+dE_conservative_eV_per_atom=+0.02556061719

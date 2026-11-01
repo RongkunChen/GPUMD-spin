@@ -298,7 +298,7 @@ printf '...\nspin_llg gamma=3.0385 alpha=0 T=0 restart=spin_restart.bin\nrun 100
 2. **热流的绝对归一化未验证**：同一条轨迹三个 $\kappa_{zz}$ 相差 $10^{7}$。
    **不要**用 `compute_hac` 或 `dump_heat_flux` 报热导率；`compute_hac` 在自旋体系上
    给出负值。详见 `docs/theory/11`、`12`。
-3. **NVT→NVE 写在同一个 `run.in` 里，$N\ge432$ 会挂死**（进程存活、无输出）。
+3. ~~NVT→NVE 写在同一个 `run.in` 里，$N\ge432$ 会挂死~~ —— **r19 已修复**（F-25）。现在可以写 `ensemble nvt_lan ...` + `run` + `ensemble nve` + `run`，两个块的 `dump_thermo` / `dump_xyz` 会接在同一个文件后面。
    拆成两次 `gpumd.exe` 调用（第一次 dump 末帧，第二次从该帧起跑）。
 4. **没有单离子各向异性**：固定晶格整体旋转自旋能量不变，$K_1$ 不可表示。
 5. **`seed` 在 `alpha=0 T=0` 的 NVE 里是空操作**：换初态才算换种子。
@@ -316,7 +316,7 @@ printf '...\nspin_llg gamma=3.0385 alpha=0 T=0 restart=spin_restart.bin\nrun 100
 | 温度爆炸（$10^5$ K） | 单位错（速度当 Å/nat 用）或 dt 太大 | 用 `velocity 300` 让程序自己采样；dt ≤ 0.1 fs |
 | 力全是 0 | 用了非训练 `nep.in` 做预测，架构不匹配 | 用训练时的 `nep.in` |
 | `thermo.out` 有两段表头 | 追加写 | 删旧文件或用新目录 |
-| 进程挂住无输出 | NVT→NVE 同文件切换（F-25） | 拆成两次调用 |
+| 第二段之后文件不再增长 | 使用的是 r18 及更早的二进制（F-25） | 升级到 r19，或拆成两次调用 |
 | 训练 loss 不降 | 标签列数不对 / `spin_force` 缺失 | 按 §2.3 检查表头 |
 | 能量漂移快 | dt 太大 / 不是保守分支（`alpha>0` 会耗散） | 见 §5.4 |
 

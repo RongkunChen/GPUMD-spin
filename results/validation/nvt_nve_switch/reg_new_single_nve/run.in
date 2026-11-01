@@ -1,0 +1,7 @@
+potential nep.txt
+time_step 0.05 100
+velocity 300 seed 1
+spin_llg gamma=3.0385 alpha=0.3 T=300 seed=1
+dump_thermo 100
+ensemble nve
+run 2000
