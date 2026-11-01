@@ -1,0 +1,6 @@
+potential nep.txt
+time_step 0.0001
+multi_replica remd replicas 2 exchange 50 temp 300 400 seed 12345
+ensemble nvt_bdp 300 400 100
+dump_xyz -1 0 50 rep.xyz
+run 100

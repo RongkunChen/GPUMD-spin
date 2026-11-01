@@ -1,0 +1,13 @@
+item,reference,criterion,measured,status
+a0 (A),2.866,<=2%,2.8254 (-1.42%),PASS
+m_eq (muB),2.2,<=10%,2.417 (+9.9%),PASS
+magnetic ground state,FM,FM lowest,FM lowest (+19.7 meV next),PASS
+spin-wave stiffness D (meV A^2),280-320,inside range,345.5,FAIL
+Tc (K),1043,<=15%,"1101 (half-M crossing, single size)",PARTIAL
+phonon stability,no imaginary mode,stability + convergence,"0 imaginary modes, omega_max 11.23 THz, conv 0.0047/0.0206 THz",PASS
+phonon frequencies vs experiment,omega_max ~9.5 THz,informational,11.23 THz (+18%); v_L[001] 8.26 vs 5.44 km/s (+52%),FAIL
+phonon degeneracies,no assumption,mapped,"H and P 3-fold, TA doublet along Gamma-P, N 2+1",PASS
+phonon Berry phase,no assumption,gauge invariant + converged,kz=0: 0; kz=0.25: pi; kz=0.5: 0 (links Gamma-P),PASS
+exchange striction g1 (meV/A),DFT,quantitative,72.9 (spread 23%),PARTIAL
+FM-DLM phonon shift,Kormann 2014,mode resolved,N: +2.24 THz (4.8 sigma),PASS
+magnon-phonon hybridisation,no assumption,mechanism + spectrum,no SOC: bilinear coupling only,NOT_SUPPORTED

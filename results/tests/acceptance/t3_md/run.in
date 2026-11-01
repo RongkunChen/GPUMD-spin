@@ -1,0 +1,6 @@
+potential nep.txt
+time_step 0.5
+ensemble nve
+dump_thermo 25
+dump_xyz 100 traj.xyz spin
+run 100

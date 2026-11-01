@@ -1,0 +1,6 @@
+# GPUMD REMD exchange output format 1
+# Exchange states are recorded immediately before swapping.
+# Units: target_temperature K, potential_energy eV.
+# step replica_i replica_j temperature_label_i temperature_label_j target_temperature_i target_temperature_j potential_energy_i potential_energy_j log_acceptance_ratio acceptance_probability accepted
+50 0 1 0 1 300 400 6.578103065490723 6.578099250793457 3.688972793610319e-05 1 1
+100 1 0 0 1 300 400 6.578054904937744 6.57804536819458 9.222431984025797e-05 1 1

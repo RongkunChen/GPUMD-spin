@@ -1,0 +1,8 @@
+type 1 Fe
+cutoff 6.0 3.0
+n_max 4 4
+basis_size 8 8
+l_max 4 0 0
+neuron 30
+spin 1
+prediction 1

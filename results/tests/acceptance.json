@@ -1,0 +1,31 @@
+{
+ "T1_train": {
+  "rc": 0,
+  "nep_txt": true,
+  "loss_tail": "40       4.446971e-02   2.015921e-02   2.416730e-02  1.432032e-04   0.000000e+00   0.000000e+00   0.000000e+00   0.000000e+00   0.000000e+00   0.000000e+00   0.000000e+00  "
+ },
+ "T2_predict": {
+  "rc": 0,
+  "energy_per_atom_eV": -0.0460624694824
+ },
+ "T3_md": {
+  "rc": 0,
+  "n_thermo": 4,
+  "PE_first": -0.73699951172,
+  "PE_last": -0.73699951172,
+  "finite": true
+ },
+ "T4_sllg": {
+  "rc": 0,
+  "frames": 2,
+  "max_norm_drift": 5.016064696938827e-08
+ },
+ "T5_restart": {
+  "checkpoint_written": true,
+  "size": 940,
+  "rc_good": 0,
+  "rc_corrupt": 4,
+  "corrupt_rejected": true
+ },
+ "pass": true
+}

@@ -1,0 +1,5 @@
+# dump_thermo 50
+# format_version 1
+# num_atoms 16
+# dt_output 2.5000000000e+01 fs
+# columns T KE PE sxx syy szz syz sxz sxy ax ay az bx by bz cx cy cz

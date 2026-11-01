@@ -1,0 +1,6 @@
+potential nep.txt
+time_step 0.5
+ensemble nve
+dump_thermo 20
+spin_llg gamma=3.04 alpha=0.5 T=300 seed=11 scheme=geometric
+run 200

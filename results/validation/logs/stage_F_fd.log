@@ -1,0 +1,85 @@
+{
+ "supercell": "7x7x7 primitive",
+ "n_atoms": 343,
+ "delta_A": 0.02,
+ "asr_correction_eV_A2": 0.340709998895838,
+ "nk": 31,
+ "gap_tol_THz": 0.05,
+ "loop_gap_min_THz": 0.1,
+ "min_gap_band12_THz": 0.0,
+ "min_gap_band23_THz": 1.8504120653517475e-06,
+ "min_gap_at": {
+  "band12": [
+   -0.467741935483871,
+   -0.467741935483871,
+   0.467741935483871,
+   8.917053494406055,
+   8.917053494406055
+  ],
+  "band23": [
+   -0.5,
+   -0.5,
+   -0.5,
+   9.177772199512463,
+   9.177774049924528
+  ]
+ },
+ "gap_closes_band12": true,
+ "gap_closes_band23": true,
+ "degenerate_grid_fraction": {
+  "band12": 0.007871504816891008,
+  "band23": 1.6783592360108757e-05
+ },
+ "loops": [
+  {
+   "loop": "kz=0_offG",
+   "center": [
+    0.25,
+    0.25
+   ],
+   "radius_2pi_over_a": 0.18,
+   "kfix": 0.0,
+   "n_points": 60,
+   "min_gap_band12_THz": 0.13222479079005733,
+   "berry_phase_rad": -9.824105646675892e-18,
+   "berry_phase_pi": -3.1271099502509387e-18,
+   "defined": true,
+   "product_magnitude": 0.9593875543896795,
+   "gauge_shift_rad": 4.591511599823664e-16,
+   "berry_phase_n30_rad": -5.023109824994306e-18,
+   "berry_phase_n120_rad": -7.856730059363507e-18
+  },
+  {
+   "loop": "kz=0.25",
+   "center": [
+    0.25,
+    0.25
+   ],
+   "radius_2pi_over_a": 0.18,
+   "kfix": 0.25,
+   "n_points": 60,
+   "min_gap_band12_THz": 0.5827826922685677,
+   "berry_phase_rad": 3.141592653589793,
+   "berry_phase_pi": 1.0,
+   "defined": true,
+   "product_magnitude": 0.8719650729076871,
+   "gauge_shift_rad": 2.4492935982947064e-16,
+   "berry_phase_n30_rad": -3.141592653589793,
+   "berry_phase_n120_rad": 3.141592653589793
+  },
+  {
+   "loop": "kz=0.5",
+   "center": [
+    0.25,
+    0.25
+   ],
+   "radius_2pi_over_a": 0.18,
+   "kfix": 0.5,
+   "n_points": 60,
+   "min_gap_band12_THz": 0.8820598465227976,
+   "berry_phase_rad": -9.095236980147632e-18,
+   "berry_phase_pi": -2.895103847965397e-18,
+   "defined": true,
+   "product_magnitude": 0.970150966047282,
+   "gauge_shift_rad": 3.783371491422518e-16,
+   "berry_phase_n30_rad": 4.6464

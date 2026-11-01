@@ -1,0 +1,138 @@
+
+***************************************************************
+*                 Welcome to use GPUMD                        *
+*     (Graphics Processing Units Molecular Dynamics)          *
+*                   version 5.9.1                             *
+*              This is the gpumd executable                   *
+***************************************************************
+
+
+---------------------------------------------------------------
+Compiling options:
+---------------------------------------------------------------
+
+DEBUG is off: Use different PRNG seeds for different runs.
+
+---------------------------------------------------------------
+GPU information:
+---------------------------------------------------------------
+
+number of GPUs = 1
+Device id:                   0
+    Device name:             NVIDIA GeForce RTX 4060 Ti
+    Compute capability:      8.9
+    Amount of global memory: 7.99561 GB
+    Number of SMs:           34
+
+---------------------------------------------------------------
+Started running GPUMD.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Started initializing positions and related parameters.
+---------------------------------------------------------------
+
+Number of atoms is 16.
+Use periodic boundary conditions along x.
+Use periodic boundary conditions along y.
+Use periodic boundary conditions along z.
+Box matrix h = [a, b, c] is
+    5.8000000000e+00    0.0000000000e+00    0.0000000000e+00
+    0.0000000000e+00    5.8000000000e+00    0.0000000000e+00
+    0.0000000000e+00    0.0000000000e+00    5.8000000000e+00
+Inverse box matrix g = inv(h) is
+    1.7241379310e-01    0.0000000000e+00    0.0000000000e+00
+    0.0000000000e+00    1.7241379310e-01    0.0000000000e+00
+    0.0000000000e+00    0.0000000000e+00    1.7241379310e-01
+Do not specify initial velocities here.
+Have no grouping method.
+Spin vectors (3 components per atom) are read from model.xyz.
+There is only one atom type.
+    16 atoms of type 0.
+Initialized velocities with default T = 300 K.
+
+---------------------------------------------------------------
+Finished initializing positions and related parameters.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Started executing the commands in run.in.
+---------------------------------------------------------------
+
+Use the NEP4 potential with 1 atom type.
+    type 0 (Fe with Z = 26).
+    spin-aware model, spin types: 1
+    spin descriptor layout (v3): Sex San Sdm Sia Smag
+    spin |S| scaling = 0.234149.
+    spin descriptor blocks (ablation model): Sex Smag
+    spin descriptor declaration (symmetry version 1, layout 3)
+      block P   T   spin rotation  rank  inv.sym.  cubic     at |S|=0
+      Sex   +   +   invariant      2     -         -         smooth
+      San   +   +   joint only     2     -         -         smooth   [off]
+      Sdm   -   +   joint only     2     zero      -         smooth   [off]
+      Sia   +   +   joint only     2     -         zero      smooth   [off]
+      Smag  +   +   invariant      0     -         -         kink
+      Smag is continuous but not differentiable at |S| = 0: its n = 0
+      channel is linear in |S|, so the torque there is a limit, not a
+      derivative.  The kernels evaluate the exact derivative for every
+      |S| > 0 and write 0 only at |S| = 0 (a convention at a point where
+      no derivative exists).  The unit direction switches to a
+      scale-invariant normalisation below |S| = 1.0e-8f.
+      Every enabled block is invariant under an independent global rotation
+      of the spins: the model is in the no-SOC class.
+    radial cutoff = 6 A.
+    angular cutoff = 3 A.
+    MN_radial = 88.
+    enlarged MN_radial = 110.
+    enlarged MN_angular = 18.
+    n_max_radial = 4.
+    n_max_angular = 4.
+    basis_size_radial = 8.
+    basis_size_angular = 8.
+    l_max_3body = 4.
+    has_q_222 = 0.
+    has_q_1111 = 0.
+    has_q_112 = 0.
+    has_q_123 = 0.
+    has_q_233 = 0.
+    has_q_134 = 0.
+    WARNING: this is a spin-aware NEP model. Add a 'spin:R:3' column to
+             model.xyz, otherwise it is evaluated in the S = 0 limit.
+    ANN = 50-30-1.
+    number of neural network parameters = 1561.
+    number of descriptor parameters = 90.
+    total number of parameters = 1651.
+Time step for this run is 0.001 fs.
+    max distance per step = 1 A.
+Use NVE ensemble for this run.
+Spin dynamics (LLG): gamma = 3.0385, alpha = 0.
+Spin dynamics is active for 16 atoms.
+Dump thermo every 1 steps.
+Run 1 steps.
+    1 steps completed.
+    spin work budget [progress]:  W_rot = +0 eV  W_noise = +0 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin: mean |S| = 2.200000, mean |torque| = 1.845713e-01, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 1.000000
+    spin work budget [end of run]:  W_rot = +0 eV  W_noise = +0 eV  W_ext = +0 eV  ->  dU = +0 eV
+
+---------------------------------------------------------------
+Time used for this run = 0.0133171 second.
+Speed of this run = 1201.46 atom*step/second.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Finished executing the commands in run.in.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Time used = 0.036419 s.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Finished running GPUMD.
+---------------------------------------------------------------
+

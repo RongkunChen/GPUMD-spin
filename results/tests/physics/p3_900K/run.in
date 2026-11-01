@@ -1,0 +1,7 @@
+potential nep.txt
+time_step 0.05 100
+ensemble nvt_lan 900 900 100
+spin_llg gamma=3.0385 alpha=0.3 T=900 seed=7
+dump_xyz 200 traj.xyz spin
+seed 7
+run 10000

@@ -1,0 +1,140 @@
+{
+ "model": "C:\\Users\\28433\\AppData\\Local\\Temp\\gpumd_r18_final\\GPUMD-spin-V3-SOURCE-v3.1.0-r18\\models\\fe_mask17_2desc_r18.nep.txt",
+ "bin": "C:\\Users\\28433\\AppData\\Local\\Temp\\gpumd_r18_final\\GPUMD-spin-V3-SOURCE-v3.1.0-r18\\src\\gpumd.exe",
+ "quick": true,
+ "lattice": {
+  "cell": "bcc 2x2x2 (16 atoms), |S| = 2.2",
+  "scan": [
+   {
+    "a": 2.75,
+    "E_per_atom": -0.18703812360625
+   },
+   {
+    "a": 2.775,
+    "E_per_atom": -0.230139300225
+   },
+   {
+    "a": 2.8,
+    "E_per_atom": -0.25508657843125
+   },
+   {
+    "a": 2.825,
+    "E_per_atom": -0.26319384575
+   },
+   {
+    "a": 2.85,
+    "E_per_atom": -0.2561153993
+   },
+   {
+    "a": 2.875,
+    "E_per_atom": -0.2357190474875
+   },
+   {
+    "a": 2.9,
+    "E_per_atom": -0.204053118825
+   }
+  ],
+  "a0_A": 2.825846865748643,
+  "E0_eV_per_atom": -0.26320255848153806,
+  "experiment_A": 2.866,
+  "error_percent": -1.4010165475002556,
+  "verdict": "PASS",
+  "criterion": "|a0 - 2.866| / 2.866 < 5%"
+ },
+ "moment": {
+  "cell": "bcc 2x2x2 at a0 = 2.8258 A",
+  "scan": [
+   {
+    "S": 2.0,
+    "E_per_atom": -0.23465432226875
+   },
+   {
+    "S": 2.2,
+    "E_per_atom": -0.26319428533125
+   },
+   {
+    "S": 2.4,
+    "E_per_atom": -0.276012688875
+   },
+   {
+    "S": 2.6,
+    "E_per_atom": -0.2661574035875
+   },
+   {
+    "S": 2.8,
+    "E_per_atom": -0.22414600849375
+   }
+  ],
+  "S0_muB": 2.413068531893086,
+  "E0_eV_per_atom": -0.2760610933817955,
+  "experiment_muB": 2.22,
+  "error_percent": 8.696780715904762,
+  "verdict": "PASS",
+  "criterion": "1.7 < S0 < 2.9 mu_B (a 50k-step model is not expected to match 2.22 exactly)"
+ },
+ "energy": {
+  "rc": 0,
+  "n_atoms": 128,
+  "steps": 2000,
+  "t_ps": 0.1,
+  "dE_max_per_atom": 3.363343750450998e-07,
+  "dE_end_per_atom": 2.6718359380506485e-07,
+  "T_mean": 126.61863012557,
+  "verdict": "PASS",
+  "criterion": "max|dE|/atom < 1e-5 eV"
+ },
+ "guard": {
+  "rc": 0,
+  "guard_triggered": false,
+  "limit_line": [],
+  "n_thermo_rows": 20,
+  "T_first": 524.96504898,
+  "T_last": 322.34816446,
+  "verdict": "PASS",
+  "criterion": "rc = 0, no RUNAWAY GUARD, run reaches step 2000"
+ },
+ "curie": {
+  "cell": "bcc 4x4x4, 0.5 ps per point",
+  "points": [
+   {
+    "T": 600,
+    "rc": 0,
+    "n_atoms": 128,
+    "n_frames": 50,
+    "M_mean": 1.6334514535083695,
+    "M_std": 0.059696278683778775,
+    "M_saturation_fraction": 0.7424779334128951
+   },
+   {
+    "T": 900,
+    "rc": 0,
+    "n_atoms": 128,
+    "n_frames": 50,
+    "M_mean": 1.0494438990258805,
+    "M_std": 0.09488460618050107,
+    "M_saturation_fraction": 0.47701995410267295
+   },
+   {
+    "T": 1200,
+    "rc": 0,
+    "n_atoms": 128,
+    "n_frames": 50,
+    "M_mean": 0.40857572630617056,
+    "M_std": 0.1636730518175033,
+    "M_saturation_fraction": 0.18571623923007752
+   }
+  ],
+  "Tc_estimate_K": 1008.9388655161741,
+  "experiment_K": 1043,
+  "verdict": "PASS",
+  "criterion": "Tc in 600-1600 K; the estimator itself is only good to +-150 K"
+ },
+ "verdicts": {
+  "lattice": "PASS",
+  "moment": "PASS",
+  "energy": "PASS",
+  "guard": "PASS",
+  "curie": "PASS"
+ },
+ "pass": true
+}

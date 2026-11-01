@@ -1,0 +1,48 @@
+{
+ "method": "finite displacement (central difference, +/-delta) of the spin-aware dumped forces; Phi(R) and D(q) built in Python",
+ "cell": "bcc primitive, 1 atom, 3 acoustic branches",
+ "a0_A": 2.825436436868364,
+ "m0_uB": 2.416913934285072,
+ "supercell": "7x7x7 primitive (343 atoms)",
+ "supercell_width_A": 13.985196850248226,
+ "delta_A": 0.02,
+ "cutoff_A": 6.0,
+ "max_pair_distance_A": 5.650873,
+ "n_q": 205,
+ "omega_at_Gamma_THz": [
+  -2.9159673279322117e-08,
+  6.97049514845789e-08,
+  1.0131225642709816e-07
+ ],
+ "omega_max_THz": 11.231973280517241,
+ "omega_min_THz": -2.9159673279322117e-08,
+ "sound_velocity_km_s": {
+  "001": [
+   4.870000151564911,
+   4.8700001515647235,
+   8.2627936511089
+  ],
+  "111": [
+   4.531541643614043,
+   4.531541643613927,
+   8.636521778942937
+  ]
+ },
+ "longitudinal_velocity_100_km_s": 8.2627936511089,
+ "transverse_velocity_100_km_s": 4.870000151564911,
+ "dos_peak_THz": 10.955373960803021,
+ "acoustic_sum_rule_gamma_max_THz": 1.0131225642709816e-07,
+ "gamma_before_asr_THz": [
+  -1.2192759911360718,
+  -1.2192759911360562,
+  -1.2192759911360358
+ ],
+ "cubic_symmetry_dev_before_eV_A2": 0.0024052831824999997,
+ "asr_correction_eV_A2": 0.3396933270083362,
+ "asr_correction_fraction_of_self_term": 0.020561718234143468,
+ "asr_note": "the on-site block is corrected so that sum_R Phi(R) = 0; the correction is ~2% of the on-site term and is the model's float32 force noise (its far-shell part scales as 1/delta, the near part does not decay with distance), not physics",
+ "asr_residual_max_eV_A2": 4.1997423932682307e-17,
+ "hermiticity_max": 8.326672684688674e-17,
+ "symmetry_asymmetry_before_eV_A2": 0.0060151449999996665,
+ "imaginary_mode_count": 0,
+ "reference_note": "the literature maximum phonon frequency of bcc Fe is about 9.4-9.6 THz; that anchor is quote

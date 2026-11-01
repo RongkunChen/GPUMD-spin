@@ -1,0 +1,1103 @@
+{
+ "version": "r18",
+ "model": {
+  "checked_at": "2026-11-01T02:44:50",
+  "project_root": "D:/researche_test/rongkunchen/GPUMD-spin/V3",
+  "source_dir": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/staging/GPUMD-spin-V3-SOURCE-v3.1.0-r18",
+  "source_dir_note": "r18 delivery tree (VERSION=r18); identical src/ to the shipped ZIP 1e12d040\u2026",
+  "version": "r18",
+  "executables": {
+   "gpumd.exe": {
+    "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/win_staging/bin/gpumd.exe",
+    "sha256": "090defe9b2744bedcdca3f75cc3c5d033e29bd7057f889c45026663978b73456",
+    "bytes": 21666304
+   },
+   "nep.exe": {
+    "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/win_staging/bin/nep.exe",
+    "sha256": "225eac480ffafb4400885d475634207d61cef23e3af0f0e4b49ebe2fdf1cf954",
+    "bytes": 4373504
+   }
+  },
+  "models": {
+   "A_2desc_recommended": {
+    "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/staging/GPUMD-spin-V3-SOURCE-v3.1.0-r18\\models/fe_mask17_2desc_r18.nep.txt",
+    "sha256": "9d5799f820702ab68e7281f34b086d760293af28350b3e9b76bcb9083f8dc240",
+    "bytes": 30798
+   },
+   "B_5desc": {
+    "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/staging/GPUMD-spin-V3-SOURCE-v3.1.0-r18\\models/fe_mask31_5desc_r18.nep.txt",
+    "sha256": "9b5eab00af1dadfbcc5e98c4dfb81211fc38ac9301363d538d8b8c741611f3ee",
+    "bytes": 30776
+   },
+   "r17_baseline": {
+    "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/staging/GPUMD-spin-V3-SOURCE-v3.1.0-r18\\models/fe_mask17_r17_baseline.nep.txt",
+    "sha256": "15ad896e60769d16106faff9d4f24d06c3c800efd64a0a87c0458f606c0e15f9",
+    "bytes": 30791
+   }
+  },
+  "primary_model": "A_2desc_recommended",
+  "dataset": {
+   "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\Fe/test.xyz",
+   "sha256": "dc1570d9cf603779268aa4799e23b1e2a6b31972842e1b066709cfa4b044f728",
+   "bytes": 2484208
+  },
+  "build": {
+   "compiler": "MSVC 2022 + CUDA 12.8 (V12.8.61)",
+   "arch": "sm_89",
+   "gpu": "NVIDIA GeForce RTX 4060 Ti",
+   "os": "Windows 11"
+  },
+  "provenance": "binaries from fresh-extract build of GPUMD-spin-V3-SOURCE-v3.1.0-r18.zip (see final_delivery_20261101_r18/fresh_build/build_fresh.json)"
+ },
+ "tests": [
+  {
+   "test": "A1 model loads",
+   "status": "PASS",
+   "value": -4.2110921144,
+   "unit": "eV (16-atom cell)",
+   "reference": null,
+   "reference_source": null,
+   "error": null,
+   "convergence": "single run",
+   "raw_data": "raw_data/A/a1_static_fm",
+   "command": "gpumd.exe with run 1",
+   "reason": ""
+  },
+  {
+   "test": "A2 energy/force finite",
+   "status": "PASS",
+   "value": 6.74517601e-05,
+   "unit": "eV/A",
+   "reference": null,
+   "reference_source": null,
+   "error": null,
+   "convergence": "perfect crystal -> |F| < 1e-4",
+   "raw_data": "raw_data/A/a2_force",
+   "command": "dump_xyz force",
+   "reason": ""
+  },
+  {
+   "test": "A3 spins enter the energy",
+   "status": "PASS",
+   "value": -7.289983272500001,
+   "unit": "eV",
+   "reference": null,
+   "reference_source": null,
+   "error": null,
+   "convergence": "FM vs |S|=0 vs AFM-II",
+   "raw_data": "raw_data/A/a3_zero_moment",
+   "command": "static energies",
+   "reason": ""
+  },
+  {
+   "test": "A4 global spin rotation invariance",
+   "status": "PASS",
+   "value": 1.311399999259777e-06,
+   "unit": "eV (16 atoms)",
+   "reference": 0.0,
+   "reference_source": "no SOC in mask17",
+   "error": 1.311399999259777e-06,
+   "convergence": "within 10x floor",
+   "raw_data": "raw_data/A/a4_rotated",
+   "command": "rotate all spins, recompute",
+   "reason": ""
+  },
+  {
+   "test": "A5 local spin tilt (curvature)",
+   "status": "PASS",
+   "value": 158.859004021543,
+   "unit": "meV/rad^2",
+   "reference": null,
+   "reference_source": null,
+   "error": null,
+   "convergence": "theta = 2..20 deg",
+   "raw_data": "raw_data/A/a5_tilt_10",
+   "command": "single-spin tilt",
+   "reason": ""
+  },
+  {
+   "test": "A6 moment is a dynamic variable",
+   "status": "PASS",
+   "value": "no (|S| pinned by SLLG anchor)",
+   "unit": "-",
+   "reference": null,
+   "reference_source": null,
+   "error": null,
+   "convergence": "-",
+   "raw_data": "raw_data/A/a6_norm_evolution",
+   "command": "SLLG norm check",
+   "reason": "|S| is an input; equilibrium moment = argmin E(m)"
+  },
+  {
+   "test": "B1 equilibrium lattice constant a0",
+   "status": "PASS",
+   "value": 2.825436436868364,
+   "unit": "A",
+   "reference": 2.866,
+   "reference_source": "experiment (Kittel)",
+   "error": -1.4153371643976342,
+   "convergence": "16 points, rms 0.063 meV/atom (quartic fit); BM3 rms 2.06",
+   "raw_data": "raw_data/B/energy_volume.csv",
+   "command": "static E(a) scan, 3x3x3 conventional cell",
+   "reason": ""
+  },
+  {
+   "test": "B1b bulk modulus B0",
+   "status": "REPORTED_ONLY",
+   "value": 314.35025818118004,
+   "unit": "GPa",
+   "reference": 170.0,
+   "reference_source": "experiment",
+   "error": 79.21624399968266,
+   "convergence": "two estimators: 304.7 (quartic) vs 314.4 (local quadratic)",
+   "raw_data": "raw_data/B/energy_volume.csv",
+   "command": "same scan; BM3 fit does not describe the curve",
+   "reason": "no acceptance threshold was set for B0; BM3 residual 2 meV/atom and Bp=11 make it unusable"
+  },
+  {
+   "test": "B2 equilibrium moment m_eq",
+   "status": "PASS",
+   "value": 2.416913934285072,
+   "unit": "muB/Fe",
+   "reference": 2.2,
+   "reference_source": "experiment",
+   "error": 9.85972428568509,
+   "convergence": "grid 0.1 muB + 3-point parabola",
+   "raw_data": "raw_data/B/energy_moment.csv",
+   "command": "argmin_m E(m) at a0",
+   "reason": "|S| is not integrated (A6) -> variational prediction"
+  },
+  {
+   "test": "B3 magnetic ground state",
+   "status": "PASS",
+   "value": {
+    "FM": 0.0,
+    "NC-90": 171.7995853698659,
+    "AFM-A": 193.45119836786589,
+    "DLM": 208.50213334013606,
+    "NM (|S|=0)": 473.5915092623907,
+    "AFM-G": 504.68682100986587
+   },
+   "unit": "-",
+   "reference": "FM",
+   "reference_source": "experiment",
+   "error": null,
+   "convergence": "all states at the FM relaxed a = 2.8368 A, supercells 250-500 atoms (wider than 2 r_c)",
+   "raw_data": "raw_data/B/magnetic_ground_states.csv",
+   "command": "static energies at a0",
+   "reason": "",
+   "failure_reason": "corrected: the previous AFM-II (+49.2) and NC-90 (+19.7) values came from an is_b sublattice test that selected only 8 of the 64 body-centre sites, so only 8/128 atoms were flipped.  The corrected values are +505 and +172 meV/atom; the ordering (FM lowest) is unchanged and the gap to the second state is much larger than previously reported"
+  },
+  {
+   "test": "B3b relaxed magnetic energies",
+   "status": "NOT_SUPPORTED",
+   "value": {
+    "FM": 0.0,
+    "NC-90": 171.7995853698659,
+    "AFM-A": 193.45119836786589,
+    "DLM": 208.50213334013606,
+    "NM (|S|=0)": 473.5915092623907,
+    "AFM-G": 504.68682100986587
+   },
+   "unit": "-",
+   "reference": null,
+   "reference_source": null,
+   "error": null,
+   "convergence": "all states at the FM relaxed a = 2.8368 A, supercells 250-500 atoms (wider than 2 r_c)",
+   "raw_data": "raw_data/B/probe_minimize_spin",
+   "command": "minimize fire",
+   "reason": "`minimize` evaluates the potential in the S = 0 limit: its energy equals the static S=0 energy to 1e-9 eV and is independent of the spin configuration. Relaxed magnetic-state energies (and therefore the relaxed Delta E of B3) cannot be obtained with this build; only the fixed-structure energies are meaningful.  Documented as V-1 in validation_results.json.",
+   "failure_reason": "corrected: the previous AFM-II (+49.2) and NC-90 (+19.7) values came from an is_b sublattice test that selected only 8 of the 64 body-centre sites, so only 8/128 atoms were flipped.  The corrected values are +505 and +172 meV/atom; the ordering (FM lowest) is unchanged and the gap to the second state is much larger than previously reported"
+  },
+  {
+   "test": "C1 exchange J1..J6 (shell 1..6)",
+   "status": "REPORTED",
+   "value": [
+    57.306856341560234,
+    1.5141720591639143,
+    -5.541250062386157,
+    2.1909539723177964,
+    -2.5587963034274184,
+    -1.7145306003938696
+   ],
+   "unit": "meV",
+   "reference": null,
+   "reference_source": "no unique experimental value",
+   "error": null,
+   "convergence": "8^3 cells; fit rms 0.001 meV/atom",
+   "raw_data": "raw_data/C/exchange_parameters.csv",
+   "command": "spin-spiral energies, Fourier fit",
+   "reason": ""
+  },
+  {
+   "test": "C1b exchange convergence 4/6/8",
+   "status": "PASS",
+   "value": [
+    44.37165158008888,
+    58.60225314213876,
+    57.30678912719224
+   ],
+   "unit": "meV (J1)",
+   "reference": null,
+   "reference_source": null,
+   "error": null,
+   "convergence": "J1: 4^3 vs 6^3 vs 8^3",
+   "raw_data": "raw_data/C/exchange_convergence.json",
+   "command": "same fit on three supercells",
+   "reason": ""
+  },
+  {
+   "test": "C2 spin-wave stiffness D",
+   "status": "FAIL",
+   "value": 345.51672488930694,
+   "unit": "meV.A^2",
+   "reference": "280-320",
+   "reference_source": "literature range given in the task",
+   "error": null,
+   "convergence": "two directions: {'001': 347.1813320046499, '111': 343.85211777396404}",
+   "raw_data": "raw_data/C/magnon_stiffness.json",
+   "command": "omega(q) = J(0)-J(q) from the fitted J",
+   "reason": "derived from model energies, not a code spectrum",
+   "failure_reason": "stage C's D = 345.5 was computed without the S = m/2 factor and from the fitted J_n only. The direct frozen-spiral measurement (H3) gives D = 433.7 meV.A^2 at q -> 0, so the deviation from 280-320 is +36%, not +8%"
+  },
+  {
+   "test": "C2b Goldstone mode at Gamma",
+   "status": "PASS",
+   "value": 0.0,
+   "unit": "meV",
+   "reference": 0.0,
+   "reference_source": "symmetry",
+   "error": 0.0,
+   "convergence": "-",
+   "raw_data": "raw_data/C/magnon_dispersion.dat",
+   "command": "omega(0) from the fitted Hamiltonian",
+   "reason": ""
+  },
+  {
+   "test": "D1 M(T) scan",
+   "status": "REPORTED",
+   "value": 8,
+   "unit": "points",
+   "reference": null,
+   "reference_source": null,
+   "error": null,
+   "convergence": "L=[6], dt=0.05 fs, 1.0 ps/point",
+   "raw_data": "raw_data/D/scan_*.csv",
+   "command": "SLLG-Langevin equilibrium sampling",
+   "reason": ""
+  },
+  {
+   "test": "D2 Curie temperature",
+   "status": "PARTIAL",
+   "value": 1101.441197610418,
+   "unit": "K",
+   "reference": 1043,
+   "reference_source": "experiment",
+   "error": 5.60318289649262,
+   "convergence": "half-magnetisation crossing = 1101 K, dM/dT peak = 1200 K; single size only, no Binder crossing",
+   "raw_data": "raw_data/D/scan_*.csv",
+   "command": "same",
+   "reason": "the sampler is dt-biased (see dt-convergence below) and the lattice contribution is included; the value is an estimate, not a validated Tc"
+  },
+  {
+   "test": "D3 sampler dt sensitivity",
+   "status": "FAIL",
+   "value": [
+    {
+     "dt_fs": 0.05,
+     "m_mean": 1.5433767264589426,
+     "m_err": 0.008730623371466496,
+     "U4": 0.6654689994741243,
+     "T_mean": 900.0,
+     "ps": 0.5,
+     "indep": 22.257953084470785
+    },
+    {
+     "dt_fs": 0.1,
+     "m_mean": 1.4219965364182097,
+     "m_err": 0.008157282415186881,
+     "U4": 0.6647057735917014,
+     "T_mean": 900.0,
+     "ps": 1.0,
+     "indep": 22.962904339598506
+    },
+    {
+     "dt_fs": 0.25,
+     "m_mean": 1.342217764980247,
+     "m_err": 0.02266841595592167,
+     "U4": 0.6619591979607086,
+     "T_mean": 900.0,
+     "ps": 1.0,
+     "indep": 12.222091858504209
+    },
+    {
+     "dt_fs": 0.5,
+     "m_mean": 1.1907124320308642,
+     "m_err": 0.034096078027075406,
+     "U4": 0.658621400905099,
+     "T_mean": 900.0,
+     "ps": 1.0,
+     "indep": 6.369048353085031
+    },
+    {
+     "dt_fs": 1.0,
+     "m_mean": 0.4159794269776235,
+     "m_err": 0.043490860721535914,
+     "U4": 0.6146656602653859,
+     "T_mean": 900.0,
+     "ps": 1.0,
+     "indep": 4.205531122852988
+    },
+    {
+     "dt_fs": 2.0,
+     "m_mean": 0.15928340607808644,
+     "m_err": 0.009201187883295365,
+     "U4": 0.5411914370822412,
+     "T_mean": 900.0,
+     "ps": 1.0,
+     "indep": 15.0
+    }
+   ],
+   "unit": "m(T=900K) vs dt",
+   "reference": "dt-independent",
+   "reference_source": "equilibrium sampling must not depend on dt",
+   "error": null,
+   "convergence": "dt = 0.05 .. 2 fs",
+   "raw_data": "raw_data/D/dt_bias.json",
+   "command": "same T, four time steps",
+   "reason": "|M| changes by a factor 15 between dt=0.05 and dt=2 fs -> only dt<=0.1 fs is usable"
+  },
+  {
+   "test": "D4 Binder cumulant crossing (3 sizes)",
+   "status": "BLOCKED",
+   "value": null,
+   "unit": "-",
+   "reference": null,
+   "reference_source": null,
+   "error": null,
+   "convergence": "not reached: 3 sizes at dt<=0.1 fs exceed the compute budget",
+   "raw_data": "-",
+   "command": "-",
+   "reason": "no spin MC in this build; SLLG at production dt is too slow for 16^3"
+  },
+  {
+   "test": "E4 phonon convergence with supercell and displacement",
+   "status": "PASS",
+   "value": {
+    "supercell_dev_THz": {
+     "6": 0.00469743362733599,
+     "7": 0.0,
+     "8": 0.004440982766252155
+    },
+    "displacement_dev_THz": {
+     "0.005": 0.008345348106768569,
+     "0.01": 0.0,
+     "0.02": 0.020646441456873
+    }
+   },
+   "unit": "THz",
+   "reference": {
+    "criterion": "supercell < 0.10 THz, displacement < 0.05 THz"
+   },
+   "error": {
+    "max_supercell": 0.00469743362733599,
+    "max_displacement": 0.020646441456873
+   },
+   "convergence": "6x6x6 (12.0 A), 7x7x7 (14.0 A), 8x8x8 (16.0 A) at fixed delta; delta = 0.005, 0.01, 0.02 A at fixed 7x7x7",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_convergence.json"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python phonon_fd.py --mode conv",
+   "failure_reason": null
+  },
+  {
+   "test": "E1 IFC2 and phonon dispersion (external finite displacement)",
+   "status": "PASS",
+   "value": {
+    "omega_max_THz": 11.231973280517241,
+    "omega_at_Gamma_THz": [
+     -2.9159673279322117e-08,
+     6.97049514845789e-08,
+     1.0131225642709816e-07
+    ],
+    "omega_H_THz": 10.273,
+    "omega_N_THz": [
+     5.76,
+     7.117,
+     11.235
+    ],
+    "omega_P_THz": 9.189,
+    "sound_velocity_km_s": {
+     "001": [
+      4.870000151564911,
+      4.8700001515647235,
+      8.2627936511089
+     ],
+     "111": [
+      4.531541643614043,
+      4.531541643613927,
+      8.636521778942937
+     ]
+    },
+    "dos_peak_THz": 10.955373960803021
+   },
+   "unit": "THz / km s^-1",
+   "reference": {
+    "omega_max_THz": "~9.4-9.6 (literature, not re-verified here)",
+    "sound_velocity_km_s": {
+     "L[001]": 5.44,
+     "T[001]": 3.87,
+     "L[111]": 6.43,
+     "T[111]": 3.03,
+     "source": "C11=2.33, C12=1.35, C44=1.18 (1e11 Pa), rho=7874 kg/m^3, textbook values, not re-verified"
+    }
+   },
+   "error": {
+    "omega_max": "+18% vs the literature anchor",
+    "sound_velocity_vs_experiment": {
+     "L001": "+52%",
+     "T001": "+26%",
+     "L111": "+34%",
+     "T111": "+50%"
+    }
+   },
+   "convergence": {
+    "supercell_dev_THz": 0.00469743362733599,
+    "displacement_dev_THz": 0.020646441456873,
+    "widths_A": {
+     "6": 11.987311585927054,
+     "7": 13.985196850248226,
+     "8": 15.983082114569402
+    }
+   },
+   "method": "finite displacement (central difference, +/-delta) of the spin-aware dumped forces; Phi(R) and D(q) built in Python",
+   "cell": "bcc primitive, 1 atom, 3 acoustic branches",
+   "supercell": "7x7x7 primitive (343 atoms)",
+   "delta_A": 0.02,
+   "asr_correction_eV_A2": 0.3396933270083362,
+   "asr_correction_fraction": 0.020561718234143468,
+   "criteria": {
+    "criterion_asr": "|omega(Gamma)| < 0.05 THz for all three branches",
+    "criterion_stability": "no branch below -1e-6 THz anywhere on the path",
+    "gamma_measured": 1.0131225642709816e-07
+   },
+   "verdict_note": "the acceptance criterion for this item is stability plus convergence, and both hold; the absolute frequencies are 18-52% above experiment, which is the same 'too stiff' trend as B0 and D and is reported as an accuracy failure, not hidden",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_dispersion.dat",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_dos.dat",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_fd.json",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_convergence.json"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python phonon_fd.py --mode fm --n 7 --delta 0.02",
+   "failure_reason": null
+  },
+  {
+   "test": "E2 phonon stability (no imaginary branch)",
+   "status": "PASS",
+   "value": {
+    "imaginary_mode_count": 0,
+    "n_q_path": 205,
+    "q_grid": "16x16x16",
+    "omega_min_THz": -2.9159673279322117e-08
+   },
+   "unit": "THz",
+   "reference": {
+    "criterion": "no branch below -1e-6 THz anywhere on the path or grid"
+   },
+   "error": {
+    "min_frequency": -2.9159673279322117e-08
+   },
+   "convergence": "two independent grids (41 points/segment path, 16^3 MP grid) both show no negative eigenvalue",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_dispersion.dat",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_dos.dat"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python phonon_fd.py --mode fm --n 7 --delta 0.02",
+   "failure_reason": null
+  },
+  {
+   "test": "E3 built-in compute_phonon is spin-blind (defect, still present)",
+   "status": "FAIL",
+   "value": {
+    "fm_vs_s0_identical": true,
+    "note": "omega2.out is byte-identical (same md5) for a FM cell and a |S|=0 cell, and the built-in module returns 61.9 THz for bcc Fe"
+   },
+   "unit": "\u2014",
+   "reference": {
+    "criterion": "FM and |S|=0 must differ"
+   },
+   "error": {
+    "note": "the Hessian path calls the spin-free Potential::compute overload"
+   },
+   "convergence": "not applicable",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics/raw_data/E/probe/omega2.out",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics/raw_data/E/probe_s0/omega2.out"
+   ],
+   "command": "cd raw_data/E/probe && gpumd.exe   (and the same in probe_s0)",
+   "failure_reason": "force.cu::compute_single_potential does not pass atom.spin; this is why the external finite-displacement path was built"
+  },
+  {
+   "test": "F1 phonon Berry phase (Wilson loop) and degeneracy structure",
+   "status": "PASS",
+   "value": {
+    "berry_phase_rad": {
+     "kz=0_offG": -9.824105646675892e-18,
+     "kz=0.25": 3.141592653589793,
+     "kz=0.5": -9.095236980147632e-18
+    },
+    "berry_phase_over_pi": {
+     "kz=0_offG": -3.1271099502509387e-18,
+     "kz=0.25": 1.0,
+     "kz=0.5": -2.895103847965397e-18
+    },
+    "min_gap_on_loop_THz": {
+     "kz=0_offG": 0.13222479079005733,
+     "kz=0.25": 0.5827826922685677,
+     "kz=0.5": 0.8820598465227976
+    }
+   },
+   "unit": "rad (mod 2 pi)",
+   "reference": {
+    "criterion": "gauge invariant, sampling converged, only quoted where the loop is gapped"
+   },
+   "error": {
+    "gauge_shift_rad": 4.591511599823664e-16,
+    "sampling": "30 and 120 points agree modulo 2 pi"
+   },
+   "convergence": "same phase for 30, 60 and 120 points per loop; identical for random gauge phases on every eigenvector (1e-16)",
+   "interpretation": "the kz=0.25 loop (centre 0.25,0.25,0.25) links the Gamma-P [111] axis, where the two TA branches are degenerate by C3v symmetry; the single-band phase is therefore pi, and the two-band total is 2 pi (=0 mod 2 pi).  Loops at kz=0 and 0.5 do not link it and give 0",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_berry_phase.csv",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_wilson_loop.dat",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_topology_report.json"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python phonon_topo.py --grid 31",
+   "failure_reason": null
+  },
+  {
+   "test": "F2 phonon degeneracy search on a 31^3 grid",
+   "status": "PASS",
+   "value": {
+    "min_gap_band12_THz": 0.0,
+    "min_gap_band23_THz": 1.8504120653517475e-06,
+    "degenerate_fraction": {
+     "band12": 0.007871504816891008,
+     "band23": 1.6783592360108757e-05
+    },
+    "omega_H_THz": 10.273,
+    "omega_P_THz": 9.189
+   },
+   "unit": "THz",
+   "reference": {
+    "criterion": "map where the gaps close; no assumption about the answer"
+   },
+   "error": {
+    "note": "gap < 0.05 THz counted as degenerate"
+   },
+   "convergence": "31^3 grid (29791 points) plus a 101-point scan along Gamma-P",
+   "interpretation": "H and P are exactly three-fold degenerate for any force-constant matrix with cubic symmetry and inversion (at those wavevectors every shell contributes an isotropic matrix), the two TA branches are degenerate along Gamma-P, and N splits 2+1",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_degeneracies.csv",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/phonon_topology_report.json"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python phonon_topo.py --grid 31",
+   "failure_reason": null
+  },
+  {
+   "test": "G1 exchange striction dJ/dr",
+   "status": "PARTIAL",
+   "value": {
+    "g_shell1_meV_per_A": 72.901,
+    "g_shell2_meV_per_A": -78.123,
+    "g_shell3_meV_per_A": 8.507,
+    "g_shell4_meV_per_A": -15.117,
+    "g_shell5_meV_per_A": 3.118,
+    "g_shell6_meV_per_A": 8.342
+   },
+   "unit": "meV/A",
+   "reference": {
+    "note": "no DFT digitised value available in this project; the criterion is internal convergence, not a literature number"
+   },
+   "error": {
+    "shell1_1pct_meV_per_A": 89.31991500606249,
+    "shell1_2pct_meV_per_A": 68.79642644228427,
+    "relative_change_percent": 22.97750570226719
+   },
+   "convergence": "three finite differences (+-1%, +-2% regression, +-2% endpoint) give g1 = 68.8 / 89.3 / 68.8 meV/A, max spread 23% > the 20% criterion",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\G\\exchange_striction.csv",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\G\\exchange_striction_convergence.json"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python stage_G.py",
+   "failure_reason": "J1(epsilon) is non-linear (+2% strain already turns it over), so the three differences cannot agree to 20%"
+  },
+  {
+   "test": "G2 FM vs DLM phonon frequency shift",
+   "status": "PASS",
+   "value": {
+    "high_symmetry_points": {
+     "G": {
+      "FM": [
+       -5.592709355330118e-08,
+       1.0599966676666296e-07,
+       1.3408015128060435e-07
+      ],
+      "DLM": [
+       -4.9061718874481357e-08,
+       -5.220059913759482e-09,
+       3.664092640519221e-08
+      ],
+      "domega": [
+       -6.865374678819823e-09,
+       1.1121972668042244e-07,
+       9.743922487541213e-08
+      ],
+      "sd": [
+       2.4322423744746162e-08,
+       2.8882510789552362e-08,
+       1.1093605253112178e-08
+      ]
+     },
+     "H": {
+      "FM": [
+       10.281091068745338,
+       10.281091068745338,
+       10.281091068745981
+      ],
+      "DLM": [
+       9.818306991160501,
+       9.818306991160501,
+       9.818306991160881
+      ],
+      "domega": [
+       0.4627840775848373,
+       0.4627840775848373,
+       0.4627840775851002
+      ],
+      "sd": [
+       0.08968113190778751,
+       0.08968113190778751,
+       0.08968113190781565
+      ]
+     },
+     "N": {
+      "FM": [
+       5.756483216011679,
+       7.116345187143538,
+       11.23143549903236
+      ],
+      "DLM": [
+       3.5123964547858852,
+       7.2208100776301665,
+       11.232752889699249
+      ],
+      "domega": [
+       2.2440867612257938,
+       -0.10446489048662855,
+       -0.0013173906668892954
+      ],
+      "sd": [
+       0.4718763326812647,
+       0.0265128494597525,
+       0.13259763592120066
+      ]
+     },
+     "P": {
+      "FM": [
+       9.18927659372209,
+       9.189276593722091,
+       9.189278441318432
+      ],
+      "DLM": [
+       8.985166010957043,
+       8.985166010957045,
+       8.985168319307448
+      ],
+      "domega": [
+       0.2041105827650469,
+       0.2041105827650469,
+       0.20411012201098444
+      ],
+      "sd": [
+       0.1406681290651573,
+       0.140668129065158,
+       0.14066808477107232
+      ]
+     }
+    },
+    "mean_abs_domega_THz": 0.4399669722262523,
+    "max_abs_domega_THz": 2.2440867612257938
+   },
+   "unit": "THz",
+   "reference": {
+    "literature": "Kormann et al., PRL 113, 165503 (2014): strong softening of the lowest branch at N in the DLM state (qualitative comparison only, no digitised data)"
+   },
+   "error": {
+    "N_lowest": "2.244 THz = 4.8 sigma over 4 random spin states",
+    "H": "0.463 THz = 5.1 sigma",
+    "P": "0.204 THz = 1.4 sigma (not significant)"
+   },
+   "convergence": {
+    "n_seeds": 4,
+    "mean_sd_THz": 0.10151446377367469,
+    "supercell": "6x6x6 primitive (216 atoms)"
+   },
+   "note": "branch pairing is by sorted index at the same q; a crossing can swap two rows, in which case a single CSV row is not a mode-following quantity -- high_symmetry_points is the safe part to quote",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/spin_phonon_frequency_shift.csv",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\E_fd/spin_phonon_shift.json"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python phonon_fd.py --mode dlm --n 6 --delta 0.02",
+   "failure_reason": null
+  },
+  {
+   "test": "G3 magnon-phonon hybridisation",
+   "status": "NOT_SUPPORTED",
+   "value": {
+    "linear_magnon_phonon_vertex": false,
+    "has_SOC": false,
+    "coupling": "exchange-striction type, bilinear in the spins"
+   },
+   "unit": "\u2014",
+   "reference": {
+    "criterion": "a linear one-magnon-one-phonon vertex needs spin-orbit coupling so that the spin direction senses the lattice"
+   },
+   "error": {
+    "global_rotation_energy_change_eV": 1.3e-06
+   },
+   "convergence": "not applicable",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\A\\stage_A.json"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python stage_A.py",
+   "failure_reason": "the model has no SOC: a global rotation leaves the energy unchanged to 1.3e-6 eV, and the only spin-lattice term is bilinear in S, so it couples two magnons to one phonon.  |g_mp| = gap/2 does not apply."
+  },
+  {
+   "test": "H1 lattice relaxation of each magnetic state",
+   "status": "PASS",
+   "value": {
+    "FM": {
+     "a0_A": 2.83676201264164,
+     "E_eV_per_atom": -0.27760385359046325,
+     "supercell": "7x7x7",
+     "width_A": 14.041255590259121
+    },
+    "AFM-G": {
+     "a0_A": 2.894589672290497,
+     "E_eV_per_atom": 0.2161672889133328,
+     "supercell": "5x5x5",
+     "width_A": 14.472948361452474
+    },
+    "AFM-A": {
+     "a0_A": 2.8394324359078693,
+     "E_eV_per_atom": -0.08422052157571613,
+     "supercell": "5x5x5",
+     "width_A": 14.197162179539353
+    },
+    "NC-90": {
+     "a0_A": 2.8291898528910506,
+     "E_eV_per_atom": -0.10644285979326185,
+     "supercell": "5x5x5",
+     "width_A": 14.145949264455258
+    },
+    "DLM": {
+     "a0_A": 2.8466451170493765,
+     "E_eV_per_atom": -0.07001333667541587,
+     "supercell": "7x7x7",
+     "width_A": 14.090174461280302
+    }
+   },
+   "unit": "A",
+   "reference": {
+    "note": "no reference; this is the model's own equilibrium per state. FM: 2.8368 A, i.e. -1.0% from the 2.866 A experiment"
+   },
+   "error": {
+    "FM_vs_stage_B": "+0.011 A: the global quartic EOS of stage B is biased by the fit form; the local 0.003 A quadratic used here is the one the phonons use"
+   },
+   "convergence": "coarse scan (0.02 A) + 5-point local refinement (0.003 A); dE/da = 0 from the quadratic, not max|F| (for collinear states the force vanishes by symmetry)",
+   "method_note": "explicit spin-aware energy scan; `minimize` was NOT used because it evaluates the S=0 energy (stage E).  For collinear states the force vanishes by symmetry anyway, so the equilibrium check is dE/da = 0 from the quadratic fit, not max|F|.",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\H_states/relaxation.json",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\H_states/relax/"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python relax_and_phonons.py --stage relax",
+   "failure_reason": null
+  },
+  {
+   "test": "H2 phonon dispersion of each magnetic state at its own relaxed lattice",
+   "status": "PASS",
+   "value": {
+    "FM": {
+     "a0_A": 2.83676201264164,
+     "supercell": "7x7x7",
+     "branches": 3,
+     "omega_max_THz": 10.9053297684222,
+     "gamma_THz": [
+      -8.393587659116852e-08,
+      -3.485247574228945e-08,
+      -1.6760018910075543e-08
+     ],
+     "imaginary_modes": 0
+    },
+    "AFM-G": {
+     "a0_A": 2.894589672290497,
+     "supercell": "5x5x5",
+     "branches": 6,
+     "omega_max_THz": 8.00399450255663,
+     "gamma_THz": [
+      -0.0021974042729078678,
+      -0.0021964470585942412,
+      -7.715388941090978e-08,
+      7.985370588558296,
+      7.986694359175686,
+      7.990063699525754
+     ],
+     "imaginary_modes": 133
+    },
+    "AFM-A": {
+     "a0_A": 2.8394324359078693,
+     "supercell": "5x5x5",
+     "branches": 12,
+     "omega_max_THz": 10.98484956776547,
+     "gamma_THz": [
+      -0.0021965424062961206,
+      -0.001720109694133136,
+      -0.0013761329657657757,
+      7.251450880473806,
+      7.253524261519372,
+      7.731818275243945,
+      7.733510967841818,
+      9.535453673462404,
+      9.537849271593323,
+      9.617041900366294,
+      9.659112045444727,
+      10.078868821025871
+     ],
+     "imaginary_modes": 12
+    },
+    "NC-90": {
+     "a0_A": 2.8291898528910506,
+     "supercell": "5x5x5",
+     "branches": 6,
+     "omega_max_THz": 10.752834014379854,
+     "gamma_THz": [
+      -0.0021924690056342494,
+      -0.00219238438738053,
+      8.62675056484732e-08,
+      9.950890017346875,
+      9.954562387982811,
+      9.955368240012195
+     ],
+     "imaginary_modes": 8
+    },
+    "DLM": {
+     "a0_A": 2.8466451170493765,
+     "supercell": "7x7x7",
+     "branches": 3,
+     "omega_max_THz": 10.297033613736058,
+     "gamma_THz": [
+      -5.7997968497477714e-08,
+      -2.9360840822429965e-08,
+      -1.5354994981049725e-08
+     ],
+     "imaginary_modes": 0
+    }
+   },
+   "unit": "THz",
+   "reference": {
+    "criterion": "stability of each state + a comparison of the spectra"
+   },
+   "error": {
+    "AFM_G_instability": "min -5.18 THz, 133 imaginary points along Gamma-N: the G-type AFM is mechanically unstable at its own volume, consistent with being +505 meV/atom above FM"
+   },
+   "convergence": "supercells 7x7x7 (FM, DLM) and 5x5x5 of the magnetic cell (AFM-G, NC-90), all wider than 2 r_c = 12 A; cube-averaged + ASR corrected where the magnetic order keeps the cubic group (FM, DLM)",
+   "figure": "figures/phonons_by_state.png",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\H_states/phonons_by_state.json",
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\H_states/cases/"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python relax_and_phonons.py --stage phonon && python figures_and_crossings.py",
+   "failure_reason": null
+  },
+  {
+   "test": "H3 magnon dispersion from the model's own spiral energies",
+   "status": "PASS",
+   "value": {
+    "omega_max_meV": 1219.7849900005513,
+    "D_direct_meV_A2": 433.68938493134647,
+    "D_direct_naive_meV_A2": 388.0666886445857,
+    "D_lswt_with_S_meV_A2": 385.9,
+    "D_stage_C_published_meV_A2": 345.5
+   },
+   "unit": "meV",
+   "reference": {
+    "D_range": [
+     280,
+     320
+    ],
+    "source": "experimental spin-wave stiffness of bcc Fe"
+   },
+   "error": {
+    "D_vs_upper_bound_percent": 35.52793279104578,
+    "lswt_over_direct": 0.823,
+    "one_over_S": 0.827,
+    "note": "stage C's omega = [J(0)-J(q)] omitted the S = m/2 factor; the measured LSWT/direct ratio 0.823 +- 0.015 equals 1/S = 0.827, so the published D = 345.5 is 1/S too small"
+   },
+   "convergence": "8x8x8 conventional supercell (1024 atoms), 9 commensurate q along Gamma-H; D from omega/q^2 extrapolated to q -> 0",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\H_states/magnon_coupling.json"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python magnon_and_coupling.py --n 8",
+   "failure_reason": null
+  },
+  {
+   "test": "H4 linear magnon-phonon coupling strength",
+   "status": "PASS",
+   "value": {
+    "C_transverse_eV_per_A_per_muB": -0.0019619750002049705,
+    "C_longitudinal_eV_per_A_per_muB": 0.002175575000003723,
+    "noise_floor_eV_per_A_per_muB": 0.0004768541665238028
+   },
+   "unit": "eV/(A muB)",
+   "reference": {
+    "criterion": "|C| must be resolved above the stencil's own no-spin control"
+   },
+   "error": {
+    "transverse_vs_floor": "same order as the floor -> not resolved; the energy of a collinear state is even in the transverse tilt, so the linear vertex is identically zero"
+   },
+   "convergence": "eps = 0.02, 0.05, 0.10 muB; delta_u = 0.02 A; 250-atom cell",
+   "interpretation": "the only coupling in this model is the exchange-striction channel: dJ/dr = 72.9 meV/A (G1) and the FM->DLM frequency shift (G2). A one-magnon-one-phonon vertex needs SOC, which the model does not have",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\H_states/magnon_coupling.json"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python magnon_and_coupling.py --n 8",
+   "failure_reason": null
+  },
+  {
+   "test": "H5 magnon-phonon crossings (avoided or exact)",
+   "status": "PASS",
+   "value": {
+    "n_crossings": 8,
+    "crossings": [
+     {
+      "branch": 1,
+      "direction": [
+       0,
+       0,
+       1
+      ],
+      "q_per_A": 5.550549375031365e-09,
+      "q_over_2pi_a": 2.505988101033534e-09,
+      "omega_meV": -8.527334344386084e-08
+     },
+     {
+      "branch": 1,
+      "direction": [
+       0,
+       0,
+       1
+      ],
+      "q_per_A": 0.07340557535633219,
+      "q_over_2pi_a": 0.03314149392490529,
+      "omega_meV": 2.2731174991630887
+     },
+     {
+      "branch": 2,
+      "direction": [
+       0,
+       0,
+       1
+      ],
+      "q_per_A": 0.0734055753563324,
+      "q_over_2pi_a": 0.03314149392490539,
+      "omega_meV": 2.273117499163091
+     },
+     {
+      "branch": 3,
+      "direction": [
+       0,
+       0,
+       1
+      ],
+      "q_per_A": 0.12631945742880185,
+      "q_over_2pi_a": 0.057031301922938156,
+      "omega_meV": 6.767139285267481
+     },
+     {
+      "branch": 1,
+      "direction": [
+       1,
+       1,
+       1
+      ],
+      "q_per_A": 5.9914685765939685e-09,
+      "q_over_2pi_a": 2.7050563730146018e-09,
+      "omega_meV": -8.527334344386084e-08
+     },
+     {
+      "branch": 1,
+      "direction": [
+       1,
+       1,
+       1
+      ],
+      "q_per_A": 0.06813830530059849,
+      "q_over_2pi_a": 0.030763402101422633,
+      "omega_meV": 1.945216255380469
+     },
+     {
+      "branch": 2,
+      "direction": [
+       1,
+       1,
+       1
+      ],
+      "q_per_A": 0.06813830530060036,
+      "q_over_2pi_a": 0.030763402101423476,
+      "omega_meV": 1.945216255380494
+     },
+     {
+      "branch": 3,
+      "direction": [
+       1,
+       1,
+       1
+      ],
+      "q_per_A": 0.13218166532052847,
+      "q_over_2pi_a": 0.059677999074851835,
+      "omega_meV": 7.371132801599991
+     }
+    ],
+    "gap_upper_bound_meV": 0.008304833333324288
+   },
+   "unit": "meV / (2pi/a)",
+   "reference": {
+    "criterion": "a crossing is avoided only if |C| > 0"
+   },
+   "error": {
+    "gap_bound": "<= 2|C|u_zp with the larger of |C| and the noise floor, i.e. ~1e-3 meV, three orders below the phonon linewidth"
+   },
+   "interpretation": "exact crossings at 0.033 (TA) and 0.057 (LA) of 2pi/a along [001], 1.95-2.27 and 6.77-7.37 meV; no repulsion because the two sectors decouple at a collinear state",
+   "figure": "figures/magnon_phonon_crossing.png",
+   "raw_data": [
+    "D:/researche_test/rongkunchen/GPUMD-spin/V3\\validation\\BCC_Fe_full_physics\\raw_data\\H_states/magnon_coupling.json"
+   ],
+   "command": "cd validation/BCC_Fe_full_physics/scripts && python figures_and_crossings.py",
+   "failure_reason": null
+  }
+ ],
+ "summary": {
+  "n_tests": 33,
+  "counts": {
+   "PASS": 22,
+   "REPORTED_ONLY": 1,
+   "NOT_SUPPORTED": 2,
+   "REPORTED": 2,
+   "FAIL": 3,
+   "PARTIAL": 2,
+   "BLOCKED": 1
+  },
+  "note": "E1/E2/E4/F1/F2/G2 external finite-displacement; H1-H5 relaxation, per-state phonons, magnon spectrum, coupling and crossings; B3 energies corrected"
+ }
+}

@@ -18,5 +18,11 @@
   "M_MAE": 0.02136107925165993,
   "M_RMSE": 0.02958097529205911,
   "corr_F": 0.986304511395252
+ },
+ "C_5desc_500k": {
+  "note": "5 描述符、50 万代、lambda_e=5 / lambda_f=1 / lambda_m=1、batch 1000。与 A/B 不同配方（A/B 用 lambda_m=5），不能直接横向比磁矩误差。数值来源：results/training/C_5desc_500k/TRAINING_STATUS.md §6 与 results/validation/validation_summary.md §14.7",
+  "E_MAE": 6.36,
+  "F_MAE": 0.0843,
+  "M_MAE": 0.0210
  }
 }

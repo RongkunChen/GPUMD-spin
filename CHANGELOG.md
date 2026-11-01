@@ -98,3 +98,34 @@
 
 ### Known gaps
 See `docs/13_VALIDATION_AND_KNOWN_ISSUES.md`.
+
+## 2026-11-01（晚）— 50 万代训练与全物理验证结果入库
+
+新增 `results/`（259 个文件，7.0 MB），收录当天最新的训练与测试产物：
+
+- `results/training/C_5desc_500k/` — 50 万代训练（5 描述符，$\lambda_e=5$、
+  $\lambda_f=1$、$\lambda_m=1$、batch 1000）的执行记录 `TRAINING_STATUS.md`、
+  `loss.out`、训练输入 `nep.in`、最终权重 `nep.txt`、5 个检查点权重，以及
+  `series/SERIES_REPORT.md` 与逐检查点 `gen_{110k,200k,300k,400k,500k}.json`。
+- `results/validation/` — `validation_summary.md`（BCC Fe 全物理 33 条：
+  22 PASS / 3 FAIL / 2 PARTIAL / 2 NOT_SUPPORTED / 1 BLOCKED / 3 REPORTED）、
+  `validation_results.json`、`benchmark_comparison.csv`、27 张 `figures/` 图、
+  复现命令 `reproduce_commands.ps1` 与 `scripts/`。
+- `results/tests/` — r18 三套测试（smoke 7 项 / acceptance 5 项 / physics 5 项）
+  的原始输出（已排除 `traj.xyz` 与 `nep.restart`）。
+- `models/C_5desc_500k_model.nep.txt` + `models/nep_C_5desc.in` — 50 万代最终权重与训练输入；
+  `models/DEV_METRICS.json` 增加 C 条目。
+
+**结论（`results/validation/validation_summary.md` §14.7–14.8）**：
+
+| 量 | 110k → 500k | 判断 |
+|---|---|---|
+| DEV E MAE (meV/atom) | 6.53 → 6.36 | 20 万代后饱和 |
+| DEV F MAE (eV/Å) | 0.0872 → 0.0843 | 单调缓降 |
+| Heisenberg 拟合残差 (meV/atom) | 0.82 → 0.41 | **−50%**，磁子谱的 LSWT 描述更可信 |
+| D 直接螺旋 (meV·Å²) | 466.8 → 440.8 | −6%，但归一到 2.2 μB 后仍 353 → 359（>320 上界） |
+| $m_{eq}$ (μB) / $a_0$ (Å) / $T_c$ (K) | +11% / −1.1% / 912（−13%） | 全部卡住不动 |
+| AFM-A 最软支 (THz) | −0.003 → −1.648 | **200k 起出现真软模并饱和** |
+
+→ **可用于 FM α-Fe 的磁–声耦合与热输运研究；不可用于 AFM-A / AFM-G 态的声子。**
+多训 40 万代只改善"描述能力"，没有改善"物理"：偏硬与磁矩偏大是配方层面的系统偏差。

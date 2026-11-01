@@ -1,0 +1,285 @@
+
+***************************************************************
+*                 Welcome to use GPUMD                        *
+*     (Graphics Processing Units Molecular Dynamics)          *
+*                   version 5.9.1                             *
+*              This is the gpumd executable                   *
+***************************************************************
+
+
+---------------------------------------------------------------
+Compiling options:
+---------------------------------------------------------------
+
+DEBUG is off: Use different PRNG seeds for different runs.
+
+---------------------------------------------------------------
+GPU information:
+---------------------------------------------------------------
+
+number of GPUs = 1
+Device id:                   0
+    Device name:             NVIDIA GeForce RTX 4060 Ti
+    Compute capability:      8.9
+    Amount of global memory: 7.99561 GB
+    Number of SMs:           34
+
+---------------------------------------------------------------
+Started running GPUMD.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Started initializing positions and related parameters.
+---------------------------------------------------------------
+
+Number of atoms is 128.
+Use periodic boundary conditions along x.
+Use periodic boundary conditions along y.
+Use periodic boundary conditions along z.
+Box matrix h = [a, b, c] is
+    1.1464000000e+01    0.0000000000e+00    0.0000000000e+00
+    0.0000000000e+00    1.1464000000e+01    0.0000000000e+00
+    0.0000000000e+00    0.0000000000e+00    1.1464000000e+01
+Inverse box matrix g = inv(h) is
+    8.7229588276e-02    0.0000000000e+00    0.0000000000e+00
+    0.0000000000e+00    8.7229588276e-02    0.0000000000e+00
+    0.0000000000e+00    0.0000000000e+00    8.7229588276e-02
+Specify initial velocities here.
+Have no grouping method.
+Spin vectors (3 components per atom) are read from model.xyz.
+There is only one atom type.
+    128 atoms of type 0.
+Initialized velocities with data in model.xyz.
+
+---------------------------------------------------------------
+Finished initializing positions and related parameters.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Started executing the commands in run.in.
+---------------------------------------------------------------
+
+Use the NEP4 potential with 1 atom type.
+    type 0 (Fe with Z = 26).
+    spin-aware model, spin types: 1
+    spin descriptor layout (v3): Sex San Sdm Sia Smag
+    spin |S| scaling = 0.234149.
+    spin descriptor blocks (ablation model): Sex Smag
+    spin descriptor declaration (symmetry version 1, layout 3)
+      block P   T   spin rotation  rank  inv.sym.  cubic     at |S|=0
+      Sex   +   +   invariant      2     -         -         smooth
+      San   +   +   joint only     2     -         -         smooth   [off]
+      Sdm   -   +   joint only     2     zero      -         smooth   [off]
+      Sia   +   +   joint only     2     -         zero      smooth   [off]
+      Smag  +   +   invariant      0     -         -         kink
+      Smag is continuous but not differentiable at |S| = 0: its n = 0
+      channel is linear in |S|, so the torque there is a limit, not a
+      derivative.  The kernels evaluate the exact derivative for every
+      |S| > 0 and write 0 only at |S| = 0 (a convention at a point where
+      no derivative exists).  The unit direction switches to a
+      scale-invariant normalisation below |S| = 1.0e-8f.
+      Every enabled block is invariant under an independent global rotation
+      of the spins: the model is in the no-SOC class.
+    radial cutoff = 6 A.
+    angular cutoff = 3 A.
+    MN_radial = 88.
+    enlarged MN_radial = 110.
+    enlarged MN_angular = 18.
+    n_max_radial = 4.
+    n_max_angular = 4.
+    basis_size_radial = 8.
+    basis_size_angular = 8.
+    l_max_3body = 4.
+    has_q_222 = 0.
+    has_q_1111 = 0.
+    has_q_112 = 0.
+    has_q_123 = 0.
+    has_q_233 = 0.
+    has_q_134 = 0.
+    WARNING: this is a spin-aware NEP model. Add a 'spin:R:3' column to
+             model.xyz, otherwise it is evaluated in the S = 0 limit.
+    ANN = 50-30-1.
+    number of neural network parameters = 1561.
+    number of descriptor parameters = 90.
+    total number of parameters = 1651.
+Time step for this run is 0.05 fs.
+    max distance per step = 100 A.
+Use NVT ensemble for this run.
+    choose the Langevin method.
+    initial temperature is 1200 K.
+    final temperature is 1200 K.
+    tau_T is 100 time_step.
+Spin dynamics (LLG): gamma = 3.0385, alpha = 0.3, temperature = 1200 K (stochastic LLG, seed 7).
+Spin dynamics is active for 128 atoms.
+Dump extended XYZ.
+    every 200 steps.
+    into file traj.xyz.
+    has spin.
+    for the whole system.
+Global PRNG seed is 7.
+Run 10000 steps.
+    1000 steps completed.
+    spin work budget [progress]:  W_rot = -8811.03 eV  W_noise = +8849.3 eV  W_ext = +0 eV  ->  dU = +38.2694 eV
+    spin work: W_noise/|W_rot| = 1.004  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.200000, mean |torque| = 1.072742e-01, rms |B_perp| = 6.665067e-02, |sum S| / sum|S| = 0.572684
+    spin dynamics: T_prec = 2 pi/(gamma |B|) = 31.03 fs (gamma = 3.0385, rms|B_perp| = 0.06665 eV/uB)
+    spin dynamics: SLLG field rms sigma = 0.4127 eV/uB = 6.19 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 6.2 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin dynamics: T_Gilbert = 1/(gamma alpha |B| dt) = 329.2 steps = 0.01646 ps
+    spin dynamics:   equilibration: N steps cover N/329.2 Gilbert times; a magnetisation
+                     average needs >= 50 tau_M = >= 1.646e+05 steps (tau_M ~ 10 tau_G, P111b)
+    spin dynamics:   discretisation x = gamma|B|dt/alpha = 0.03375  (need x <~ 2; C24)  [OK]
+    2000 steps completed.
+    spin work budget [progress]:  W_rot = -17562.1 eV  W_noise = +17618.8 eV  W_ext = +0 eV  ->  dU = +56.7409 eV
+    spin work: W_noise/|W_rot| = 1.003  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.200000, mean |torque| = 9.386569e-02, rms |B_perp| = 6.484319e-02, |sum S| / sum|S| = 0.420522
+    spin dynamics: T_prec = 2 pi/(gamma |B|) = 31.89 fs (gamma = 3.0385, rms|B_perp| = 0.06484 eV/uB)
+    spin dynamics: SLLG field rms sigma = 0.4127 eV/uB = 6.36 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 6.4 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin dynamics: T_Gilbert = 1/(gamma alpha |B| dt) = 338.4 steps = 0.01692 ps
+    spin dynamics:   equilibration: N steps cover N/338.4 Gilbert times; a magnetisation
+                     average needs >= 50 tau_M = >= 1.692e+05 steps (tau_M ~ 10 tau_G, P111b)
+    spin dynamics:   discretisation x = gamma|B|dt/alpha = 0.03284  (need x <~ 2; C24)  [OK]
+    3000 steps completed.
+    spin work budget [progress]:  W_rot = -26321.7 eV  W_noise = +26392.6 eV  W_ext = +0 eV  ->  dU = +70.9151 eV
+    spin work: W_noise/|W_rot| = 1.003  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.200000, mean |torque| = 7.939550e-02, rms |B_perp| = 5.294119e-02, |sum S| / sum|S| = 0.185823
+    spin dynamics: T_prec = 2 pi/(gamma |B|) = 39.06 fs (gamma = 3.0385, rms|B_perp| = 0.05294 eV/uB)
+    spin dynamics: SLLG field rms sigma = 0.4127 eV/uB = 7.8 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin dynamics: T_Gilbert = 1/(gamma alpha |B| dt) = 414.4 steps = 0.02072 ps
+    spin dynamics:   equilibration: N steps cover N/414.4 Gilbert times; a magnetisation
+                     average needs >= 50 tau_M = >= 2.072e+05 steps (tau_M ~ 10 tau_G, P111b)
+    spin dynamics:   discretisation x = gamma|B|dt/alpha = 0.02681  (need x <~ 2; C24)  [OK]
+    4000 steps completed.
+    spin work budget [progress]:  W_rot = -35086.4 eV  W_noise = +35160.9 eV  W_ext = +0 eV  ->  dU = +74.5361 eV
+    spin work: W_noise/|W_rot| = 1.002  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.200000, mean |torque| = 8.371914e-02, rms |B_perp| = 5.622709e-02, |sum S| / sum|S| = 0.362691
+    spin dynamics: T_prec = 2 pi/(gamma |B|) = 36.78 fs (gamma = 3.0385, rms|B_perp| = 0.05623 eV/uB)
+    spin dynamics: SLLG field rms sigma = 0.4127 eV/uB = 7.34 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.3 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin dynamics: T_Gilbert = 1/(gamma alpha |B| dt) = 390.2 steps = 0.01951 ps
+    spin dynamics:   equilibration: N steps cover N/390.2 Gilbert times; a magnetisation
+                     average needs >= 50 tau_M = >= 1.951e+05 steps (tau_M ~ 10 tau_G, P111b)
+    spin dynamics:   discretisation x = gamma|B|dt/alpha = 0.02847  (need x <~ 2; C24)  [OK]
+    5000 steps completed.
+    spin work budget [progress]:  W_rot = -43854.6 eV  W_noise = +43935 eV  W_ext = +0 eV  ->  dU = +80.37 eV
+    spin work: W_noise/|W_rot| = 1.002  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.200000, mean |torque| = 7.533554e-02, rms |B_perp| = 5.358928e-02, |sum S| / sum|S| = 0.191520
+    spin dynamics: T_prec = 2 pi/(gamma |B|) = 38.59 fs (gamma = 3.0385, rms|B_perp| = 0.05359 eV/uB)
+    spin dynamics: SLLG field rms sigma = 0.4127 eV/uB = 7.7 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.7 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin dynamics: T_Gilbert = 1/(gamma alpha |B| dt) = 409.4 steps = 0.02047 ps
+    spin dynamics:   equilibration: N steps cover N/409.4 Gilbert times; a magnetisation
+                     average needs >= 50 tau_M = >= 2.047e+05 steps (tau_M ~ 10 tau_G, P111b)
+    spin dynamics:   discretisation x = gamma|B|dt/alpha = 0.02714  (need x <~ 2; C24)  [OK]
+    6000 steps completed.
+    spin work budget [progress]:  W_rot = -52642.8 eV  W_noise = +52722.6 eV  W_ext = +0 eV  ->  dU = +79.777 eV
+    spin work: W_noise/|W_rot| = 1.002  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.200000, mean |torque| = 7.016885e-02, rms |B_perp| = 4.347750e-02, |sum S| / sum|S| = 0.034885
+    spin dynamics: T_prec = 2 pi/(gamma |B|) = 47.56 fs (gamma = 3.0385, rms|B_perp| = 0.04348 eV/uB)
+    spin dynamics: SLLG field rms sigma = 0.4127 eV/uB = 9.49 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 9.5 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin dynamics: T_Gilbert = 1/(gamma alpha |B| dt) = 504.6 steps = 0.02523 ps
+    spin dynamics:   equilibration: N steps cover N/504.6 Gilbert times; a magnetisation
+                     average needs >= 50 tau_M = >= 2.523e+05 steps (tau_M ~ 10 tau_G, P111b)
+    spin dynamics:   discretisation x = gamma|B|dt/alpha = 0.02202  (need x <~ 2; C24)  [OK]
+    7000 steps completed.
+    spin work budget [progress]:  W_rot = -61440 eV  W_noise = +61511.5 eV  W_ext = +0 eV  ->  dU = +71.5338 eV
+    spin work: W_noise/|W_rot| = 1.001  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.200000, mean |torque| = 8.552320e-02, rms |B_perp| = 5.677932e-02, |sum S| / sum|S| = 0.264258
+    spin dynamics: T_prec = 2 pi/(gamma |B|) = 36.42 fs (gamma = 3.0385, rms|B_perp| = 0.05678 eV/uB)
+    spin dynamics: SLLG field rms sigma = 0.4127 eV/uB = 7.27 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.3 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin dynamics: T_Gilbert = 1/(gamma alpha |B| dt) = 386.4 steps = 0.01932 ps
+    spin dynamics:   equilibration: N steps cover N/386.4 Gilbert times; a magnetisation
+                     average needs >= 50 tau_M = >= 1.932e+05 steps (tau_M ~ 10 tau_G, P111b)
+    spin dynamics:   discretisation x = gamma|B|dt/alpha = 0.02875  (need x <~ 2; C24)  [OK]
+    8000 steps completed.
+    spin work budget [progress]:  W_rot = -70203.3 eV  W_noise = +70270.2 eV  W_ext = +0 eV  ->  dU = +66.8243 eV
+    spin work: W_noise/|W_rot| = 1.001  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.200000, mean |torque| = 7.618002e-02, rms |B_perp| = 4.685450e-02, |sum S| / sum|S| = 0.126478
+    spin dynamics: T_prec = 2 pi/(gamma |B|) = 44.13 fs (gamma = 3.0385, rms|B_perp| = 0.04685 eV/uB)
+    spin dynamics: SLLG field rms sigma = 0.4127 eV/uB = 8.81 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 8.8 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin dynamics: T_Gilbert = 1/(gamma alpha |B| dt) = 468.3 steps = 0.02341 ps
+    spin dynamics:   equilibration: N steps cover N/468.3 Gilbert times; a magnetisation
+                     average needs >= 50 tau_M = >= 2.341e+05 steps (tau_M ~ 10 tau_G, P111b)
+    spin dynamics:   discretisation x = gamma|B|dt/alpha = 0.02373  (need x <~ 2; C24)  [OK]
+    9000 steps completed.
+    spin work budget [progress]:  W_rot = -78960.3 eV  W_noise = +79023.6 eV  W_ext = +0 eV  ->  dU = +63.2171 eV
+    spin work: W_noise/|W_rot| = 1.001  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.200000, mean |torque| = 7.651597e-02, rms |B_perp| = 5.279912e-02, |sum S| / sum|S| = 0.267780
+    spin dynamics: T_prec = 2 pi/(gamma |B|) = 39.16 fs (gamma = 3.0385, rms|B_perp| = 0.0528 eV/uB)
+    spin dynamics: SLLG field rms sigma = 0.4127 eV/uB = 7.82 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin dynamics: T_Gilbert = 1/(gamma alpha |B| dt) = 415.5 steps = 0.02078 ps
+    spin dynamics:   equilibration: N steps cover N/415.5 Gilbert times; a magnetisation
+                     average needs >= 50 tau_M = >= 2.078e+05 steps (tau_M ~ 10 tau_G, P111b)
+    spin dynamics:   discretisation x = gamma|B|dt/alpha = 0.02674  (need x <~ 2; C24)  [OK]
+    10000 steps completed.
+    spin work budget [progress]:  W_rot = -87721.6 eV  W_noise = +87779.6 eV  W_ext = +0 eV  ->  dU = +57.9581 eV
+    spin work: W_noise/|W_rot| = 1.001  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.200000, mean |torque| = 7.690911e-02, rms |B_perp| = 5.205749e-02, |sum S| / sum|S| = 0.180803
+    spin dynamics: T_prec = 2 pi/(gamma |B|) = 39.72 fs (gamma = 3.0385, rms|B_perp| = 0.05206 eV/uB)
+    spin dynamics: SLLG field rms sigma = 0.4127 eV/uB = 7.93 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.9 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin dynamics: T_Gilbert = 1/(gamma alpha |B| dt) = 421.5 steps = 0.02107 ps
+    spin dynamics:   equilibration: N steps cover N/421.5 Gilbert times; a magnetisation
+                     average needs >= 50 tau_M = >= 2.107e+05 steps (tau_M ~ 10 tau_G, P111b)
+    spin dynamics:   discretisation x = gamma|B|dt/alpha = 0.02636  (need x <~ 2; C24)  [OK]
+    spin work budget [end of run]:  W_rot = -87721.6 eV  W_noise = +87779.6 eV  W_ext = +0 eV  ->  dU = +57.9581 eV
+    spin work: W_noise/|W_rot| = 1.001  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+
+---------------------------------------------------------------
+Time used for this run = 23.3731 second.
+Speed of this run = 54763.9 atom*step/second.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Finished executing the commands in run.in.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Time used = 23.417301 s.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Finished running GPUMD.
+---------------------------------------------------------------
+

@@ -1,0 +1,5 @@
+potential nep.txt
+time_step 0.0001
+ensemble nve
+dump_thermo 1
+run 1

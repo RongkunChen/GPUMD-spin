@@ -40,6 +40,9 @@ models/         Fe 模型（mask17 2 描述符、mask31 5 描述符、r17 基线
 tests/          smoke.py（7 项）、acceptance.py（5 项）、physics_checks.py（5 项物理）
 tools/          physics_validation/（长时间稳定性、热流审计）、numerical_accuracy/
 scripts/        批量运行脚本
+results/        实测产物：training/C_5desc_500k/（50 万代训练 + 逐检查点电池）、
+                validation/（BCC Fe 全物理验证 33 条 + 27 张图）、
+                tests/（smoke / acceptance / physics 的原始输出）
 ```
 
 ## 能力一览
@@ -69,6 +72,9 @@ scripts/        批量运行脚本
    $T_c\approx950/850$ K。
 3. **时间步政策**：0.05 fs 参考 / 0.1 fs 平衡 / 0.2 fs 不建议；适用范围写死。
 4. **文档与示例补全**：`docs/theory/` 15 篇 + 缺陷日志 F19–F27 + 三个可跑的物理示例。
+5. **50 万代训练与全物理验证入库**（`results/`，2026-11-01 晚）：DEV E 6.36 meV/atom、
+   DEV F 0.0843 eV/Å；20 万代后饱和，拟合残差 −50%，但 D 归一后仍 359、磁矩 +11%、
+   $T_c$ 912 K 卡住，AFM-A 出现 −1.6…−1.8 THz 软模。详见 `VALIDATION_REPORT.md` §9。
 
 ## 三条必须知道的限制
 

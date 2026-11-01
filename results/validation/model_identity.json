@@ -1,0 +1,49 @@
+{
+ "checked_at": "2026-11-01T02:44:50",
+ "project_root": "D:/researche_test/rongkunchen/GPUMD-spin/V3",
+ "source_dir": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/staging/GPUMD-spin-V3-SOURCE-v3.1.0-r18",
+ "source_dir_note": "r18 delivery tree (VERSION=r18); identical src/ to the shipped ZIP 1e12d040\u2026",
+ "version": "r18",
+ "executables": {
+  "gpumd.exe": {
+   "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/win_staging/bin/gpumd.exe",
+   "sha256": "090defe9b2744bedcdca3f75cc3c5d033e29bd7057f889c45026663978b73456",
+   "bytes": 21666304
+  },
+  "nep.exe": {
+   "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/win_staging/bin/nep.exe",
+   "sha256": "225eac480ffafb4400885d475634207d61cef23e3af0f0e4b49ebe2fdf1cf954",
+   "bytes": 4373504
+  }
+ },
+ "models": {
+  "A_2desc_recommended": {
+   "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/staging/GPUMD-spin-V3-SOURCE-v3.1.0-r18\\models/fe_mask17_2desc_r18.nep.txt",
+   "sha256": "9d5799f820702ab68e7281f34b086d760293af28350b3e9b76bcb9083f8dc240",
+   "bytes": 30798
+  },
+  "B_5desc": {
+   "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/staging/GPUMD-spin-V3-SOURCE-v3.1.0-r18\\models/fe_mask31_5desc_r18.nep.txt",
+   "sha256": "9b5eab00af1dadfbcc5e98c4dfb81211fc38ac9301363d538d8b8c741611f3ee",
+   "bytes": 30776
+  },
+  "r17_baseline": {
+   "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18/staging/GPUMD-spin-V3-SOURCE-v3.1.0-r18\\models/fe_mask17_r17_baseline.nep.txt",
+   "sha256": "15ad896e60769d16106faff9d4f24d06c3c800efd64a0a87c0458f606c0e15f9",
+   "bytes": 30791
+  }
+ },
+ "primary_model": "A_2desc_recommended",
+ "dataset": {
+  "path": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\Fe/test.xyz",
+  "sha256": "dc1570d9cf603779268aa4799e23b1e2a6b31972842e1b066709cfa4b044f728",
+  "bytes": 2484208
+ },
+ "build": {
+  "compiler": "MSVC 2022 + CUDA 12.8 (V12.8.61)",
+  "arch": "sm_89",
+  "gpu": "NVIDIA GeForce RTX 4060 Ti",
+  "os": "Windows 11"
+ },
+ "provenance": "binaries from fresh-extract build of GPUMD-spin-V3-SOURCE-v3.1.0-r18.zip (see final_delivery_20261101_r18/fresh_build/build_fresh.json)"
+}

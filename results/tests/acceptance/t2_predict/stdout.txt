@@ -1,0 +1,145 @@
+
+***************************************************************
+*                 Welcome to use GPUMD                        *
+*    (Graphics Processing Units Molecular Dynamics)           *
+*                   version 5.9.1                             *
+*              This is the nep executable                     *
+***************************************************************
+
+
+---------------------------------------------------------------
+GPU information:
+---------------------------------------------------------------
+
+number of GPUs = 1
+Device id:                   0
+    Device name:             NVIDIA GeForce RTX 4060 Ti
+    Compute capability:      8.9
+    Amount of global memory: 7.99561 GB
+    Number of SMs:           34
+
+---------------------------------------------------------------
+Started running nep.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Started reading nep.in.
+---------------------------------------------------------------
+
+Spin descriptor blocks enabled: Sex Smag   <-- ABLATION: the other blocks are switched off in both the
+      energy and the force/torque; the model is NOT a general
+      spin potential and should only be used for this study.
+    spin descriptor declaration (symmetry version 1, layout 3)
+      block P   T   spin rotation  rank  inv.sym.  cubic     at |S|=0
+      Sex   +   +   invariant      2     -         -         smooth
+      San   +   +   joint only     2     -         -         smooth   [off]
+      Sdm   -   +   joint only     2     zero      -         smooth   [off]
+      Sia   +   +   joint only     2     -         zero      smooth   [off]
+      Smag  +   +   invariant      0     -         -         kink
+      Smag is continuous but not differentiable at |S| = 0: its n = 0
+      channel is linear in |S|, so the torque there is a limit, not a
+      derivative.  The kernels evaluate the exact derivative for every
+      |S| > 0 and write 0 only at |S| = 0 (a convention at a point where
+      no derivative exists).  The unit direction switches to a
+      scale-invariant normalisation below |S| = 1.0e-8f.
+      Every enabled block is invariant under an independent global rotation
+      of the spins: the model is in the no-SOC class.
+Input or default parameters:
+    (default) model_type = potential.
+    (input)   calculation mode = predict.
+    (default) use NEP version 4.
+    (input)   number of atom types = 1.
+        type 0 (Fe with Z = 26) has cutoffs (6 A, 3 A).
+    (default) will not add the ZBL potential.
+    (input)   n_max_radial = 4.
+    (input)   n_max_angular = 4.
+    (input)   basis_size_radial = 8.
+    (input)   basis_size_angular = 8.
+    (input)   l_max_3body = 4.
+    (input)   has_q_222 = 0.
+    (input)   has_q_1111 = 0.
+    (input)   has_q_112 = 0.
+    (input)   has_q_123 = 0.
+    (input)   has_q_233 = 0.
+    (input)   has_q_134 = 0.
+    (input)   number of neurons = 30.
+    (default) lambda_1 = 0.0406324975.
+    (default) lambda_2 = 0.0406324975.
+    (input)   lambda_e = 1.
+    (input)   lambda_f = 1.
+    (default) lambda_v = 0.100000001.
+    (default) atomic_v = 0.
+    (default) lambda_shear = 1.
+    (default) force_delta = 0.
+    (input)   batch size = 8.
+    (input)   population size = 10.
+    (input)   random seed = 2026.
+    (input)   maximum number of generations = 40.
+    (default) save potential every N = 100000 generations.
+    (input)   output_interval = 20 generations.
+Some calculated parameters:
+    number of radial descriptor components = 5.
+    number of angular descriptor components = 20.
+    number of spin descriptor components = 25 (Sex, San, Sdm, Sia, Smag).
+    spin is enabled for atom types: Fe
+    magnetic torque (spin) loss weight lambda_m = 1.
+    total number of descriptor components = 50.
+    NN architecture = 50-30-1.
+    number of NN parameters to be optimized = 1561.
+    number of descriptor parameters to be optimized = 90.
+    total number of parameters to be optimized = 1651.
+
+---------------------------------------------------------------
+Finished reading nep.in.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Started reading train.xyz
+---------------------------------------------------------------
+
+Number of configurations = 1.
+Spin |S| scaling (from nep.in) = 0.25.
+Number of devices = 1
+Number of batches = 1
+Hello, I changed the batch_size from 8 to 1.
+
+Batch 0:
+Number of configurations = 1.
+
+---------------------------------------------------------------
+Constructing train_set in device  0.
+Total number of atoms = 16.
+Number of atoms in the largest configuration = 16.
+Number of configurations having virial = 0.
+Radial descriptor with a cutoff of 6 A:
+    Minimum number of neighbors for one atom = 65.
+    Maximum number of neighbors for one atom = 70.
+    Average number of neighbors for one atom = 66.75.
+Angular descriptor with a cutoff of 3 A:
+    Minimum number of neighbors for one atom = 13.
+    Maximum number of neighbors for one atom = 14.
+    Average number of neighbors for one atom = 13.75.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Time used for initialization = 0.019 s.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Started predicting.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Time used for predicting = 0.023 s.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Finished running nep.
+---------------------------------------------------------------
+

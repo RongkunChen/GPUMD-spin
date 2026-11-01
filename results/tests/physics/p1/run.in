@@ -1,0 +1,6 @@
+potential nep.txt
+time_step 0.001 1
+ensemble nve
+spin_llg gamma=3.0385 alpha=0 T=0
+dump_thermo 1
+run 1

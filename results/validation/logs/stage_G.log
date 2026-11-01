@@ -1,0 +1,39 @@
+  eps=-0.02 a=2.7689  J1=52.71 meV  rms=1.071
+  eps=-0.01 a=2.7972  J1=55.71 meV  rms=1.063
+  eps=+0.00 a=2.8254  J1=58.60 meV  rms=0.933
+  eps=+0.01 a=2.8537  J1=60.08 meV  rms=0.697
+  eps=+0.02 a=2.8819  J1=59.45 meV  rms=0.426
+{
+ "strains": [
+  -0.02,
+  -0.01,
+  0.0,
+  0.01,
+  0.02
+ ],
+ "a0": 2.825436436868364,
+ "moment": 2.416913934285072,
+ "ncell": 6,
+ "g_shell1_1pct": 89.31991500606249,
+ "g_shell1_2pct": 68.79642644228427,
+ "relative_change_percent": 22.97750570226719,
+ "fit_rms_meV": [
+  1.0711600622558752,
+  1.0633499107682194,
+  0.9325578400845459,
+  0.6974091255145183,
+  0.4264476641237745
+ ],
+ "criterion": "|g(+-1%) - g(+-2%)| / |g(+-1%)| < 20%",
+ "note": "uniform (hydrostatic) strain only: dJ_n/dr at the shell radius.  A site-resolved g_ij,kalpha would need displacements of individual atoms for every bond, which is O(N^2) single-point runs; the hydrostatic derivative is the isotropic component of that tensor.",
+ "status": "PARTIAL"
+}
+{
+ "G2": {
+  "status": "BLOCKED",
+  "reason": "The Hessian is evaluated in the S=0 limit (force/force.cu::compute_single_potential drops the spin argument); an FM and a DLM cell produce bit-identical omega2.out (md5 7b584a12c3570f14bc4c72f780fda2e4 vs 7b584a12c3570f14bc4c72f780fda2e4).  A FM-DLM frequency shift is therefore not measurable with this build, and computing one would require a spin-aware dynamical matrix that does not exist.",
+  "consequence": "delta_omega(q,nu) and lambda(q,nu) not reported"
+ },
+ "G3": {
+  "status": "NOT_SUPPORTED",
+  "reason": "The model's only spin-lattice coupling is the exchange-striction type: the bond stiffness depends on S_i.S_j (descriptor Sex/San), whic

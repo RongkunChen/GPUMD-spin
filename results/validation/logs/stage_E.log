@@ -1,0 +1,36 @@
+  rep 4 0 2a4520a08c01e785aa78a0978ba81567
+  rep 6 0 7b584a12c3570f14bc4c72f780fda2e4
+  rep 8 0 89f9dbc78adac50280ef27b89d3fcad6
+  disp 0.005 0
+  disp 0.02 0
+  S=0 probe 0
+{
+ "a0": 2.825436436868364,
+ "moment": 2.416913934285072,
+ "spin_aware": false,
+ "spin_aware_evidence": {
+  "fm_md5": "7b584a12c3570f14bc4c72f780fda2e4",
+  "s0_md5": "7b584a12c3570f14bc4c72f780fda2e4",
+  "note": "identical md5 -> the Hessian path does not read the spin columns; documented in force/force.cu::compute_single_potential"
+ },
+ "gamma_frequencies_THz": [
+  -0.00178855,
+  0.0305623,
+  0.0708298
+ ],
+ "n_branches": 3,
+ "max_acoustic_frequency_THz": 3828.09,
+ "imaginary_modes": 6,
+ "imaginary_fraction": 0.003992015968063872,
+ "acoustic_sum_rule_max_abs_THz": 0.0708298,
+ "stability_status": "FAIL",
+ "convergence": {
+  "rep4_vs_rep6_THz": 219.8800000000001,
+  "rep6_vs_rep8_THz": 36.273000000000025,
+  "disp_0p005_vs_0p010_THz": 3.8899999999998727,
+  "disp_0p010_vs_0p020_THz": 14.849999999999909
+ },
+ "criterion": "no imaginary modes; supercell and displacement convergence |df| < 0.1 THz",
+ "scope": "S=0 limit of the production potential; NOT the FM ground-state phonon dispersion (see spin_aware_evidence)",
+ "status": "FAIL"
+}

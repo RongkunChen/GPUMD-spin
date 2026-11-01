@@ -1,0 +1,260 @@
+
+***************************************************************
+*                 Welcome to use GPUMD                        *
+*     (Graphics Processing Units Molecular Dynamics)          *
+*                   version 5.9.1                             *
+*              This is the gpumd executable                   *
+***************************************************************
+
+
+---------------------------------------------------------------
+Compiling options:
+---------------------------------------------------------------
+
+DEBUG is off: Use different PRNG seeds for different runs.
+
+---------------------------------------------------------------
+GPU information:
+---------------------------------------------------------------
+
+number of GPUs = 1
+Device id:                   0
+    Device name:             NVIDIA GeForce RTX 4060 Ti
+    Compute capability:      8.9
+    Amount of global memory: 7.99561 GB
+    Number of SMs:           34
+
+---------------------------------------------------------------
+Started running GPUMD.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Started initializing positions and related parameters.
+---------------------------------------------------------------
+
+Number of atoms is 16.
+Use periodic boundary conditions along x.
+Use periodic boundary conditions along y.
+Use periodic boundary conditions along z.
+Box matrix h = [a, b, c] is
+    5.5508823900e+00    0.0000000000e+00    0.0000000000e+00
+    6.9043270000e-02    5.7972844900e+00    0.0000000000e+00
+    7.7743450000e-02    6.1873250000e-02    5.5155324700e+00
+Inverse box matrix g = inv(h) is
+    1.8015153803e-01    0.0000000000e+00    0.0000000000e+00
+   -2.1455306019e-03    1.7249455357e-01    0.0000000000e+00
+   -2.5152333367e-03   -1.9350441131e-03    1.8130615774e-01
+Specify initial velocities here.
+Have no grouping method.
+Spin vectors (3 components per atom) are read from model.xyz.
+There is only one atom type.
+    16 atoms of type 0.
+Initialized velocities with data in model.xyz.
+
+---------------------------------------------------------------
+Finished initializing positions and related parameters.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Started executing the commands in run.in.
+---------------------------------------------------------------
+
+Use the NEP4 potential with 1 atom type.
+    type 0 (Fe with Z = 26).
+    spin-aware model, spin types: 1
+    spin descriptor layout (v3): Sex San Sdm Sia Smag
+    spin |S| scaling = 0.25.
+    spin descriptor blocks (ablation model): Sex Smag
+    spin descriptor declaration (symmetry version 1, layout 3)
+      block P   T   spin rotation  rank  inv.sym.  cubic     at |S|=0
+      Sex   +   +   invariant      2     -         -         smooth
+      San   +   +   joint only     2     -         -         smooth   [off]
+      Sdm   -   +   joint only     2     zero      -         smooth   [off]
+      Sia   +   +   joint only     2     -         zero      smooth   [off]
+      Smag  +   +   invariant      0     -         -         kink
+      Smag is continuous but not differentiable at |S| = 0: its n = 0
+      channel is linear in |S|, so the torque there is a limit, not a
+      derivative.  The kernels evaluate the exact derivative for every
+      |S| > 0 and write 0 only at |S| = 0 (a convention at a point where
+      no derivative exists).  The unit direction switches to a
+      scale-invariant normalisation below |S| = 1.0e-8f.
+      Every enabled block is invariant under an independent global rotation
+      of the spins: the model is in the no-SOC class.
+    radial cutoff = 6 A.
+    angular cutoff = 3 A.
+    MN_radial = 70.
+    enlarged MN_radial = 88.
+    enlarged MN_angular = 18.
+    n_max_radial = 4.
+    n_max_angular = 4.
+    basis_size_radial = 8.
+    basis_size_angular = 8.
+    l_max_3body = 4.
+    has_q_222 = 0.
+    has_q_1111 = 0.
+    has_q_112 = 0.
+    has_q_123 = 0.
+    has_q_233 = 0.
+    has_q_134 = 0.
+    WARNING: this is a spin-aware NEP model. Add a 'spin:R:3' column to
+             model.xyz, otherwise it is evaluated in the S = 0 limit.
+    ANN = 50-30-1.
+    number of neural network parameters = 1561.
+    number of descriptor parameters = 90.
+    total number of parameters = 1651.
+Time step for this run is 0.5 fs.
+Use NVE ensemble for this run.
+Dump thermo every 50 steps.
+Dump extended XYZ.
+    every 50 steps.
+    into file traj.xyz.
+    has spin.
+    for the whole system.
+Dump restart every 50 steps.
+Spin dynamics (LLG): gamma = 3.04, alpha = 0.5, temperature = 300 K (stochastic LLG, seed 4242).
+Spin dynamics is active for 16 atoms.
+S08B: spin restart state loaded from spin_restart.bin
+      physics step 50, 100 SLLG steps, RNG restored, anchor restored, digest 74b5c9fe4346f0fc
+Run 25 steps.
+WARNING: spin_llg is running with a finite temperature (300 K) while the
+         lattice is integrated in the NVE ensemble.  The SLLG thermal field
+         is a net energy source (risk R12): measured on CrN at 1024 atoms it
+         pumps +6.8e-08 eV/atom/step into the lattice and the run heats up
+         monotonically (+4.5 eV over 3e5 steps); the same protocol at 128
+         atoms cools, because the injection only wins when it exceeds the
+         Gilbert damping sink.  Use a lattice thermostat (e.g.
+         'ensemble nvt_lan 300 300 100'), or set the spin temperature to 0,
+         or keep the run below ~3e5 steps.
+    2 steps completed.
+    spin work budget [progress]:  W_rot = -1.29054 eV  W_noise = +1.29054 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.551338
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    4 steps completed.
+    spin work budget [progress]:  W_rot = -2.45936 eV  W_noise = +2.45936 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.533911
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    6 steps completed.
+    spin work budget [progress]:  W_rot = -3.91835 eV  W_noise = +3.91835 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.538301
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    8 steps completed.
+    spin work budget [progress]:  W_rot = -4.98714 eV  W_noise = +4.98714 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.557817
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    10 steps completed.
+    spin work budget [progress]:  W_rot = -6.20306 eV  W_noise = +6.20306 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.539192
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    12 steps completed.
+    spin work budget [progress]:  W_rot = -7.67029 eV  W_noise = +7.67029 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.516968
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    14 steps completed.
+    spin work budget [progress]:  W_rot = -9.36801 eV  W_noise = +9.36801 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.524682
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    16 steps completed.
+    spin work budget [progress]:  W_rot = -11.1034 eV  W_noise = +11.1034 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.417148
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    18 steps completed.
+    spin work budget [progress]:  W_rot = -12.368 eV  W_noise = +12.368 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.482565
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    20 steps completed.
+    spin work budget [progress]:  W_rot = -13.4555 eV  W_noise = +13.4555 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.469264
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    22 steps completed.
+    spin work budget [progress]:  W_rot = -14.544 eV  W_noise = +14.544 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.455268
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    24 steps completed.
+    spin work budget [progress]:  W_rot = -15.9507 eV  W_noise = +15.9507 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+    spin: mean |S| = 2.242356, mean |torque| = 0.000000e+00, rms |B_perp| = 0.000000e+00, |sum S| / sum|S| = 0.438569
+    spin dynamics: SLLG field rms sigma = 0.0779 eV/uB = 7.79e+28 x rms|B_perp|
+    spin dynamics: NOTE sigma/rms|B_perp| = 7.8e+28 > 3, so the F16 spin-work budget
+                   (spin_work.out, columns 2-4) is dominated by the damping of the
+                   noise field: use only its SIGN and TREND, never its absolute
+                   value.  Raise gamma towards 3.04 to make the splitting meaningful.
+    spin work budget [end of run]:  W_rot = -16.5262 eV  W_noise = +16.5262 eV  W_ext = +0 eV  ->  dU = +0 eV
+    spin work: W_noise/|W_rot| = 1.000  (diagnostic only -- biased by O(gamma dt |B|/alpha); judge equilibrium by a stationary potential energy, not by this ratio)
+
+---------------------------------------------------------------
+Time used for this run = 0.310908 second.
+Speed of this run = 1286.56 atom*step/second.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Finished executing the commands in run.in.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Time used = 0.363093 s.
+---------------------------------------------------------------
+
+
+---------------------------------------------------------------
+Finished running GPUMD.
+---------------------------------------------------------------
+

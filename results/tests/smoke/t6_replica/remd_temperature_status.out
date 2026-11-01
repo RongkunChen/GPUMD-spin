@@ -1,0 +1,6 @@
+# GPUMD REMD temperature status output format 1
+# Replica-to-temperature mapping after any exchange at the reported step.
+# step temperature_label_of_replica_0 temperature_label_of_replica_1
+0 0 1
+50 1 0
+100 0 1

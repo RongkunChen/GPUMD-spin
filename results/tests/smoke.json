@@ -1,0 +1,63 @@
+{
+ "binaries": {
+  "gpumd": {
+   "path": "C:\\Users\\28433\\AppData\\Local\\Temp\\gpumd_r18_final\\GPUMD-spin-V3-SOURCE-v3.1.0-r18\\src\\gpumd.exe",
+   "sha256": "090defe9b2744bedcdca3f75cc3c5d033e29bd7057f889c45026663978b73456"
+  },
+  "nep": {
+   "path": "C:\\Users\\28433\\AppData\\Local\\Temp\\gpumd_r18_final\\GPUMD-spin-V3-SOURCE-v3.1.0-r18\\src\\nep.exe",
+   "sha256": "225eac480ffafb4400885d475634207d61cef23e3af0f0e4b49ebe2fdf1cf954"
+  },
+  "replica": {
+   "path": "C:\\Users\\28433\\AppData\\Local\\Temp\\gpumd_r18_final\\GPUMD-spin-V3-SOURCE-v3.1.0-r18\\src\\gpumd_replica.exe",
+   "sha256": "a17482a57171dd52bc219ba18643e2a3836769184312f4efbeb73e382378ac32"
+  }
+ },
+ "tests": {
+  "T1_single_point": {
+   "rc": [
+    0,
+    0
+   ],
+   "E_gpumd_eV": -0.73352956772,
+   "E_nep_eV": -0.7335362434384,
+   "abs_diff_eV": 6.675718399962172e-06,
+   "pass": true
+  },
+  "T2_conservative": {
+   "rc": 0,
+   "n_frames": 10,
+   "spin_norm_drift": 8.125184409735198e-07,
+   "pass": true
+  },
+  "T3a_geometric": {
+   "rc": 0,
+   "n_frames": 10,
+   "spin_norm_drift": 8.408866292164419e-08,
+   "pass": true
+  },
+  "T3b_midpoint": {
+   "rc": 0,
+   "n_frames": 10,
+   "spin_norm_drift": 7.210908248289627e-08,
+   "pass": true
+  },
+  "T4_dimer": {
+   "rc": 0,
+   "PE_eV": 3.6480026245,
+   "finite": true,
+   "pass": true
+  },
+  "T5_restart": {
+   "max_spin_diff": 0.0,
+   "rng_stream_identical": true,
+   "pass": true
+  },
+  "T6_replica": {
+   "rc": 0,
+   "exchange_file": true,
+   "pass": true
+  }
+ },
+ "pass": true
+}

@@ -1,0 +1,8 @@
+potential nep.txt
+time_step 0.5
+ensemble nve
+dump_thermo 10
+dump_xyz 20 t.xyz spin
+dump_restart 100000
+spin_llg gamma=3.04 alpha=0.5 T=300 seed=7 scheme=midpoint
+run 200

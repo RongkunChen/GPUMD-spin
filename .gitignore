@@ -27,8 +27,8 @@ venv/
 .DS_Store
 Thumbs.db
 
-# ---- GPUMD 运行输出 ----
-thermo.out
-restart.bin
-dump_*.out
+# ---- GPUMD 运行输出（仅仓库根；results/ 下的同名文件是实测产物，必须入库）----
+/thermo.out
+/restart.bin
+/dump_*.out
 *.out.tmp

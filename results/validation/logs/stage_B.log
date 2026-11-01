@@ -1,0 +1,68 @@
+  a=2.70  E/atom=-0.041717
+  a=2.72  E/atom=-0.109673
+  a=2.74  E/atom=-0.164458
+  a=2.76  E/atom=-0.206523
+  a=2.78  E/atom=-0.236546
+  a=2.80  E/atom=-0.255086
+  a=2.82  E/atom=-0.262845
+  a=2.84  E/atom=-0.260653
+  a=2.86  E/atom=-0.249444
+  a=2.88  E/atom=-0.230219
+  a=2.90  E/atom=-0.204053
+  a=2.92  E/atom=-0.172088
+  a=2.94  E/atom=-0.135541
+  a=2.96  E/atom=-0.095696
+  a=2.98  E/atom=-0.053895
+  a=3.00  E/atom=-0.011481
+B1: {'E0_eV': -14.10366, 'V0_A3': 607.97856, 'B0_eV_A3': 0.59613, 'Bp': 11.34105, 'B0_GPa': 95.51043, 'rms_residual_eV': 0.11097, 'max_residual_eV': 0.19288, 'n_atoms': 54, 'a0_A': 2.82385, 'experiment_a0_A': 2.866, 'a0_rel_error_percent': -1.47072, 'experiment_B0_GPa': 170.0, 'B0_rel_error_percent': -43.81739, 'criterion': '|a0 - 2.866|/2.866 <= 2%', 'status': 'PASS'}
+  m=0.0  E/atom=+0.191852
+  m=0.1  E/atom=+0.187221
+  m=0.2  E/atom=+0.179315
+  m=0.3  E/atom=+0.168341
+  m=0.4  E/atom=+0.154462
+  m=0.5  E/atom=+0.137821
+  m=0.6  E/atom=+0.118576
+  m=0.7  E/atom=+0.096917
+  m=0.8  E/atom=+0.073086
+  m=0.9  E/atom=+0.047391
+  m=1.0  E/atom=+0.020211
+  m=1.1  E/atom=-0.008016
+  m=1.2  E/atom=-0.036807
+  m=1.3  E/atom=-0.065658
+  m=1.4  E/atom=-0.094086
+  m=1.5  E/atom=-0.121649
+  m=1.6  E/atom=-0.147973
+  m=1.7  E/atom=-0.172741
+  m=1.8  E/atom=-0.195686
+  m=1.9  E/atom=-0.216547
+  m=2.0  E/atom=-0.235023
+  m=2.1  E/atom=-0.250731
+  m=2.2  E/atom=-0.263168
+  m=2.3  E/atom=-0.271685
+  m=2.4  E/atom=-0.275482
+  m=2.5  E/atom=-0.273604
+  m=2.6  E/atom=-0.264944
+  m=2.7  E/atom=-0.248231
+  m=2.8  E/atom=-0.222033
+  m=2.9  E/atom=-0.184737
+  m=3.0  E/atom=-0.134552
+B2: {'m_eq_muB': 2.41691, 'E0_eV_per_atom': -0.27556, 'curvature_eV_per_muB2': 0.56738, 'grid_min_muB': 2.4, 'grid_min_E_eV_per_atom': -0.27548, 'experiment_muB': 2.2, 'rel_error_percent': 9.85972, 'criterion': '|m_eq - 2.2|/2.2 <= 10%', 'status': 'PASS', 'a0_A': 2.82385, 'method': 'argmin_m E(m) at fixed bcc structure: the energy is evaluated by the production model for each input |S|; |S| is not integrated by the SLLG (see A6), so this is a variational prediction of the local moment'}
+  FM                         E/atom=-0.275592
+  NM_zero_moment             E/atom=+0.191853
+  AFM_I_001_layers           E/atom=-0.178738
+  AFM_II_bcc_sublattice      E/atom=-0.226298
+  NC_cant_90deg              E/atom=-0.255830
+  NC_domain_wall_180         E/atom=-0.217400
+  DLM_random_1               E/atom=-0.068572
+  DLM_random_2               E/atom=-0.066187
+  DLM_random_3               E/atom=-0.050786
+  FM                         relaxed E/atom=0.183101
+  NM_zero_moment             relaxed E/atom=0.183101
+  AFM_I_001_layers           relaxed E/atom=0.183101
+  AFM_II_bcc_sublattice      relaxed E/atom=0.183101
+  NC_cant_90deg              relaxed E/atom=0.183101
+  NC_domain_wall_180         relaxed E/atom=0.183101
+  DLM_random_1               relaxed E/atom=0.183101
+  DLM_random_2               relaxed E/atom=0.183101
+  DLM_random_3               relaxed E/atom=0.183101
+B3 lowest: FM [('FM', 0.0), ('NC_cant_90deg', 19.763), ('AFM_II_bcc_sublattice', 49.295), ('NC_domain_wall_180', 58.192), ('AFM_I_001_layers', 96.854), ('DLM_random_1', 207.02), ('DLM_random_2', 209.406), ('DLM_random_3', 224.806), ('NM_zero_moment', 467.445)]

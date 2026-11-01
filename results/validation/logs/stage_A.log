@@ -1,0 +1,66 @@
+{
+ "stage": "A",
+ "model": "D:/researche_test/rongkunchen/GPUMD-spin/V3\\final_delivery_20261101_r18\\staging\\GPUMD-spin-V3-SOURCE-v3.1.0-r18\\models\\fe_mask17_2desc_r18.nep.txt",
+ "A1_model_loads": {
+  "status": "PASS",
+  "E_eV": -4.2110921144,
+  "atoms": 16,
+  "note": "gpumd.exe exited 0 and wrote thermo.out"
+ },
+ "A2_energy_force": {
+  "status": "PASS",
+  "rc": 0,
+  "max_force_eV_A": 6.74517601e-05,
+  "note": "perfect bcc cell: forces vanish by symmetry (checked they are finite)"
+ },
+ "A2_force_displaced": {
+  "rc": 0,
+  "F_on_atom0": [
+   -0.151746408,
+   -6.70695678e-05,
+   -5.58251284e-05
+  ],
+  "expected_direction": "-x (restoring)",
+  "sign_ok": true
+ },
+ "A3_spin_participates": {
+  "status": "PASS",
+  "E_FM": -4.2110921144,
+  "E_zero_moment": 3.0788911581,
+  "E_AFM2": -2.7322744131,
+  "dE_FM_minus_zero_moment_eV": -7.289983272500001,
+  "dE_AFM2_minus_FM_eV_per_atom": 0.09242610633125004,
+  "note": "energy changes when the spin columns change -> spins are read by the model"
+ },
+ "A4_numerical_floor": {
+  "E_translated": -4.2110922337,
+  "dE_translation_eV": -1.1929999921278522e-07,
+  "criterion": "|dE| <= max(10*floor, 1e-5) eV",
+  "note": "global translation is a no-op in PBC; its dE is the float32 evaluation floor of the model"
+ },
+ "A4_global_rotation": {
+  "status": "PASS",
+  "criterion": "|dE_rot| <= 1.00e-05 eV (10x the measured translation floor)",
+  "E_unrotated": -4.2110921144,
+  "E_rotated_z": -4.2110934258,
+  "E_rotated_random": -4.2110916376,
+  "max_abs_diff_eV": 1.311399999259777e-06,
+  "note": "mask17 has no SOC-like term -> energy must be invariant under a global rotation of all spins; this is a symmetry test, not a fit"
+ },
+ "A5_local_tilt": {
+  "status": "PASS",
+  "points": [
+   {
+    "theta_deg": 2.0,
+    "E_eV": -4.2109003067,
+    "dE_meV": 0.19180770000026826
+   },
+   {
+    "theta_deg": 5.0,
+    "E_eV": -4.2098786831,
+    "dE_meV": 1.2134313000000674
+   },
+   {
+    "theta_deg": 10.0,
+    "E_eV": -4.2062363625,
+    "dE_meV": 4.8557519000

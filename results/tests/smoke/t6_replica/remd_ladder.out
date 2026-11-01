@@ -1,0 +1,5 @@
+# REMD temperature ladder report
+# target_acceptance 2.0000000000e-01
+# temp_i temp_j temperature_i temperature_j attempts accepted acceptance_ratio average_probability meets_target
+0 1 300 400 2 2 1.0000000000e+00 1.0000000000e+00 1
+# summary all_pairs_meet_target 1
