@@ -2,19 +2,26 @@
 
 ## 6.1 运动方程
 
-固定模长的 Landau–Lifshitz–Gilbert 方程：
+代码求解的是固定模长的 **Landau–Lifshitz (LL)** 形式，**不是** Gilbert 形式
+（与 `docs/06_SPIN_LLG_FDT_AND_MC.md` §1 一致）：
 
 $$
-\dot{\mathbf S}_i=-\frac{\gamma}{1+\alpha^2}\,\mathbf S_i\times\mathbf H_i^{\rm eff}
--\frac{\gamma\alpha}{1+\alpha^2}\,\mathbf S_i\times\big(\mathbf S_i\times\mathbf H_i^{\rm eff}\big),
+\frac{d\mathbf S_i}{dt}=-\,\gamma\,\mathbf S_i\times\mathbf B_i
+-\frac{\gamma\alpha}{|\mathbf S_i|}\,\mathbf S_i\times\big(\mathbf S_i\times\mathbf B_i\big),
 \qquad
-\mathbf H_i^{\rm eff}=-\frac{\partial E}{\partial\mathbf S_i}=\mathbf g_i .
+\mathbf B_i=-\frac{\partial E}{\partial\mathbf S_i}=\mathbf g_i .
 \tag{6.1}
 $$
 
-* $\gamma$：rad·$\mu_B$/(eV·ps)，Fe 用 3.0385，`spin_llg gamma=` 可改。
-* $\alpha$：无量纲阻尼。
-* 单位：$\mathbf H$ 用 eV/$\mu_B$，则 $\dot{\mathbf S}$ 为 $\mu_B$/ps。
+* $\gamma$：代码里的 `gamma`，单位 $\mu_B$/(eV·fs)，物理值 $g\mu_B/\hbar\approx3.0385$
+  （$g=2$），`spin_llg gamma=` 可改。
+* $\alpha$：无量纲 Gilbert 阻尼。
+* **约定（最容易写错的一处）**：这里的 `gamma` 是 LL 的 $\gamma_{\rm LL}$，与 Gilbert
+  形式的关系为 $\gamma_{\rm LL}=\gamma_G/(1+\alpha^2)$。若把方程改写成 Gilbert 形式
+  （两个系数都带 $1/(1+\alpha^2)$），数学上等价，但**不能再**给噪声振幅额外乘一次
+  $1/(1+\alpha^2)$——那正是 (6.4)(6.5) 中 $1/(1+\alpha^2)$ 的来源（Stage04 冻结结论）。
+* 单位：$\mathbf B$ 用 eV/$\mu_B$，时间步长用 **fs**，故 $d\mathbf S/dt$ 为 $\mu_B$/fs。
+  `spin_llg` 用的 $\Delta t$ 就是 MD 时间步长，代码内部已是 fs（`src/spin/spin.cuh`）。
 
 **结构性质**（由 (6.1) 直接可验）：
 
@@ -26,10 +33,14 @@ $$
 $$
 
 $$
-\dot E=\sum_i\mathbf g_i\cdot\dot{\mathbf S}_i
-=-\frac{\gamma\alpha}{1+\alpha^2}\sum_i\big|\mathbf S_i\times\mathbf g_i\big|^2\le0 .
+\dot E=\sum_i\frac{\partial E}{\partial\mathbf S_i}\cdot\dot{\mathbf S}_i
+=-\sum_i\mathbf g_i\cdot\dot{\mathbf S}_i
+=-\sum_i\frac{\gamma\alpha}{|\mathbf S_i|}\big|\mathbf S_i\times\mathbf g_i\big|^2\le0 .
 \tag{6.3}
 $$
+
+（因 $\mathbf g_i=-\partial E/\partial\mathbf S_i$，故 $\dot E=-\sum\mathbf g_i\cdot\dot{\mathbf S}_i$；
+阻尼项的 $1/|\mathbf S_i|$ 正是 (6.1) 的 LL 系数，不能像全局常数那样提出求和号。）
 
 进动项不做功，零温阻尼必然降低能量。这是 `spin_work.out` 里阻尼功符号的
 来源，也是判断"符号写反"的第一道检查。
@@ -39,21 +50,32 @@ $$
 要求平衡分布 $\propto\exp(-\beta E)$，FDT 给出
 
 $$
-\langle \xi_i^a(t)\xi_j^b(t')\rangle
-=\frac{2\alpha k_BT}{\gamma\,(1+\alpha^2)}\,
+\langle b_{i,a}(t)b_{j,b}(t')\rangle
+=\frac{2\alpha k_BT}{\gamma\,|\mathbf S_i|\,(1+\alpha^2)}\,
 \delta_{ij}\delta^{ab}\,\delta(t-t').
 \tag{6.4}
 $$
 
-离散后噪声幅度
+离散后（每原子、每笛卡尔分量各抽一次，故 $\mathrm{Var}(b_k)=\sigma^2$ 与 $k$ 无关）
 
 $$
-\sigma=\sqrt{\frac{2\alpha k_BT}{\gamma\,\Delta t\,(1+\alpha^2)}} .
+\sigma^2=\frac{2\alpha k_BT}{\gamma\,\Delta t\,(1+\alpha^2)\,|\mathbf S_i|},
+\qquad
+\mathbf b_i=\sigma\,\boldsymbol\xi_i,\quad \xi\sim\mathcal N(0,1).
 \tag{6.5}
 $$
 
-$(1+\alpha^2)$ 来自 Gilbert→LL 转换；漏掉它会让有效温度偏高 $1+\alpha^2$ 倍
-（$\alpha=0.3$ 时 9%）。Stage04 已冻结，r18 未改。
+分母的两个因子都不能漏：
+
+* $1/(1+\alpha^2)$ 来自 Gilbert→LL 转换；漏掉它会让有效温度偏高 $1+\alpha^2$ 倍
+  （$\alpha=0.3$ 时 9%，$\alpha=1$ 时 2 倍）。
+* $1/|\mathbf S_i|$ 是**逐原子**归一化，不是全局常数：`gpu_fill_thermal_field` 在 kernel
+  内用每个原子的实时 $|\mathbf S_i|$ 现算（`var = prefactor / |S_i|`），所以幅度随原子而异。
+  代价是 $|\mathbf S_i|\to0$ 时幅度发散（R11 已知边界）；好处是不需要把 $|\mathbf S|$ 当成常量
+  提出来，非等价磁矩体系才是对的。
+
+$k_B=8.617333262\times10^{-5}$ eV/K（`SPIN_KB_EV_PER_K`），$T$ 用 K，$\Delta t$ 用 fs。
+Stage04 已冻结，r18/r19 未改。
 
 **注意**：$\sigma\propto\Delta t^{-1/2}$，所以改时间步必须同时改噪声幅度。
 `spin_llg` 在内部用同一 $\Delta t$ 计算，用户无需手动改。
@@ -144,4 +166,4 @@ midpoint 偏差 +3.2%（在统计误差内），geometric 偏差 −1.6%（$\mat
 | 二聚体静态关联 vs 精确求积 | PASS（midpoint 3%） |
 | 耦合体系里"自旋温度 = 晶格温度" | **NOT_VERIFIED**：没有独立测温手段 |
 | 自旋波线宽 | NOT_IMPLEMENTED（13 篇） |
-| 外磁场 $-\sum\mathbf S_i\cdot\mathbf B$ | **未实现**：`spin_llg` 无 `B=` 关键字 |
+| 外磁场 $-\sum\mathbf S_i\cdot\mathbf B$ | **已实现**：`add_bfield <Bx> <By> <Bz> [<omega_in_THz>]`（`src/main_gpumd/run.cu`），单位 eV/$\mu_B$，必须先设 `spin_llg`；$\omega>0$ 为 THz 交变场（FMR / 自旋泵浦）。外场所做的功在功分解中单列一项 $W_{\rm ext}$ |

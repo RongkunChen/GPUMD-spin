@@ -125,11 +125,19 @@ $g_n$ 是另一组径向基。注意 $E^{\rm mag}$ **不含** $\mathbf S_i$ 与�
 | 速度（`thermo.out` 隐含） | — | Å/nat | 同上 |
 | 磁矩 $|\mathbf S|$ | $\mu_B$ | $\mu_B$ | — |
 | 磁梯度 $\mathbf g=-\partial E/\partial\mathbf S$ | eV/$\mu_B$ | eV/$\mu_B$ | — |
-| 旋磁比 $\gamma$ | rad·$\mu_B$/(eV·ps) | 同一数值 | 内部 $\times10^{-3}$ 转 rad·$\mu_B$/(eV·fs) |
+| 旋磁比 $\gamma$ | $\mu_B$/(eV·fs) | $\mu_B$/(eV·fs) | **无转换**：`Spin::parse` 直接 `atof`，无任何缩放 |
 | 动能 | — | eV | $\frac12 m v^2\times1.0364269\times10^{-4}$（$m$ 用 u，$v$ 用 Å/fs） |
 | 热流（`heat_flux.out`） | eV/(Å²·ps)？ | eV/(Å²·nat) | $\times 98.23$ **（归一化存疑，11 篇 §11.7）** |
 
 **动能那一行必须记住**：`thermo.out` 的 KE 已经乘过 $1.0364269\times10^{-4}$。
+
+**旋磁比那一行也必须记住**：$\gamma$ 的单位是 $\mu_B/(\mathrm{eV}\cdot\mathrm{fs})$，代码里
+**没有** ps→fs 的内部换算——`Spin::parse` 就是一句 `atof`（`src/spin/spin.cu`），
+`spin_llg` 给什么数值就按什么数值用。物理值 $g\mu_B/\hbar\approx3.0385$（$g=2$）
+正是按这个单位给的，见 `spin.cu` 中 `gamma_phys = 3.0385 // g*mu_B/hbar in mu_B/(eV fs)`。
+（旧版曾写作 rad·$\mu_B$/(eV·ps) 且"内部 $\times10^{-3}$"，与实现不符，已更正。）
+若按"per ps"的数值输入，自旋动力学会快 1000 倍：平衡量（$M$、$\chi$）看不出问题，
+但磁子寿命、$\kappa_{mm}$、磁化弛豫时间全部错掉。
 自己从 `dump_xyz` 的 Å/fs 速度重算时若漏掉它，KE 会大 $9.6\times10^{3}$ 倍；
 PV1 阶段就因为漏乘质量与漏乘该因子，两次算出荒谬的温度。
 
