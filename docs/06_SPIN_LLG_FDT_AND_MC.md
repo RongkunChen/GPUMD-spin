@@ -52,6 +52,7 @@ $$
 -\frac{g\Delta t\ \alpha}{|\mathbf m|}\ \mathbf m\times(\mathbf m\times\mathbf H),
 \quad \mathbf m=\frac{\mathbf S_n+\mathbf S_{n+1}}{2},
 $$
+
 $\mathbf H=\mathbf B\_{\rm det}(\mathbf m)+\mathbf b\_n+\mathbf B\_{\rm ext}$。
 **噪声每步只抽一次并在整个不动点迭代期间保持不变**（否则不是同一个随机格式）。
 精确算术下 $\mathbf S\_{n+1}-\mathbf S\_n\perp\mathbf m$ 且 $\mathbf S\_{n+1}+\mathbf S\_n=2\mathbf m$ → $|\mathbf S|$ 严格守恒。

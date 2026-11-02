@@ -44,6 +44,7 @@ $$
 \Pi_{\alpha\beta}=\sum_i \mathbf r_{i\alpha}F_{i\beta},\qquad
 \sigma_{\alpha\beta}=-\frac{\Pi_{\alpha\beta}}{V}\ \text{(符号依约定)}.
 $$
+
 单位：eV/Å³；`dump_xyz` 头部的 `stress=` 与 `virial=` 由同一 `gpu_total_virial` 派生。
 
 ## 4. 数值算法

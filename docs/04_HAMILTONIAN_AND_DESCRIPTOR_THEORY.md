@@ -64,9 +64,11 @@ $\sum\_{j}g\_n(r\_{ij})$ 权重下的一阶矩各向同性 → 该块**恒为零
 
 $q^{\rm mag}_n=(s|\mathbf S|)^{n+1}$。对 $n=0$： $q=s|\mathbf S|$，在 $\mathbf S=0$ 处方向导数依赖方向 → 不可微。
 生产核在 $|\mathbf S|\ge 10^{-8}\ \mu_B$ 用精确导数
+
 $$
 \frac{\partial q_n}{\partial \mathbf S}=(n+1)\ (s|\mathbf S|)^{n}\ s\ \frac{\mathbf S}{|\mathbf S|},
 $$
+
 在 $|\mathbf S|<10^{-8}$ 处写 0 —— 这是**约定**，不是导数。代码：`src/utilities/spin_descriptor_kernels.cuh`（三处实现一致），常量 `SPIN_MAG_MIN_MOMENT`。
 
 ## 4. 掩码与布局
