@@ -46,7 +46,7 @@ $$
 
 本版本实测（4 原子强交换场，100 fs）：
 
-| $\Delta t$/fs | $\max|\Delta E|/N$ | 纯晶格对照 | 末态 $|\Delta E|$ |
+| $\Delta t$/fs | $\max\vert \Delta E\vert /N$ | 纯晶格对照 | 末态 $\vert \Delta E\vert$ |
 |---|---|---|---|
 | 0.2 | $1.023\times10^{-5}$ | $3.77\times10^{-6}$ | $1.04\times10^{-6}$ |
 | 0.1 | $3.18\times10^{-6}$ | $1.44\times10^{-6}$ | $1.03\times10^{-6}$ |

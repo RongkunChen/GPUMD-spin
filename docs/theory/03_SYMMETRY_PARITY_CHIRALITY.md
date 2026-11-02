@@ -32,7 +32,7 @@ $$
 | San | **变**（依赖 $\hat{\mathbf r}$） | 与自旋一起转则不变 |
 | Sdm | **变**（三重积） | 同上 |
 | Sia | **变** | 同上 |
-| Smag | 不变（只有 $|\mathbf S|$） | 不变 |
+| Smag | 不变（只有 $\vert \mathbf S\vert$） | 不变 |
 
 所以只有 `mask17 = Sex|Smag` 的模型具有“自旋空间整体旋转不变性” → 它必须有一个 Goldstone 模
 （整体旋转零能）。实测：旋转 0.3 rad，$\Delta E=0.0$ eV（mask17），$\Delta E=-2.9\times10^{-3}$ eV（mask31）。

@@ -120,8 +120,7 @@ $E\approx105$ eV 时 float32 ulp 为 $7.6\times10^{-6}$ eV；取 $h=10^{-3}\,\mu
 
 ## 5.7 固定模长下只用切向分量
 
-SLLG 保持 $|\mathbf S_i|$ 不变，因此纵向分量 $\mathbf g_\parallel
-=\hat{\mathbf S}_i(\hat{\mathbf S}_i\cdot\mathbf g_i)$ 不产生运动：
+SLLG 保持 $|\mathbf S_i|$ 不变，因此纵向分量 $\mathbf g_\parallel=\hat{\mathbf S}_i(\hat{\mathbf S}_i\cdot\mathbf g_i)$ 不产生运动：
 $\mathbf S\times\mathbf g$ 对 $\mathbf g$ 的纵向部分恒为零。实现上仍然
 计算完整的 $\mathbf g$（训练需要它），但积分时只用到切向部分。
 后果：**纵向磁刚度不被动力学检验**，只被静态能量检验（P2 的 $E(|S|)$ 扫描）。

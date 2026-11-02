@@ -28,7 +28,7 @@ cd examples\synthetic
 
 - 输入：`nep.txt`（模型）、`model.xyz`（16 原子 + `spin:R:3`）。
 - 输出：`thermo.out`。第 1 行是表头，**第 3 列是 PE（eV，总量）**，第 2 列 KE。
-- 单位：时间 `time_step` 用 **fs**；能量 eV；磁矩 \(\mu_B\)；力 eV/Å；磁梯度 eV/\(\mu_B\)。
+- 单位：时间 `time_step` 用 **fs**；能量 eV；磁矩 $\mu_B$；力 eV/Å；磁梯度 eV/$\mu_B$。
 
 ## 2. 训练一个极小模型
 
@@ -115,7 +115,7 @@ run 200
 | `thermo.out` | T, KE, PE, 应力张量分量 | PE/KE 是**总量**不是每原子 |
 | `traj.xyz` | 每 `dump_xyz` 间隔一帧 | 头部 `Time=` 不是 `Step=` |
 | `restart.xyz` | 可直接当 `model.xyz` 用 | 只有 R,v,S；磁自由度另见 `spin_restart.bin` |
-| `spin_work.out` | \(W_{\rm rot},W_{\rm noise},W_{\rm ext}\) | 累积量，单位 eV |
+| `spin_work.out` | $W_{\rm rot},W_{\rm noise},W_{\rm ext}$ | 累积量，单位 eV |
 | `loss.out` | 训练损失分项 | 首列是 generation |
 
 ## 7. 示例目录
@@ -128,4 +128,4 @@ examples/
   replica/            run.in
 ```
 
-> 所有示例都用合成模型，绝对能量（\(\sim-0.73\) eV/16 原子）没有物理意义。
+> 所有示例都用合成模型，绝对能量（$\sim-0.73$ eV/16 原子）没有物理意义。

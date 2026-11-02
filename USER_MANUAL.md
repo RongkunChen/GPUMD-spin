@@ -218,8 +218,7 @@ gpumd.exe > stdout.txt
 ```
 
 `magnetization.out` 的 `|M|` 列直接给磁化强度，`chi` 列给磁化率
-（$=(\langle\mathbf M\cdot\mathbf M\rangle-\langle\mathbf M\rangle\cdot
-\langle\mathbf M\rangle)/(Nk_BT)$，单位 $\mu_B^2$/eV）。
+（$=(\langle\mathbf M\cdot\mathbf M\rangle-\langle\mathbf M\rangle\cdot\langle\mathbf M\rangle)/(Nk_BT)$，单位 $\mu_B^2$/eV）。
 
 **判据**：$|M|(T)$ 在 $T_c$ 附近陡降，$\chi$ 在 $T_c$ 出现峰。
 R18 的两个模型：A（mask17）$\approx950$ K，B（mask31）$\approx850$ K，实验 1043 K。
@@ -267,7 +266,7 @@ printf '...\nspin_llg gamma=3.0385 alpha=0 T=0 restart=spin_restart.bin\nrun 100
 | 能量 | eV | |
 | 力 | eV/Å | |
 | 速度（dump） | Å/fs | 内部是 Å/nat，要 ×10.1805 |
-| 自旋 $|\mathbf S|$ | $\mu_B$ | |
+| 自旋 $\vert \mathbf S\vert$ | $\mu_B$ | |
 | 磁梯度/力矩列 | eV/$\mu_B$ | `torque` 列存的是 $-\partial E/\partial\mathbf S$，不是 $\mathbf S\times\mathbf g$ |
 | 外磁场 | eV/$\mu_B$ | `add_bfield` |
 | 动能 | — | $\frac12 m v^2\times1.0364269\times10^{-4}$（$m$ 用 u，$v$ 用 Å/fs） |

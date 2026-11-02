@@ -17,7 +17,7 @@ $$
 \mathbf g_i\approx\texttt{spin\_forces\_vert}_i\ [\mathrm{eV/\mu_B}].
 $$
 
-`spin_forces_vert` 的字段名不可读作“已投影”：实测 \(|\mathbf w\!\cdot\!\mathbf u|/|\mathbf w|\) 中位 0.915，
+`spin_forces_vert` 的字段名不可读作“已投影”：实测 $|\mathbf w\!\cdot\!\mathbf u|/|\mathbf w|$ 中位 0.915，
 即标签以**纵向分量为主**。这一点必须在任何训练报告里写明。
 
 ## 2. 划分（输入状态隔离，不是轨迹级独立）
@@ -46,10 +46,10 @@ $$
 R^2=1-\frac{\sum(y^{\rm pred}-y^{\rm ref})^2}{\sum(y^{\rm ref}-\bar y^{\rm ref})^2}.
 $$
 
-- 能量：meV/atom；力：eV/Å（逐分量）；磁梯度：eV/\(\mu_B\)（逐分量）。
+- 能量：meV/atom；力：eV/Å（逐分量）；磁梯度：eV/$\mu_B$（逐分量）。
 - **置信区间按帧分块**（不是按原子分量，那会把相关性当独立样本）。
-- 磁矩方向分解：\(g_\parallel=\mathbf g\!\cdot\!\hat{\mathbf S}\)、\(g_\perp=|\mathbf g-g_\parallel\hat{\mathbf S}|\)；
-  角力矩 \(\boldsymbol\tau=\mathbf S\times\mathbf g\)（eV）。
+- 磁矩方向分解：$g_\parallel=\mathbf g\!\cdot\!\hat{\mathbf S}$、$g_\perp=|\mathbf g-g_\parallel\hat{\mathbf S}|$；
+  角力矩 $\boldsymbol\tau=\mathbf S\times\mathbf g$（eV）。
 
 ## 5. 本版本实测（2k / 8k 帧，20000 代；工程候选）
 
@@ -61,7 +61,7 @@ $$
 | m31 s2 | 2048 | 13.31 | 13.20 | 13.09 | 0.094 | 0.0240 |
 | m17 s1 | 8192 | 见 `phase_4` | — | — | — | — |
 
-（单位：E meV/atom，F eV/Å，g eV/\(\mu_B\)。）
+（单位：E meV/atom，F eV/Å，g eV/$\mu_B$。）
 
 ## 6. 禁止事项
 

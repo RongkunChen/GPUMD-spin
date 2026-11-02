@@ -94,7 +94,7 @@ $1.58\times10^{-6}$@4000 步（$\sqrt2=1.41$ 的量级）。
 
 Fe `mask17`、250 K、$\Delta t=0.05$ fs、$\alpha=0$、NVE、1024 原子：
 
-| 时长 | $\max|\Delta E|/N$ | 末态 $|\Delta E|/N$ | 后半段斜率 (eV/atom/ps) |
+| 时长 | $\max\vert \Delta E\vert /N$ | 末态 $\vert \Delta E\vert /N$ | 后半段斜率 (eV/atom/ps) |
 |---|---|---|---|
 | 1 ps | $5.94\times10^{-8}$ | $+2.86\times10^{-8}$ | 1 ps 太短，不可靠 |
 | 5 ps | $9.02\times10^{-8}$ | $+8.95\times10^{-8}$ | $+4.74\times10^{-9}$ |

@@ -123,7 +123,7 @@ $g_n$ 是另一组径向基。注意 $E^{\rm mag}$ **不含** $\mathbf S_i$ 与�
 | 力 | eV/Å | eV/Å | — |
 | 速度（`dump_xyz velocity`） | Å/fs | Å/nat | $\times 10.1805$ |
 | 速度（`thermo.out` 隐含） | — | Å/nat | 同上 |
-| 磁矩 $|\mathbf S|$ | $\mu_B$ | $\mu_B$ | — |
+| 磁矩 $\vert \mathbf S\vert$ | $\mu_B$ | $\mu_B$ | — |
 | 磁梯度 $\mathbf g=-\partial E/\partial\mathbf S$ | eV/$\mu_B$ | eV/$\mu_B$ | — |
 | 旋磁比 $\gamma$ | $\mu_B$/(eV·fs) | $\mu_B$/(eV·fs) | **无转换**：`Spin::parse` 直接 `atof`，无任何缩放 |
 | 动能 | — | eV | $\frac12 m v^2\times1.0364269\times10^{-4}$（$m$ 用 u，$v$ 用 Å/fs） |

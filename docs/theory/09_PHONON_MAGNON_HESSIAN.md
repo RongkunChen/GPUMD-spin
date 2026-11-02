@@ -66,11 +66,11 @@ $\lVert C\rVert$ 单独不是物理量。
 
 | 量 | mask17（16 原子） | mask31（4 原子） |
 |---|---|---|
-| ASR $\max|\sum_j\Phi_{ij}|$ | $5.6\times10^{-14}$ eV/Å² | $2.4\times10^{-4}$ |
-| $\max|\Phi|$ | 10.6 eV/Å² | 98.0 |
-| $\max|\Phi-\Phi^{\mathsf T}|$ | $1.4\times10^{-3}$ | $7.8\times10^{-3}$ |
+| ASR $\max\vert \sum_j\Phi_{ij}\vert$ | $5.6\times10^{-14}$ eV/Å² | $2.4\times10^{-4}$ |
+| $\max\vert \Phi\vert$ | 10.6 eV/Å² | 98.0 |
+| $\max\vert \Phi-\Phi^{\mathsf T}\vert$ | $1.4\times10^{-3}$ | $7.8\times10^{-3}$ |
 | Maxwell 相对差 | $3.1\times10^{-3}$ | $1.0\times10^{-3}$ |
-| $\max|K-K^{\mathsf T}|$ | $1.7\times10^{-4}$ | $1.8\times10^{-4}$ |
+| $\max\vert K-K^{\mathsf T}\vert$ | $1.7\times10^{-4}$ | $1.8\times10^{-4}$ |
 
 ## 9.6 限制
 

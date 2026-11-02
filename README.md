@@ -73,7 +73,9 @@ For atom $i$ the NEP model builds a descriptor vector $\mathbf q_i$ from the
 positions of its neighbours inside a cutoff, and maps it through a shallow
 feed-forward network to a per-atom energy:
 
-$$U_i = \mathrm{ANN}(\mathbf q_i),\qquad U = \sum_i U_i$$
+$$
+U_i = \mathrm{ANN}(\mathbf q_i),\qquad U = \sum_i U_i
+$$
 
 The radial part is expanded on Chebyshev basis functions $g_n(r)$ and the
 angular part on real spherical harmonics of degree $l$, both multiplied by a
@@ -85,13 +87,17 @@ see §2.3.
 The spin equation solved in `src/spin/spin.cu` is the **Landau–Lifshitz form**
 of the stochastic LLG equation (see `src/spin/spin.cuh`):
 
-$$\frac{d\mathbf S_i}{dt} = -\gamma\,\mathbf S_i\times\mathbf B_i
--\frac{\gamma\alpha}{|\mathbf S_i|}\,\mathbf S_i\times\big(\mathbf S_i\times\mathbf B_i\big)$$
+$$
+\frac{d\mathbf S_i}{dt} = -\gamma\,\mathbf S_i\times\mathbf B_i
+-\frac{\gamma\alpha}{|\mathbf S_i|}\,\mathbf S_i\times\big(\mathbf S_i\times\mathbf B_i\big)
+$$
 
 with the effective field
 
-$$\mathbf B_i = \mathbf w_i + \mathbf b_i(t) + \mathbf b_{\rm ext},
-\qquad \mathbf w_i = -\frac{\partial E}{\partial\mathbf S_i}$$
+$$
+\mathbf B_i = \mathbf w_i + \mathbf b_i(t) + \mathbf b_{\rm ext},
+\qquad \mathbf w_i = -\frac{\partial E}{\partial\mathbf S_i}
+$$
 
 where:
 
@@ -102,15 +108,19 @@ where:
 The noise is white in space and time with the fluctuation–dissipation
 amplitude (`src/spin/spin.cuh`):
 
-$$\big\langle b_i^{a}(t)\,b_j^{b}(t')\big\rangle
+$$
+\big\langle b_i^{a}(t)\,b_j^{b}(t')\big\rangle
 = \frac{2\alpha k_B T}{\gamma\,(1+\alpha^2)\,|\mathbf S_i|}\,
-\delta_{ij}\,\delta^{ab}\,\delta(t-t')$$
+\delta_{ij}\,\delta^{ab}\,\delta(t-t')
+$$
 
 discretised per step as
 
-$$\sigma_i = \sqrt{\frac{2\alpha k_B T}
+$$
+\sigma_i = \sqrt{\frac{2\alpha k_B T}
 {\gamma\,(1+\alpha^2)\,|\mathbf S_i|\,\Delta t}},
-\qquad k_B = 8.617333262\times10^{-5}\ \mathrm{eV/K}$$
+\qquad k_B = 8.617333262\times10^{-5}\ \mathrm{eV/K}
+$$
 
 The normalisation is **per atom** — it divides by $|\mathbf S_i|$, not by the
 volume or the atom count.
@@ -145,8 +155,8 @@ basis $g_n(r)$ and cutoff $f_c$:
 | `Sex` | $q^{{\rm Sex}}_{i,n}=\sum_j g_n f_c\,(\mathbf S_i\cdot\mathbf S_j)$ | exchange |
 | `San` | $q^{{\rm San}}_{i,n}=\sum_j g_n f_c\,(\mathbf S_i\cdot\hat{\mathbf r}_{ij})(\mathbf S_j\cdot\hat{\mathbf r}_{ij})$ | anisotropic exchange |
 | `Sdm` | $q^{{\rm Sdm}}_{i,n}=\sum_j g_n f_c\,\hat{\mathbf r}_{ij}\cdot(\mathbf S_i\times\mathbf S_j)$ | Dzyaloshinskii–Moriya |
-| `Sia` | $q^{{\rm Sia}}_{i,n}=\sum_j g_n f_c\left(\tfrac32(\mathbf S_i\cdot\hat{\mathbf r}_{ij})^2-\tfrac12|\mathbf S_i|^2\right)$ | single-ion anisotropy |
-| `Smag` | $q^{{\rm Smag}}_{i,n}=u^{\,n+1},\quad u = |\mathbf S_i|\cdot\texttt{spin\_mag\_scale}$ | on-site moment magnitude |
+| `Sia` | $q^{{\rm Sia}}_{i,n}=\sum_j g_n f_c\left(\tfrac32(\mathbf S_i\cdot\hat{\mathbf r}_{ij})^2-\tfrac12\vert\mathbf S_i\vert^2\right)$ | single-ion anisotropy |
+| `Smag` | $q^{{\rm Smag}}_{i,n}=u^{\,n+1},\quad u = \vert\mathbf S_i\vert\cdot\texttt{spin\_mag\_scale}$ | on-site moment magnitude |
 
 `Smag` is a purely on-site term (no neighbour sum). The current model layout is
 version 3, written into `nep.txt` as
@@ -163,7 +173,9 @@ and is not differentiable at zero moment.
 
 The default coupling is the symmetric Strang split
 
-$$S(\Delta t/2)\;V(\Delta t)\;S(\Delta t/2)$$
+$$
+S(\Delta t/2)\;V(\Delta t)\;S(\Delta t/2)
+$$
 
 implemented in `Run::perform_run` (`src/main_gpumd/run.cu`): half spin step →
 force → half kick plus drift → force → half kick → half spin step → force and
@@ -615,5 +627,5 @@ integrators, the measurement framework and the example set all originate from
 upstream. The spin extension — the spin descriptors, the magnetic torque, the
 sLLG integrator and its coupling to the lattice — is developed in this fork.
 
-If you use this code, please cite the upstream GPUMD papers in addition to any
-work describing the spin extension.
+If you use this code, please cite the upstream GPUMD papers. If you use the spin
+extension, please contact <shiqian@ynu.edu.cn> or follow our recent work.

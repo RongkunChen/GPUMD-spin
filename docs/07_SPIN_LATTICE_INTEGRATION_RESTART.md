@@ -17,7 +17,7 @@
 ```
 
 要点：
-- 每次求力对应一个**真实存在**的 \((R,S)\) 组合，没有“用上一步的力凑”；
+- 每次求力对应一个**真实存在**的 $(R,S)$ 组合，没有“用上一步的力凑”；
 - 步末再求一次力，保证 `thermo`、`dump_xyz`、`restart.xyz`、磁化输出读的是**同一状态**；
 - 代码：`src/main_gpumd/run.cu` L384–L470；`compute_force()` 在 L312/L426 被调用。
 
@@ -25,30 +25,30 @@
 
 ## 2. 能量、动量与误差阶（必须实测，不靠推断）
 
-保守情形（\(\alpha=T=0\)）的判据：
+保守情形（$\alpha=T=0$）的判据：
 
 | 量 | 门槛 | 历史实测（S05B-R1，4 Fe 原子） |
 |---|---|---|
-| \(\max|\Delta E|/\text{atom}\)，\(\Delta t=0.2\) fs | \(1.0\times10^{-5}\) eV | **\(1.0673\times10^{-5}\)（FAIL）** |
-| 同，\(\Delta t=0.1\) fs | — | \(4.3321\times10^{-6}\) |
-| 同，\(\Delta t=0.05\) fs | — | \(1.6758\times10^{-6}\) |
-| 误差阶 \(p=\log_2(\Delta E_{0.2}/\Delta E_{0.1})\) | \(\ge1.5\) | \(\approx1.30\) |
+| $\max\vert \Delta E\vert /\text{atom}$，$\Delta t=0.2$ fs | $1.0\times10^{-5}$ eV | **$1.0673\times10^{-5}$（FAIL）** |
+| 同，$\Delta t=0.1$ fs | — | $4.3321\times10^{-6}$ |
+| 同，$\Delta t=0.05$ fs | — | $1.6758\times10^{-6}$ |
+| 误差阶 $p=\log_2(\Delta E_{0.2}/\Delta E_{0.1})$ | $\ge1.5$ | $\approx1.30$ |
 | 固定晶格（A 组） | PASS | PASS |
 | 等时单点（C 组） | PASS | PASS |
 
 > **当前版本状态：`COUPLED_NOT_VALIDATED`。** 本轮未重跑该 harness（见 `13`），因此
 > 耦合热流（`08`）与耦合输运一律 BLOCKED；不得用“能量差很小”替代门禁。
 
-解析玩具模型（两原子磁弹性）用于机制反例：\(E=-J\,\mathbf S_1\!\cdot\!\mathbf S_2+\frac{k}{2}(r-r_0)^2+\lambda(r-r_0)(\mathbf S_1\!\cdot\!\mathbf S_2)\)。
+解析玩具模型（两原子磁弹性）用于机制反例：$E=-J\,\mathbf S_1\!\cdot\!\mathbf S_2+\frac{k}{2}(r-r_0)^2+\lambda(r-r_0)(\mathbf S_1\!\cdot\!\mathbf S_2)$。
 在该模型上可以直接算出精确能量守恒，用来判断生产分裂是否「结构正确」而非仅「数值小」。
 
 ## 3. Checkpoint 格式（`spin_restart.bin`）
 
-`restart.xyz` 是 xyz 文件，只能装 \((\mathbf R,\mathbf v,\mathbf S)\)。磁自由度的另外两块状态**不在其中**：
+`restart.xyz` 是 xyz 文件，只能装 $(\mathbf R,\mathbf v,\mathbf S)$。磁自由度的另外两块状态**不在其中**：
 
-1. **每原子 curand 状态**：热噪声是**有状态**随机流，第 \(k\) 步之后的位置无法由 `seed` 反推；
+1. **每原子 curand 状态**：热噪声是**有状态**随机流，第 $k$ 步之后的位置无法由 `seed` 反推；
    重新 seed 会从第 0 步重放——分布对、轨迹错。
-2. **每原子 \(|\mathbf S|\) 锚点**：约束投影的参考值。
+2. **每原子 $|\mathbf S|$ 锚点**：约束投影的参考值。
 
 二进制布局（小端，逐字段 `fwrite`）：
 
@@ -62,12 +62,12 @@
 | 64 | `i32 ×3` | scheme, has_rng, has_anchor |
 | 76 | `i64 ×2` | sllg_steps, physics_step |
 | 92 | `f64` | global_time |
-| 100 | `f32[n]` | 每原子 \(|\mathbf S|\) 锚点 |
+| 100 | `f32[n]` | 每原子 $\vert \mathbf S\vert$ 锚点 |
 | … | `u8[n×48]` | 每原子 `curandState`（`sizeof=48`） |
 | 末 8B | `u64` | 前面全部字节的 FNV-1a 载荷校验和 |
 
 写入是**原子式**（`*.tmp` + `rename`），崩溃不会留下半个文件。读取时校验：magic、版本、natoms、
-载荷校验和、`nep.txt` 哈希、\(\gamma/\alpha/T/\Delta t\)/scheme；任一不符**直接 `exit(4)`**，不静默接受。
+载荷校验和、`nep.txt` 哈希、$\gamma/\alpha/T/\Delta t$/scheme；任一不符**直接 `exit(4)`**，不静默接受。
 
 ## 4. 重启语义与验证
 
@@ -91,12 +91,12 @@ restart : cp prefix/restart.xyz model.xyz  ; cp prefix/spin_restart.bin .
 
 | 量 | 结果 |
 |---|---|
-| \(\max|\Delta \mathbf S|\)（float32 逐位） | **0**（三者全同） |
-| \(\max|\Delta \mathbf R|\)、\(\max|\Delta \mathbf v|\) | **0** |
-| \(\max|\Delta \mathrm{PE}|\)、\(\max|\Delta \mathrm{KE}|\) | **0** |
+| $\max\vert \Delta \mathbf S\vert$（float32 逐位） | **0**（三者全同） |
+| $\max\vert \Delta \mathbf R\vert$、$\max\vert \Delta \mathbf v\vert$ | **0** |
+| $\max\vert \Delta \mathrm{PE}\vert$、$\max\vert \Delta \mathrm{KE}\vert$ | **0** |
 | 末态 RNG 块（768 B = 16×48） | **逐字节相同** |
 | 损坏载荷 / 改 scheme | 均 `rc=4` 拒绝 |
-| 去掉 `restart=` 只重播种 | \(\max|\Delta\mathbf S|=5.68\,\mu_B\)（说明测试有分辨力） |
+| 去掉 `restart=` 只重播种 | $\max\vert \Delta\mathbf S\vert =5.68\,\mu_B$（说明测试有分辨力） |
 
 > midpoint 求解器是**步内**迭代，没有跨步中间状态，因此 checkpoint 不需要保存「半步阶段」。
 
@@ -104,13 +104,13 @@ restart : cp prefix/restart.xyz model.xyz  ; cp prefix/spin_restart.bin .
 
 | 场景 | 支持 | 说明 |
 |---|---|---|
-| \(\alpha=T=0\)（保守） | ✅ 逐位 | 无 RNG，只有 R/v/S |
-| geometric \(T>0\) | ✅ 逐位 | RNG 必须续接 |
-| midpoint \(T>0\) | ✅ 逐位 | 同上 |
+| $\alpha=T=0$（保守） | ✅ 逐位 | 无 RNG，只有 R/v/S |
+| geometric $T>0$ | ✅ 逐位 | RNG 必须续接 |
+| midpoint $T>0$ | ✅ 逐位 | 同上 |
 | NPT / 热浴链 | ❌ | 恒压器/热浴内部状态不在本文件内；本轮未验证 |
 | 跨构建（不同编译器/架构） | ⚠️ | 只能要求容差一致，不能要求逐位 |
 | 改变 `nep.txt` | ❌ | 哈希不符直接拒绝 |
-| 改变 dt/scheme/\(\gamma/\alpha/T\) | ❌ | 直接拒绝 |
+| 改变 dt/scheme/$\gamma/\alpha/T$ | ❌ | 直接拒绝 |
 
 ## 6. 代码入口
 
