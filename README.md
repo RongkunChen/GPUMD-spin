@@ -122,7 +122,7 @@ $$
 \qquad k_B = 8.617333262\times10^{-5}\ \mathrm{eV/K}
 $$
 
-The normalisation is **per atom** — it divides by $|\mathbf S_i|$, not by the
+The normalisation is **per atom** — it divides by $\|\mathbf S_i\|$, not by the
 volume or the atom count.
 
 **Units.** `gamma` is given in $\mu_B/(\mathrm{eV}\cdot\mathrm{fs})$. The
@@ -130,7 +130,7 @@ physical gyromagnetic ratio $g\mu_B/\hbar$ with $g=2$ equals
 $3.0385\ \mu_B/(\mathrm{eV}\cdot\mathrm{fs})$, which is the value used in the
 examples.
 
-**Spin length.** $|\mathbf S_i|$ is conserved by every integration branch: the
+**Spin length.** $\|\mathbf S_i\|$ is conserved by every integration branch: the
 geometric branch composes two isometries (a Rodrigues rotation and an analytic
 Gilbert relaxation), and the midpoint branches converge to the implicit
 midpoint rule, which is norm preserving.
@@ -145,29 +145,37 @@ midpoint rule, which is norm preserving.
 
 ### 2.3 Spin descriptors
 
-With $\hat{\mathbf r}_{ij} = \mathbf r_{ij}/r_{ij}$,
-$a = \mathbf S_i\cdot\hat{\mathbf r}_{ij}$,
-$b = \mathbf S_j\cdot\hat{\mathbf r}_{ij}$, $s_2 = |\mathbf S_i|^2$, radial
-basis $g_n(r)$ and cutoff $f_c$:
+Every block sums over the neighbours $j$ of atom $i$ inside the cutoff, weighted
+by the radial basis $g_n$ and the cutoff function $f_c$. The arguments are the
+unit bond vector and its projections,
+
+$$
+\mathbf e_{ij}=\mathbf r_{ij}/r_{ij},\qquad
+a=\mathbf S_i\cdot\mathbf e_{ij},\qquad
+b=\mathbf S_j\cdot\mathbf e_{ij},\qquad
+s=\|\mathbf S_i\|,
+$$
+
+which gives the five blocks of layout 3:
 
 | Block | Definition | Physical order |
 |---|---|---|
-| `Sex` | $q^{{\rm Sex}}_{i,n}=\sum_j g_n f_c\,(\mathbf S_i\cdot\mathbf S_j)$ | exchange |
-| `San` | $q^{{\rm San}}_{i,n}=\sum_j g_n f_c\,(\mathbf S_i\cdot\hat{\mathbf r}_{ij})(\mathbf S_j\cdot\hat{\mathbf r}_{ij})$ | anisotropic exchange |
-| `Sdm` | $q^{{\rm Sdm}}_{i,n}=\sum_j g_n f_c\,\hat{\mathbf r}_{ij}\cdot(\mathbf S_i\times\mathbf S_j)$ | Dzyaloshinskii–Moriya |
-| `Sia` | $q^{{\rm Sia}}_{i,n}=\sum_j g_n f_c\left(\tfrac32(\mathbf S_i\cdot\hat{\mathbf r}_{ij})^2-\tfrac12\vert\mathbf S_i\vert^2\right)$ | single-ion anisotropy |
-| `Smag` | $q^{{\rm Smag}}_{i,n}=u^{\,n+1},\quad u = \vert\mathbf S_i\vert\cdot\texttt{spin\_mag\_scale}$ | on-site moment magnitude |
+| `Sex` | $q^{\mathrm{Sex}}_{i,n}=\sum_j g_n f_c\,(\mathbf S_i\cdot\mathbf S_j)$ | exchange |
+| `San` | $q^{\mathrm{San}}_{i,n}=\sum_j g_n f_c\,a\,b$ | anisotropic exchange |
+| `Sdm` | $q^{\mathrm{Sdm}}_{i,n}=\sum_j g_n f_c\,\mathbf e_{ij}\cdot(\mathbf S_i\times\mathbf S_j)$ | Dzyaloshinskii–Moriya |
+| `Sia` | $q^{\mathrm{Sia}}_{i,n}=\sum_j g_n f_c\,(\tfrac32 a^2-\tfrac12 s^2)$ | single-ion anisotropy |
+| `Smag` | $q^{\mathrm{Smag}}_{i,n}=u^{\,n+1}$ | on-site moment magnitude |
 
-`Smag` is a purely on-site term (no neighbour sum). The current model layout is
-version 3, written into `nep.txt` as
-`spin_layout 3 Sex San Sdm Sia Smag`. Layout 2 used a deprecated `Senv` block
-in place of `Sia`.
+`Smag` is a purely on-site term (no neighbour sum), built from $u=s\,m$ where
+$m$ is the scaling factor given by `spin_mag_scale`. The current model layout is
+version 3, written into `nep.txt` as `spin_layout 3 Sex San Sdm Sia Smag`.
+Layout 2 used a deprecated `Senv` block in place of `Sia`.
 
 **Expressive limits worth knowing before choosing a block mask.** `Sia` carries
 spin rank 2 only, so it represents uniaxial/quadrupolar anisotropy but not a
 cubic $l=4$ term of the form $S_x^4+S_y^4+S_z^4$. `Sdm` represents the
-bond-parallel (screw) component of DMI only. `Smag` scales with $|\mathbf S|$
-and is not differentiable at zero moment.
+bond-parallel (screw) component of DMI only. `Smag` scales with $s$ and is not
+differentiable at zero moment.
 
 ### 2.4 Spin–lattice coupling
 
@@ -181,7 +189,7 @@ implemented in `Run::perform_run` (`src/main_gpumd/run.cu`): half spin step →
 force → half kick plus drift → force → half kick → half spin step → force and
 thermodynamic output. Each step therefore costs three force evaluations.
 
-Conserved quantities: $|\mathbf S_i|$ always; total energy additionally when
+Conserved quantities: $\|\mathbf S_i\|$ always; total energy additionally when
 $\alpha = 0$ and $T = 0$ (the conservative branch). With $T>0$ the sLLG
 thermostat is a heat bath and the energy is not conserved.
 
