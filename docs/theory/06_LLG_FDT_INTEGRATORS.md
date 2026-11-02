@@ -6,21 +6,21 @@
 （与 `docs/06_SPIN_LLG_FDT_AND_MC.md` §1 一致）：
 
 $$
-\frac{d\mathbf S_i}{dt}=-\,\gamma\,\mathbf S_i\times\mathbf B_i
--\frac{\gamma\alpha}{|\mathbf S_i|}\,\mathbf S_i\times\big(\mathbf S_i\times\mathbf B_i\big),
+\frac{d\mathbf S_i}{dt}=-\ \gamma\ \mathbf S_i\times\mathbf B_i
+-\frac{\gamma\alpha}{|\mathbf S_i|}\ \mathbf S_i\times\big(\mathbf S_i\times\mathbf B_i\big),
 \qquad
 \mathbf B_i=-\frac{\partial E}{\partial\mathbf S_i}=\mathbf g_i .
 \tag{6.1}
 $$
 
 * $\gamma$：代码里的 `gamma`，单位 $\mu_B$/(eV·fs)，物理值 $g\mu_B/\hbar\approx3.0385$
-  （$g=2$），`spin_llg gamma=` 可改。
+  （ $g=2$），`spin_llg gamma=` 可改。
 * $\alpha$：无量纲 Gilbert 阻尼。
 * **约定（最容易写错的一处）**：这里的 `gamma` 是 LL 的 $\gamma_{\rm LL}$，与 Gilbert
-  形式的关系为 $\gamma_{\rm LL}=\gamma_G/(1+\alpha^2)$。若把方程改写成 Gilbert 形式
+  形式的关系为 $\gamma\_{\rm LL}=\gamma\_G/(1+\alpha^2)$。若把方程改写成 Gilbert 形式
   （两个系数都带 $1/(1+\alpha^2)$），数学上等价，但**不能再**给噪声振幅额外乘一次
   $1/(1+\alpha^2)$——那正是 (6.4)(6.5) 中 $1/(1+\alpha^2)$ 的来源（Stage04 冻结结论）。
-* 单位：$\mathbf B$ 用 eV/$\mu_B$，时间步长用 **fs**，故 $d\mathbf S/dt$ 为 $\mu_B$/fs。
+* 单位： $\mathbf B$ 用 $\mathrm{eV}/\mu_B$，时间步长用 **fs**，故 $d\mathbf S/dt$ 为 $\mu_B$/fs。
   `spin_llg` 用的 $\Delta t$ 就是 MD 时间步长，代码内部已是 fs（`src/spin/spin.cuh`）。
 
 **结构性质**（由 (6.1) 直接可验）：
@@ -39,7 +39,7 @@ $$
 \tag{6.3}
 $$
 
-（因 $\mathbf g_i=-\partial E/\partial\mathbf S_i$，故 $\dot E=-\sum\mathbf g_i\cdot\dot{\mathbf S}_i$；
+（因 $\mathbf g\_i=-\partial E/\partial\mathbf S\_i$，故 $\dot E=-\sum\mathbf g\_i\cdot\dot{\mathbf S}\_i$；
 阻尼项的 $1/|\mathbf S_i|$ 正是 (6.1) 的 LL 系数，不能像全局常数那样提出求和号。）
 
 进动项不做功，零温阻尼必然降低能量。这是 `spin_work.out` 里阻尼功符号的
@@ -51,33 +51,33 @@ $$
 
 $$
 \langle b_{i,a}(t)b_{j,b}(t')\rangle
-=\frac{2\alpha k_BT}{\gamma\,|\mathbf S_i|\,(1+\alpha^2)}\,
-\delta_{ij}\delta^{ab}\,\delta(t-t').
+=\frac{2\alpha k_BT}{\gamma\ |\mathbf S_i|\ (1+\alpha^2)}
+\delta_{ij}\delta^{ab}\ \delta(t-t').
 \tag{6.4}
 $$
 
 离散后（每原子、每笛卡尔分量各抽一次，故 $\mathrm{Var}(b_k)=\sigma^2$ 与 $k$ 无关）
 
 $$
-\sigma^2=\frac{2\alpha k_BT}{\gamma\,\Delta t\,(1+\alpha^2)\,|\mathbf S_i|},
+\sigma^2=\frac{2\alpha k_BT}{\gamma\ \Delta t\ (1+\alpha^2)\ |\mathbf S_i|},
 \qquad
-\mathbf b_i=\sigma\,\boldsymbol\xi_i,\quad \xi\sim\mathcal N(0,1).
+\mathbf b_i=\sigma\ \boldsymbol\xi_i,\quad \xi\sim\mathcal N(0,1).
 \tag{6.5}
 $$
 
 分母的两个因子都不能漏：
 
 * $1/(1+\alpha^2)$ 来自 Gilbert→LL 转换；漏掉它会让有效温度偏高 $1+\alpha^2$ 倍
-  （$\alpha=0.3$ 时 9%，$\alpha=1$ 时 2 倍）。
+  （ $\alpha=0.3$ 时 9%， $\alpha=1$ 时 2 倍）。
 * $1/|\mathbf S_i|$ 是**逐原子**归一化，不是全局常数：`gpu_fill_thermal_field` 在 kernel
   内用每个原子的实时 $|\mathbf S_i|$ 现算（`var = prefactor / |S_i|`），所以幅度随原子而异。
   代价是 $|\mathbf S_i|\to0$ 时幅度发散（R11 已知边界）；好处是不需要把 $|\mathbf S|$ 当成常量
   提出来，非等价磁矩体系才是对的。
 
-$k_B=8.617333262\times10^{-5}$ eV/K（`SPIN_KB_EV_PER_K`），$T$ 用 K，$\Delta t$ 用 fs。
+$k_B=8.617333262\times10^{-5}$ eV/K（`SPIN_KB_EV_PER_K`）， $T$ 用 K， $\Delta t$ 用 fs。
 Stage04 已冻结，r18/r19 未改。
 
-**注意**：$\sigma\propto\Delta t^{-1/2}$，所以改时间步必须同时改噪声幅度。
+**注意**： $\sigma\propto\Delta t^{-1/2}$，所以改时间步必须同时改噪声幅度。
 `spin_llg` 在内部用同一 $\Delta t$ 计算，用户无需手动改。
 
 ## 6.3 三种积分格式
@@ -87,7 +87,7 @@ Stage04 已冻结，r18/r19 未改。
 先算 $\Delta\mathbf S$，再投影：
 
 $$
-\mathbf S^{n+1}=\frac{\mathbf S^{n}+\Delta\mathbf S}{\big|\mathbf S^{n}+\Delta\mathbf S\big|}\,|\mathbf S^{n}| .
+\mathbf S^{n+1}=\frac{\mathbf S^{n}+\Delta\mathbf S}{\big|\mathbf S^{n}+\Delta\mathbf S\big|}\ |\mathbf S^{n}| .
 \tag{6.6}
 $$
 
@@ -97,8 +97,8 @@ $$
 ### 6.3.2 随机隐式中点（`scheme=midpoint`）
 
 $$
-\mathbf S^{n+1}=\mathbf S^{n}+\Delta t\;\mathbf f\!\Big(\frac{\mathbf S^{n}+\mathbf S^{n+1}}{2}\Big)
-+\sqrt{\Delta t}\,\boldsymbol\sigma\circ\boldsymbol\xi^n .
+\mathbf S^{n+1}=\mathbf S^{n}+\Delta t\ \mathbf f \Big(\frac{\mathbf S^{n}+\mathbf S^{n+1}}{2}\Big)
++\sqrt{\Delta t}\ \boldsymbol\sigma\circ\boldsymbol\xi^n .
 \tag{6.7}
 $$
 
@@ -126,8 +126,8 @@ $9.998\times10^{-7}$。
 每步把 $|\mathbf S|$ 拉回初值（`project_onto_norm_anchor`），并记录投影前的
 原始误差 `pre_projection_norm_error`，用于区分"积分器漂移"与"float32 游走"。
 
-实测（Fe 1024 原子，10 ps）：投影前模长漂移 $\le9.8\times10^{-5}\,\mu_B$
-（相对 $2.2\,\mu_B$ 为 $4.5\times10^{-5}$），与 float32 的 $\sqrt{N}$ 游走一致。
+实测（Fe 1024 原子，10 ps）：投影前模长漂移 $\le9.8\times10^{-5}\ \mu_B$
+（相对 $2.2\ \mu_B$ 为 $4.5\times10^{-5}$），与 float32 的 $\sqrt{N}$ 游走一致。
 投影把漂移压到 0，但**不改变**能量漂移量级——说明能量误差主要不来自模长漂移。
 
 ## 6.6 二聚体验证
@@ -136,9 +136,9 @@ $9.998\times10^{-7}$。
 
 | 量 | geometric | midpoint | 精确求积 | 蒙特卡洛 |
 |---|---|---|---|---|
-| $\langle\mathbf S_1\cdot\mathbf S_2\rangle$ | 0.2583 | 0.2709 | 0.2625 | 0.2615 |
+| $\langle\mathbf S\_1\cdot\mathbf S\_2\rangle$ | 0.2583 | 0.2709 | 0.2625 | 0.2615 |
 
-midpoint 偏差 +3.2%（在统计误差内），geometric 偏差 −1.6%（$\mathcal O(\Delta t)$
+midpoint 偏差 +3.2%（在统计误差内），geometric 偏差 −1.6%（ $\mathcal O(\Delta t)$
 投影误差）。两者都好于"Euler + 事后归一化"一个量级。
 
 ## 6.7 一个必须知道的坑：`seed` 在确定性 NVE 里是空操作
@@ -162,8 +162,8 @@ midpoint 偏差 +3.2%（在统计误差内），geometric 偏差 −1.6%（$\mat
 
 | 项 | 状态 |
 |---|---|
-| 固定模长 SLLG（$\alpha>0,T>0$）温度标定 | PASS（±20%，smoke T3） |
+| 固定模长 SLLG（ $\alpha>0,T>0$）温度标定 | PASS（±20%，smoke T3） |
 | 二聚体静态关联 vs 精确求积 | PASS（midpoint 3%） |
 | 耦合体系里"自旋温度 = 晶格温度" | **NOT_VERIFIED**：没有独立测温手段 |
 | 自旋波线宽 | NOT_IMPLEMENTED（13 篇） |
-| 外磁场 $-\sum\mathbf S_i\cdot\mathbf B$ | **已实现**：`add_bfield <Bx> <By> <Bz> [<omega_in_THz>]`（`src/main_gpumd/run.cu`），单位 eV/$\mu_B$，必须先设 `spin_llg`；$\omega>0$ 为 THz 交变场（FMR / 自旋泵浦）。外场所做的功在功分解中单列一项 $W_{\rm ext}$ |
+| 外磁场 $-\sum\mathbf S_i\cdot\mathbf B$ | **已实现**：`add_bfield <Bx> <By> <Bz> [<omega_in_THz>]`（`src/main_gpumd/run.cu`），单位 $\mathrm{eV}/\mu_B$，必须先设 `spin_llg`； $\omega>0$ 为 THz 交变场（FMR / 自旋泵浦）。外场所做的功在功分解中单列一项 $W_{\rm ext}$ |

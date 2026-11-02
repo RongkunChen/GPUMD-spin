@@ -48,7 +48,7 @@ Fe x y z Fx Fy Fz Sx Sy Sz gx gy gz
 * `energy` 是**总能量**（eV），训练器除以原子数得到 per-atom 目标；
 * `spin_forces` 按项目约定当 $-\partial E/\partial\mathbf S$（eV/μB），
   来源未核实，状态 ASSUMED_LABEL_CONTRACT；
-* 本项目的项目约定：$\mathbf S=\text{spin\_length}\times\text{initial\_magmoms}$。
+* 本项目的项目约定： $\mathbf S=\text{spin\\_length}\times\text{initial\\_magmoms}$。
 
 ## 4. 输出
 

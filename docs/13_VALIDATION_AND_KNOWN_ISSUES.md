@@ -20,7 +20,7 @@
 | G8 | 误差阶 | $\ge1.5$ | **$1.68$** | **PASS**（上轮 1.30） | `phase_2/run` |
 | G8b | 轨迹收敛阶 | — | spin 1.89 / position 2.12 | PASS | `phase_2/run` |
 | G9 | 自旋模长漂移（20000 步） | $10^{-5}$ | $2.0\times10^{-8}$ / $1.4\times10^{-7}$ | PASS | S08A |
-| G10 | FDT 方差 | 4% | $-0.96\%$ | PASS | S08A |
+| G10 | FDT 方差 | 4% | $-0.96$% | PASS | S08A |
 | G11 | 单自旋平衡 4σ | $z\le4$ | 4.5 | **FAIL**（5% 带宽内） | S08A |
 | G12 | 二聚体 vs MC/求积 | $z\le4$ | 2.0 / 3.7 | PASS | S08A-R1 |
 | G13 | midpoint 收敛 | 0 非收敛步 | 0（1.6M 步） | PASS | S08A-R1 |
@@ -40,7 +40,7 @@
 
 用当前树重建 `trainer_probe.exe` / `md_singlepoint_probe.exe`（`build_stage03a.py --only all`），
 跑 Stage03A 冻结的 24 帧子集里 5 个 case（3 个历史失败 + 2 个通过控制），
-逐元素判 $\vert e^{\rm cand}_i-e^{\rm ref}_i\vert\le 10^{-6}+10^{-6}\vert e^{\rm ref}_i\vert$：
+逐元素判 $\vert e^{\rm cand}\_i-e^{\rm ref}\_i\vert\le 10^{-6}+10^{-6}\vert e^{\rm ref}\_i\vert$：
 
 | case | 角色 | max \|Δe\| (eV) | 该原子阈值 (eV) | 判定 |
 |---|---|---|---|---|
@@ -50,14 +50,14 @@
 | fe24_mask31_f02_a4 | 通过控制 | $4.768\times10^{-7}$ | $1.146\times10^{-6}$ | PASS |
 | fe24_mask16_f10_a0 | 通过控制 | $4.768\times10^{-7}$ | $1.001\times10^{-6}$ | PASS |
 
-差异全部是 $2.384\times10^{-7}$（$=2^{-22}$）的整数倍：3、5、2 倍。这不是“某个公式算错了”的
+差异全部是 $2.384\times10^{-7}$（ $=2^{-22}$）的整数倍：3、5、2 倍。这不是“某个公式算错了”的
 形态，而是 float32 末几位。
 
 ### 2.2 根因
 
 两条路径各自遍历**自己的邻居表**：训练器按 `ia,ib,ic` 镜像三重循环枚举，MD 按 cell list 顺序。
 同一批项相加的顺序不同，float32 每次加法都重新舍入，结果相差数个 ulp。
-Stage03A.2 的分解把这件事量化过：描述符 $q$ 在 radial 块上差到 $4.77\times10^{-6}$（$\vert q\vert\approx10$，即 3–4 ulp），
+Stage03A.2 的分解把这件事量化过：描述符 $q$ 在 radial 块上差到 $4.77\times10^{-6}$（ $\vert q\vert\approx10$，即 3–4 ulp），
 经 $J=\partial e/\partial q$ 放大成 $10^{-6}$ 量级的能量差。权重指纹、`q_scaler` 指纹、neighbor **集合**都相同，
 所以差异只能来自求和顺序。
 
@@ -94,7 +94,7 @@ for (int n = 0; n <= paramb.n_max_radial; ++n)
 
 **残余 $7\times10^{-7}$ 的来源是已知且不同的一件事**：训练器把坐标存成 `float`
 （`dataset.cu` 的 `const float* x`），MD 存成 `double`（`g_x`）。同一个 17 位十进制坐标，
-训练器先舍入到 float32 再算 $d_{12}$，MD 用 double 算再舍入，$q$ 就差 1 ulp。
+训练器先舍入到 float32 再算 $d_{12}$，MD 用 double 算再舍入， $q$ 就差 1 ulp。
 这一项**无法**在不改变训练器存储精度的前提下消掉，而改存储会改变整个训练流水线的内存
 与模型格式，不在“必要数值路径”范围内，故保留并在 §3 记录。当前它已落在冻结阈值内。
 
@@ -119,8 +119,8 @@ $E_0=105.286$ eV，float32 的 ulp 已经是 $7.6\times10^{-6}$ eV，除以 $2h=
 1. `main_replica` 是代码副本，已两处修复（`-I..`、`spin_block_mask`），仍有漂移风险。
 2. **训练器坐标是 float32、MD 是 double**：这是 G6 残余 $7\times10^{-7}$ eV 的唯一来源（§2.4）。
 3. `nep.exe prediction` 只输出帧总量，不输出逐原子 $e_i$；逐原子回归只能靠 Stage03A probe 对（已重建）。
-4. **耦合能量门禁 G7 仍 FAIL**（$1.023\times10^{-5}$ vs $10^{-5}$）。误差阶本轮已回到 1.68（上轮 1.30）。
-4b. **G5（$g=-\partial E/\partial S$）在 h=1e-3 时超阈值**：1.40e-2 vs 1e-2。
+4. **耦合能量门禁 G7 仍 FAIL**（ $1.023\times10^{-5}$ vs $10^{-5}$）。误差阶本轮已回到 1.68（上轮 1.30）。
+4b. **G5（ $g=-\partial E/\partial S$）在 h=1e-3 时超阈值**：1.40e-2 vs 1e-2。
    步长扫描显示是 float32 能量输出的差分噪声地板（§2b），不是导数错。
    修法只能是换能量参考（更大 h 且做 Richardson）或让 prediction 输出 double，
    本轮未做，按原阈值判 FAIL。

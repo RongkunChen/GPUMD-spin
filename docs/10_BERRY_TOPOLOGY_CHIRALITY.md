@@ -16,7 +16,7 @@
 
 ## 2. 离散 Berry 相位与 Wilson loop
 
-对占据带子空间 $\{|u_n(\mathbf k)\rangle\}$，沿闭合路径分 $N$ 段：
+对占据带子空间 $\lbrace |u_n(\mathbf k)\rangle\rbrace$，沿闭合路径分 $N$ 段：
 
 $$
 \theta=-\operatorname{Im}\ln\prod_{m=0}^{N-1}\big\langle u(\mathbf k_m)\big|u(\mathbf k_{m+1})\big\rangle,
@@ -24,23 +24,23 @@ $$
 $$
 
 - **规范不变性**：每个 $|u\rangle$ 乘相位不改变 $\theta$；数值上要用重叠矩阵的**行列式**（多带时）
-  $\det M^{(m)}=\det\langle u_n(\mathbf k_m)|u_{m'}(\mathbf k_{m+1})\rangle$，而不是逐带相位差之和。
+  $\det M^{(m)}=\det\langle u\_n(\mathbf k\_m)|u\_{m'}(\mathbf k\_{m+1})\rangle$，而不是逐带相位差之和。
 - **简并子空间**：在子空间内做 SVD/正交化后再取 det，避免随机相位导致的 $2\pi$ 跳变。
-- 曲率：$\Omega(\mathbf k)=\partial_{k_x}A_y-\partial_{k_y}A_x$，$A=i\langle u|\nabla_{\mathbf k}u\rangle$；
+- 曲率： $\Omega(\mathbf k)=\partial\_{k\_x}A\_y-\partial\_{k\_y}A\_x$， $A=i\langle u|\nabla_{\mathbf k}u\rangle$；
   离散用 Wilson loop 的小回路版本（plaquette）更稳。
 
 ## 3. 度量的选择
 
 | 系统 | 本征问题 | 度量 | 常见错误 |
 |---|---|---|---|
-| 声子 | $D(\mathbf q)\mathbf e=\omega^2\mathbf e$ | 质量加权欧氏度量 | 忘记 $1/\sqrt{m_im_j}$ → 简并错位 |
-| 磁子（玻色） | $i\dot\eta=\mathcal H\eta$ | paraunitary：$\sigma_3$ 或 $\mathcal J=\mathrm{diag}(1,-1)$ | 用厄米度量 → 本征值非物理 |
-| 磁子（BdG） | $\mathcal H_{\rm BdG}\Psi=E\sigma_3\Psi$ | $\sigma_3$ 不定度量 | 直接对 $\mathcal H$ 取本征值 |
+| 声子 | $D(\mathbf q)\mathbf e=\omega^2\mathbf e$ | 质量加权欧氏度量 | 忘记 $1/\sqrt{m\_im\_j}$ → 简并错位 |
+| 磁子（玻色） | $i\dot\eta=\mathcal H\eta$ | paraunitary： $\sigma_3$ 或 $\mathcal J=\mathrm{diag}(1,-1)$ | 用厄米度量 → 本征值非物理 |
+| 磁子（BdG） | $\mathcal H\_{\rm BdG}\Psi=E\sigma\_3\Psi$ | $\sigma_3$ 不定度量 | 直接对 $\mathcal H$ 取本征值 |
 
 ## 4. 手性 vs 拓扑（概念区分）
 
 - **圆偏振 / 角动量**：模式 $\mathbf e$ 的 $\langle \mathbf e|\mathbf L|\mathbf e\rangle$，是**局域可观测量**；
-- **Berry 曲率**：$\mathbf k$ 空间的几何量；
+- **Berry 曲率**： $\mathbf k$ 空间的几何量；
 - **Chern 数**：曲率在闭合流形上的积分（整数）；
 - **拓扑边界态**：开边界谱中的隙内态。
 

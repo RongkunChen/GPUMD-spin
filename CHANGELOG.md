@@ -5,13 +5,13 @@
 **只有一处行为改变，不动物理**：`run.in` 里写两个 `run` 块（典型用法：NVT 平衡 ->
 NVE 生产）现在能正常工作，并且与"拆成两次 `gpumd.exe` 调用"给出**逐位相同**的结果。
 
-### Fixed — F-25：NVT→NVE 在同一 `run.in` 里，$N\ge432$ 表现为挂死
-- 症状（历史记录）：先 `ensemble nvt_lan` 再 `ensemble nve`，$N=432$ 与 $N=1024$ 上
-  "进程存活、CPU 占用、26 分钟无任何输出"；拆成两次调用正常；$N=128$ 不复现。
+### Fixed — F-25：NVT→NVE 在同一 `run.in` 里， $N\ge432$ 表现为挂死
+- 症状（历史记录）：先 `ensemble nvt_lan` 再 `ensemble nve`， $N=432$ 与 $N=1024$ 上
+  "进程存活、CPU 占用、26 分钟无任何输出"；拆成两次调用正常； $N=128$ 不复现。
 - **根因**：`Measure::post_run()` 末尾无条件执行 `actions_.clear()`。第一个 `run` 块结束
   时所有 measure 被销毁，第二个块只做积分：`thermo.out`、`traj.xyz`、`restart.xyz`
   都不再更新，而 stdout 仍在打进度（重定向时被块缓冲，肉眼更看不到）。于是"跑得好好的
-  但文件不动"被当成了挂死；$N$ 越大，等到的耐心越短，所以"阈值"看起来在 $N\approx432$。
+  但文件不动"被当成了挂死； $N$ 越大，等到的耐心越短，所以"阈值"看起来在 $N\approx432$。
 - **修复**：`post_run()` 不再清空，而是把 dump 类 action（`dump_thermo`、`dump_xyz`、
   `dump_exyz`、`dump_netcdf`、`dump_restart`）保留下来；它们本来就是无状态追加写，
   `pre_run()` 会以 `"a"` 重新打开文件。`dump_thermo` 增加 `header_written_`，同一次进程里
@@ -82,8 +82,8 @@ NVE 生产）现在能正常工作，并且与"拆成两次 `gpumd.exe` 调用"�
 
 新增 `results/`（259 个文件，7.0 MB），收录当天最新的训练与测试产物：
 
-- `results/training/C_5desc_500k/` — 50 万代训练（5 描述符，$\lambda_e=5$、
-  $\lambda_f=1$、$\lambda_m=1$、batch 1000）的执行记录 `TRAINING_STATUS.md`、
+- `results/training/C_5desc_500k/` — 50 万代训练（5 描述符， $\lambda_e=5$、
+  $\lambda_f=1$、 $\lambda_m=1$、batch 1000）的执行记录 `TRAINING_STATUS.md`、
   `loss.out`、训练输入 `nep.in`、最终权重 `nep.txt`、5 个检查点权重，以及
   `series/SERIES_REPORT.md` 与逐检查点 `gen_{110k,200k,300k,400k,500k}.json`。
 - `results/validation/` — `validation_summary.md`（BCC Fe 全物理 33 条：
@@ -112,11 +112,11 @@ NVE 生产）现在能正常工作，并且与"拆成两次 `gpumd.exe` 调用"�
 $2S\Delta E/N$（正确为 $2\Delta E/(NS)$），D 闭式误写成 $(S/6)\Sigma Jzr^2$（正确为
 $\frac{1}{6S}\Sigma Jzr^2$），同一个错同时进了冻结螺旋与 LSWT 两条路线，所以比值永远
 对得上、一直没被发现。更正后 D 从 436–476 降到 **292–316**，全部落在实验区间内；
-"D 偏硬源于磁矩偏大（$D\propto m^{2.35}$）"的解释同样作废——正确的
-$d\ln D/d\ln m = 0.02$–$0.35$，即 **D 基本与所用磁矩无关**。详见
+"D 偏硬源于磁矩偏大（ $D\propto m^{2.35}$）"的解释同样作废——正确的
+$d\ln D/d\ln m = 0.02$– $0.35$，即 **D 基本与所用磁矩无关**。详见
 `results/validation/validation_summary.md` §15。
 
-仍然没变的是：磁矩 +11%、$a_0$ −1.1%、$T_c$ 912 K 卡住，AFM-A 从 20 万代起的
+仍然没变的是：磁矩 +11%、 $a_0$ −1.1%、 $T_c$ 912 K 卡住，AFM-A 从 20 万代起的
 −1.6…−1.8 THz 软模——这些是配方层面的系统偏差，继续加训练步数不会解决。
 
 ## v3.0.0-r17 (2026-10-31) — research preview

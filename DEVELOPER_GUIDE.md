@@ -109,7 +109,7 @@ python tests/acceptance.py --bin src
 1. `src/utilities/spin_descriptor.cuh` 的声明表加一行：名称、掩码位、
    rank、时间反演、空间反演、是否需 SOC、退化条件。
 2. `spin_descriptor_kernels.cuh`：在 `find_descriptor` 的
-   small-box 与 large-box 两个变体里都实现前向与对 $\mathbf S$、$\mathbf R$ 的导数。
+   small-box 与 large-box 两个变体里都实现前向与对 $\mathbf S$、 $\mathbf R$ 的导数。
    **两个变体必须给出一致的结果**（`tests/smoke.py` 不含这一项，需要自己写
    16 原子 vs 1024 原子的对比）。
 3. `main_nep/nep.cu`、`nep_specialized.cu`：同步训练器侧，保证标签与梯度一致。

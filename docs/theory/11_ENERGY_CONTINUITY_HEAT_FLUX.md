@@ -6,7 +6,7 @@
 
 ## 11.1 局域能量
 
-$E=\sum_i e_i$，$e_i$ 是局域原子能（`dump_xyz potential`）。连续性方程要求
+$E=\sum\_i e\_i$， $e_i$ 是局域原子能（`dump_xyz potential`）。连续性方程要求
 
 $$
 \frac{\partial e_i}{\partial t}+\sum_{j\neq i}\mathbf j_{ij}=0,
@@ -14,32 +14,32 @@ $$
 \tag{11.1}
 $$
 
-即"$i$ 的能量变化只能通过与 $j$ 的成对通量流走"。
+即" $i$ 的能量变化只能通过与 $j$ 的成对通量流走"。
 
 ## 11.2 从 Hamiltonian 推热流（教科书形式）
 
 对 $e_i(\mathbf R,\mathbf S)$ 求全导数：
 
 $$
-\dot e_i=\sum_j\frac{\partial e_i}{\partial\mathbf R_j}\!\cdot\!\dot{\mathbf R}_j
-+\sum_j\frac{\partial e_i}{\partial\mathbf S_j}\!\cdot\!\dot{\mathbf S}_j .
+\dot e_i=\sum_j\frac{\partial e_i}{\partial\mathbf R_j} \cdot \dot{\mathbf R}_j
++\sum_j\frac{\partial e_i}{\partial\mathbf S_j} \cdot \dot{\mathbf S}_j .
 \tag{11.2}
 $$
 
-利用 $\mathbf F_j=-\partial E/\partial\mathbf R_j$、$\mathbf g_j=-\partial E/\partial\mathbf S_j$，
+利用 $\mathbf F\_j=-\partial E/\partial\mathbf R\_j$、 $\mathbf g\_j=-\partial E/\partial\mathbf S\_j$，
 把成对项对称化（每对只算一次，各分一半），得到
 
 $$
-\mathbf J=\sum_i \mathbf R_i\,\dot e_i
-=\underbrace{\sum_i \mathbf R_i\,\mathbf F_i\cdot\dot{\mathbf R}_i}_{\mathbf J_{\rm L}}
-+\underbrace{\sum_i \mathbf R_i\,\mathbf g_i\cdot\dot{\mathbf S}_i}_{\mathbf J_{\rm S}} .
+\mathbf J=\sum_i \mathbf R_i\ \dot e_i
+=\underbrace{\sum_i \mathbf R_i\ \mathbf F_i\cdot\dot{\mathbf R}_i}_{\mathbf J_{\rm L}}
++\underbrace{\sum_i \mathbf R_i\ \mathbf g_i\cdot\dot{\mathbf S}_i}_{\mathbf J_{\rm S}} .
 \tag{11.3}
 $$
 
 $\mathbf J_{\rm L}$ 是常规 virial 型热流（`compute_heat` 算的就是它），
-$\mathbf J_{\rm S}$ 是自旋通道。交叉项来自 $\partial e_i/\partial\mathbf S_j$ 与
-$\partial e_i/\partial\mathbf R_j$ 的混合：它不能靠"$-\mathbf g\cdot\dot{\mathbf S}=0$"
-一句话消掉，因为 $\mathbf g_i\cdot\dot{\mathbf S}_i$ 只在稳态/单自旋时为零。
+$\mathbf J_{\rm S}$ 是自旋通道。交叉项来自 $\partial e\_i/\partial\mathbf S\_j$ 与
+$\partial e\_i/\partial\mathbf R\_j$ 的混合：它不能靠" $-\mathbf g\cdot\dot{\mathbf S}=0$"
+一句话消掉，因为 $\mathbf g\_i\cdot\dot{\mathbf S}\_i$ 只在稳态/单自旋时为零。
 
 `dump_heat_flux` 输出的三组数（每帧 11 列）对应：
 
@@ -54,11 +54,11 @@ $\partial e_i/\partial\mathbf R_j$ 的混合：它不能靠"$-\mathbf g\cdot\dot
 ## 11.3 规范非唯一性
 
 $\mathbf j_{ij}$ 只在"成对、反对称"约束下唯一；把能量在 $i,j$ 之间重新分配
-（$\mathbf R_i\to\mathbf R_i+\delta$）会改变 $\mathbf J$ 而保持 $\nabla\cdot\mathbf J$。
+（ $\mathbf R\_i\to\mathbf R\_i+\delta$）会改变 $\mathbf J$ 而保持 $\nabla\cdot\mathbf J$。
 因此：
 
 * $\kappa$ 在热力学极限下规范不变；
-* 分解 $\kappa=\kappa_{\rm LL}+\kappa_{\rm SS}+\kappa_{\rm LS}+\kappa_{\rm SL}$
+* 分解 $\kappa=\kappa\_{\rm LL}+\kappa\_{\rm SS}+\kappa\_{\rm LS}+\kappa\_{\rm SL}$
   **依赖规范**，尤其 $\kappa_{\rm cross}$ 可能为负；
 * 报分解时必须同时报规范（本实现用"原子中心 + 成对平分"）。
 
@@ -82,20 +82,20 @@ $$
 
 **先排除"我的记账写错了"**：同一批 dump 上
 
-* $\mathrm{rms}\big(\sum_i \dot e_i^{\rm pot}\big)=18.2$ eV/ps，
-* $\mathrm{rms}\big(\sum_i \mathbf F_i\!\cdot\!\mathbf v_i\big)=18.2$ eV/ps，
+* $\mathrm{rms}\big(\sum\_i \dot e\_i^{\rm pot}\big)=18.2$ eV/ps，
+* $\mathrm{rms}\big(\sum\_i \mathbf F\_i \cdot \mathbf v\_i\big)=18.2$ eV/ps，
 * 两者之和的 rms 只有 **0.08**（0.4%）。
 
 即逐原子势能、力、速度三者互相自洽到 0.4%。
 
 **结论：判据本身不成立，不是热流算子的 bug。** 原因：周期性边界下
 $\mathbf r_i$ 只在模 $\mathbf L$ 意义下有定义，而相互作用用键矢
-$\mathbf r_{ij}=\mathbf r_i-\mathbf r_j+\mathbf n\mathbf L$。于是
+$\mathbf r\_{ij}=\mathbf r\_i-\mathbf r\_j+\mathbf n\mathbf L$。于是
 
 $$
 \sum_i \mathbf r_i\dot e_i
-=\underbrace{\sum_{i<j}\mathbf r_{ij}\,\dot e_{ij}}_{J_{\rm 键矢}}
-+\sum_{i<j}\mathbf n\mathbf L\,\dot e_{ij},
+=\underbrace{\sum_{i<j}\mathbf r_{ij}\ \dot e_{ij}}_{J_{\rm 键矢}}
++\sum_{i<j}\mathbf n\mathbf L\ \dot e_{ij},
 \tag{11.5}
 $$
 
@@ -106,7 +106,7 @@ $L_y=9.75$ Å 都小于 $2r_c=12$ Å，几乎每对都带镜像；把胞放大�
 进一步排除自旋通道。
 
 **状态：`NOT_VALIDATED_BY_DESIGN`。** 要补的判据是键矢形式
-$\sum_{i<j}\mathbf r_{ij}\dot e_{ij}$，需要 $\dot e_{ij}$ 的成对分解
+$\sum\_{i<j}\mathbf r\_{ij}\dot e\_{ij}$，需要 $\dot e_{ij}$ 的成对分解
 （NEP 不直接给），或用解析二体模型（LJ）在非周期团簇上做。两条都超出
 本阶段范围，写进 `KNOWN_LIMITATIONS.md` L-11。
 
@@ -114,7 +114,7 @@ $\sum_{i<j}\mathbf r_{ij}\dot e_{ij}$，需要 $\dot e_{ij}$ 的成对分解
 
 同一条 128 原子轨迹，把所有坐标整体平移 (0.317, 0.191, 0.233) Å（再折回盒子）
 后重跑，400 步内两条 $\mathbf J(t)$ 序列的相对 RMS 偏差 **1.11e-05**，
-第一步偏差 9.4e-08（$\mathbf J$ 本身量级 0.011）。这个量级正是 float32
+第一步偏差 9.4e-08（ $\mathbf J$ 本身量级 0.011）。这个量级正是 float32
 坐标平移后舍入不同造成的。**PASS。**
 
 ## 11.6 绝对归一化：三个数字差 7 个数量级（`NOT_VALIDATED`）
@@ -144,7 +144,7 @@ $\kappa_{zz}=5.94\times10^5/98.23^2=\mathbf{62}$ W/(m·K)——正好是 Fe 的�
 
 ## 11.7 与代码的对应
 
-* `src/measure/compute_heat.cu`：逐原子 $e_i$ 与 $\sum_j \mathbf r_{ij}\otimes\mathbf f_{ij}$。
+* `src/measure/compute_heat.cu`：逐原子 $e_i$ 与 $\sum\_j \mathbf r\_{ij}\otimes\mathbf f\_{ij}$。
   **只看函数名不能证明它包含自旋通道**，要读它是否把 `g` 项加进去。
 * `src/measure/dump_heat_flux.cu`：写出 $\mathbf J$ 的 11 列。
 * `src/measure/hac.cu`：`compute_hac`，用 5 分量分别做自相关；因丢交叉项，
@@ -154,13 +154,13 @@ $\kappa_{zz}=5.94\times10^5/98.23^2=\mathbf{62}$ W/(m·K)——正好是 Fe 的�
 
 | 前置条件 | 状态 | 证据 |
 |---|---|---|
-| 耦合能量守恒（0.2 fs） | FAIL | R2：$1.0201\times10^{-5}>10^{-5}$ |
+| 耦合能量守恒（0.2 fs） | FAIL | R2： $1.0201\times10^{-5}>10^{-5}$ |
 | 连续性方程 | **NOT_VALIDATED_BY_DESIGN** | §11.4 |
 | 热流绝对值 | **NOT_VALIDATED** | §11.6 |
-| 相关函数形状 | PASS | 12 篇：$\tau=0.176$ ps，单调衰减 |
+| 相关函数形状 | PASS | 12 篇： $\tau=0.176$ ps，单调衰减 |
 | 统计收敛 | **FAIL** | 5 ps 只有 14 个独立样本 |
 | 估计器/单位 | PASS | OU 自检 0.978 ± 0.12 |
 
 **在 §11.6 的归一化问题被解析模型钉死之前，任何 Fe 的 $\kappa$、
-$\kappa_{ph}$、$\kappa_{mag}$、$\kappa_{cross}$ 都不允许出现在报告里。**
+$\kappa_{ph}$、 $\kappa_{mag}$、 $\kappa_{cross}$ 都不允许出现在报告里。**
 S09 维持 `BLOCKED`。

@@ -8,7 +8,7 @@ K_{ij}^{ab}=\frac{\partial^2E}{\partial S_i^a\partial S_j^b},\qquad
 C_{ij}^{ab}=\frac{\partial^2E}{\partial R_i^a\partial S_j^b}.
 $$
 
-由 $F=-E_R$、$g=-E_S$，有限差分形式为
+由 $F=-E_R$、 $g=-E_S$，有限差分形式为
 
 $$
 \Phi_{ij}^{ab}=-\frac{\partial F_j^b}{\partial R_i^a},\quad
@@ -20,30 +20,30 @@ $$
 
 ## 9.2 求和规则与零模
 
-**声学求和规则**（平移不变）：$\sum_j\Phi_{ij}^{ab}=0$ 对每个 $i,a$。
-实测（16 原子，48×48）：$5.6\times10^{-14}$ eV/Å²——机器精度。
+**声学求和规则**（平移不变）： $\sum\_j\Phi\_{ij}^{ab}=0$ 对每个 $i,a$。
+实测（16 原子，48×48）： $5.6\times10^{-14}$ eV/Å²——机器精度。
 
 **自旋 Goldstone**：若 $E$ 在整体自旋旋转下不变（无 SOC，即 mask17），
-则旋转方向 $\delta\mathbf S_j=\mathbf n\times\mathbf S_j$ 必须是切空间 Hessian 的零模。
+则旋转方向 $\delta\mathbf S\_j=\mathbf n\times\mathbf S\_j$ 必须是切空间 Hessian 的零模。
 注意两点陷阱（本项目踩过）：
 
 1. $\mathbf K\cdot(\mathbf n\times\mathbf S)\neq0$ 不是“破坏对称性”的证据：
-   对称方向上梯度随态一起转，$\mathbf K\mathbf m=\mathbf n\times\mathbf g$ 本来就不为零；
+   对称方向上梯度随态一起转， $\mathbf K\mathbf m=\mathbf n\times\mathbf g$ 本来就不为零；
 2. 直线二阶导 $\mathbf m^{\mathsf T}\mathbf K\mathbf m$ 会混进 Smag 的径向刚度
    （直线运动在二阶上改变 $|\mathbf S|$）。
 
-正确做法：取每个自旋的切平面基 $\mathbf e_{i,1},\mathbf e_{i,2}\perp\mathbf S_i$，
-构造 $2N\times2N$ 矩阵 $\tilde K_{ia,jb}=\mathbf e_{i,a}^{\mathsf T}\mathbf K_{ij}\mathbf e_{j,b}$，
+正确做法：取每个自旋的切平面基 $\mathbf e\_{i,1},\mathbf e\_{i,2}\perp\mathbf S\_i$，
+构造 $2N\times2N$ 矩阵 $\tilde K\_{ia,jb}=\mathbf e\_{i,a}^{\mathsf T}\mathbf K\_{ij}\mathbf e\_{j,b}$，
 再求其特征值；整体旋转应对应 3 个零模。本项目**未完成**这一步，故 Goldstone 判据记 `NOT_VERIFIED`。
 
 ## 9.3 动力学矩阵
 
-**声子**：$D_{ij}^{ab}(\mathbf q)=\frac{1}{\sqrt{m_im_j}}\sum_{\mathbf R}e^{i\mathbf q\cdot\mathbf R}\Phi^{ab}_{i0,j\mathbf R}$，
+**声子**： $D\_{ij}^{ab}(\mathbf q)=\frac{1}{\sqrt{m\_im\_j}}\sum\_{\mathbf R}e^{i\mathbf q\cdot\mathbf R}\Phi^{ab}\_{i0,j\mathbf R}$，
 本征值 $\omega^2$，本征矢是极化。质量加权保证 $\mathbf q=0$ 的 3 个声学模为零（若 ASR 成立）。
 
-**磁子**：无阻尼 LLG 线性化。以 $\mathbf S_j=s_j\hat{\mathbf n}_j$ 为基，
-$\delta\mathbf S_j$ 只在切平面内，运动方程 $\dot{\delta\mathbf S}_j=-\gamma\,\mathbf S_j\times\delta\mathbf H_j$，
-$\delta\mathbf H_j=\sum_k K_{jk}\delta\mathbf S_k$。写成 $\dot{\mathbf u}=\mathcal A\mathbf u$，
+**磁子**：无阻尼 LLG 线性化。以 $\mathbf S\_j=s\_j\hat{\mathbf n}\_j$ 为基，
+$\delta\mathbf S_j$ 只在切平面内，运动方程 $\dot{\delta\mathbf S}\_j=-\gamma\ \mathbf S\_j\times\delta\mathbf H\_j$，
+$\delta\mathbf H\_j=\sum\_k K\_{jk}\delta\mathbf S\_k$。写成 $\dot{\mathbf u}=\mathcal A\mathbf u$，
 本征值 $\pm i\omega$（无阻尼）或复频率（有阻尼）。
 
 **磁声混合**：联立
@@ -66,7 +66,7 @@ $\lVert C\rVert$ 单独不是物理量。
 
 | 量 | mask17（16 原子） | mask31（4 原子） |
 |---|---|---|
-| ASR $\max\vert \sum_j\Phi_{ij}\vert$ | $5.6\times10^{-14}$ eV/Å² | $2.4\times10^{-4}$ |
+| ASR $\max\vert \sum\_j\Phi\_{ij}\vert$ | $5.6\times10^{-14}$ eV/Å² | $2.4\times10^{-4}$ |
 | $\max\vert \Phi\vert$ | 10.6 eV/Å² | 98.0 |
 | $\max\vert \Phi-\Phi^{\mathsf T}\vert$ | $1.4\times10^{-3}$ | $7.8\times10^{-3}$ |
 | Maxwell 相对差 | $3.1\times10^{-3}$ | $1.0\times10^{-3}$ |

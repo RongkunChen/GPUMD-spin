@@ -5,15 +5,15 @@
 本实现积分的是 **Landau–Lifshitz (LL)** 形式：
 
 $$
-\frac{d\mathbf S_i}{dt}=-\,\gamma\,\mathbf S_i\times\mathbf B_i
--\frac{\gamma\alpha}{|\mathbf S_i|}\,\mathbf S_i\times\big(\mathbf S_i\times\mathbf B_i\big)
+\frac{d\mathbf S_i}{dt}=-\ \gamma\ \mathbf S_i\times\mathbf B_i
+-\frac{\gamma\alpha}{|\mathbf S_i|}\ \mathbf S_i\times\big(\mathbf S_i\times\mathbf B_i\big)
 +\ \mathbf b_i(t),
 $$
 
-- $\gamma$：代码里的 `gamma`，单位 $\mu_B/(\mathrm{eV\,fs})$，物理值 $g\mu_B/\hbar\approx3.0385$（$g=2$）。
+- $\gamma$：代码里的 `gamma`，单位 $\mu_B/(\mathrm{eV\ fs})$，物理值 $g\mu_B/\hbar\approx3.0385$（ $g=2$）。
 - $\alpha$：无量纲 Gilbert 阻尼。
-- $\mathbf B_i=-\partial E/\partial\mathbf S_i=\mathbf g_i$（eV/$\mu_B$）。
-- 与 Gilbert 形式的换算：LL 的 $\gamma_{\rm LL}=\gamma_G/(1+\alpha^2)$。**代码里 `gamma` 是 LL 的 $\gamma_{\rm LL}$**，因此噪声振幅必须带 $1/(1+\alpha^2)$，否则双重修正（阶段04 冻结结论）。
+- $\mathbf B\_i=-\partial E/\partial\mathbf S\_i=\mathbf g\_i$（ $\mathrm{eV}/\mu_B$）。
+- 与 Gilbert 形式的换算：LL 的 $\gamma\_{\rm LL}=\gamma\_G/(1+\alpha^2)$。**代码里 `gamma` 是 LL 的 $\gamma_{\rm LL}$**，因此噪声振幅必须带 $1/(1+\alpha^2)$，否则双重修正（阶段04 冻结结论）。
 
 ## 2. 涨落–耗散（FDT）
 
@@ -21,17 +21,17 @@ $$
 
 $$
 \big\langle b_{i,a}(t)b_{j,b}(t')\big\rangle
-=\frac{2\alpha k_BT}{\gamma\,|\mathbf S_i|\,(1+\alpha^2)}\ \delta_{ij}\delta_{ab}\,\delta(t-t').
+=\frac{2\alpha k_BT}{\gamma\ |\mathbf S_i|\ (1+\alpha^2)}\ \delta_{ij}\delta_{ab}\ \delta(t-t').
 $$
 
 离散化后（步长 $\Delta t$）：
 
 $$
-\sigma^2=\frac{2\alpha k_BT}{\gamma\,\Delta t\,(1+\alpha^2)\,|\mathbf S_i|}.
+\sigma^2=\frac{2\alpha k_BT}{\gamma\ \Delta t\ (1+\alpha^2)\ |\mathbf S_i|}.
 $$
 
 - 代码：`src/spin/spin.cu` 的 `gpu_fill_thermal_field`，`prefactor` 即上式分子，除 $\Delta t$ 与 $|\mathbf S_i|$ 在 kernel 内完成。
-- 单位：$k_B=8.617333262\times10^{-5}$ eV/K；$T$ 用 K；$\Delta t$ 用 fs。
+- 单位： $k_B=8.617333262\times10^{-5}$ eV/K； $T$ 用 K； $\Delta t$ 用 fs。
 - **该系数自 Stage04 冻结，任何改动都必须重跑 FDT 门禁**。
 
 ## 3. 离散格式
@@ -48,15 +48,15 @@ $$
 ### 3.2 随机隐式中点（`scheme=midpoint`）
 
 $$
-\mathbf S_{n+1}=\mathbf S_n-g\Delta t\,\mathbf m\times\mathbf H
--\frac{g\Delta t\,\alpha}{|\mathbf m|}\,\mathbf m\times(\mathbf m\times\mathbf H),
+\mathbf S_{n+1}=\mathbf S_n-g\Delta t\ \mathbf m\times\mathbf H
+-\frac{g\Delta t\ \alpha}{|\mathbf m|}\ \mathbf m\times(\mathbf m\times\mathbf H),
 \quad \mathbf m=\frac{\mathbf S_n+\mathbf S_{n+1}}{2},
 $$
-$\mathbf H=\mathbf B_{\rm det}(\mathbf m)+\mathbf b_n+\mathbf B_{\rm ext}$。
+$\mathbf H=\mathbf B\_{\rm det}(\mathbf m)+\mathbf b\_n+\mathbf B\_{\rm ext}$。
 **噪声每步只抽一次并在整个不动点迭代期间保持不变**（否则不是同一个随机格式）。
-精确算术下 $\mathbf S_{n+1}-\mathbf S_n\perp\mathbf m$ 且 $\mathbf S_{n+1}+\mathbf S_n=2\mathbf m$ → $|\mathbf S|$ 严格守恒。
+精确算术下 $\mathbf S\_{n+1}-\mathbf S\_n\perp\mathbf m$ 且 $\mathbf S\_{n+1}+\mathbf S\_n=2\mathbf m$ → $|\mathbf S|$ 严格守恒。
 
-迭代终止：$\max_i|\mathbf S^{(k+1)}-\mathbf S^{(k)}|\le$ `midpoint_tolerance`（默认 $10^{-6}\mu_B$），
+迭代终止： $\max_i|\mathbf S^{(k+1)}-\mathbf S^{(k)}|\le$ `midpoint_tolerance`（默认 $10^{-6}\mu_B$），
 上限 `midpoint_max_iterations`（默认 50）。不收敛时**保留最后迭代值**并计数，绝不回退到冻结场。
 
 ### 3.3 保模长与约束投影
@@ -75,15 +75,15 @@ $\mathbf H=\mathbf B_{\rm det}(\mathbf m)+\mathbf b_n+\mathbf B_{\rm ext}$。
 
 | 量 | 精确 | MC | SLLG geometric | SLLG midpoint |
 |---|---|---|---|---|
-| $\langle\mathbf S_1\!\cdot\!\mathbf S_2\rangle$ | 0.2625 | 0.2615 | 0.2583 ($z=2.0$) | 0.2709 ($z=3.7$) |
+| $\langle\mathbf S\_1 \cdot \mathbf S\_2\rangle$ | 0.2625 | 0.2615 | 0.2583 ($z=2.0$) | 0.2709 ($z=3.7$) |
 
-$z_{\max}=4$（冻结）。单自旋：$\langle\cos\theta\rangle=\coth x-1/x$，实测 $+2.9\%$（$x=1$，64 replica），
-dt 减半后 $+3.4\%$ → **偏差不随 $\Delta t$ 减小**，属采样/离散化之外的系统效应，已记录为已知问题。
+$z_{\max}=4$（冻结）。单自旋： $\langle\cos\theta\rangle=\coth x-1/x$，实测 $+2.9$%（ $x=1$，64 replica），
+dt 减半后 $+3.4$% → **偏差不随 $\Delta t$ 减小**，属采样/离散化之外的系统效应，已记录为已知问题。
 
 ## 5. 统计与误差
 
-- 样本间隔取 $2\tau_G$，$\tau_G=1/(\gamma\alpha k_BT)$；仍用**分块标准误**与积分自相关时间双口径。
-- 不得把相关帧当独立样本：$\tau_{\rm int}$ 用初始正序列截断的积分自相关（FFT 计算）。
+- 样本间隔取 $2\tau_G$， $\tau\_G=1/(\gamma\alpha k\_BT)$；仍用**分块标准误**与积分自相关时间双口径。
+- 不得把相关帧当独立样本： $\tau_{\rm int}$ 用初始正序列截断的积分自相关（FFT 计算）。
 - 误差条报告：replica 间标准误（保守）+ 自相关修正后的有效样本数标准误。
 
 ## 6. 代码入口
@@ -93,7 +93,7 @@ dt 减半后 $+3.4\%$ → **偏差不随 $\Delta t$ 减小**，属采样/离散�
 | 参数解析 | `src/spin/spin.cu` | `Spin::parse`（`gamma= alpha= T= seed= scheme= restart=`） |
 | 随机格式 | 同上 | `propagate_stochastic_midpoint` |
 | 几何格式 | 同上 | `gpu_llg_step` |
-| 保守分支 | 同上 | `propagate_conservative`（$\alpha=T=0$） |
+| 保守分支 | 同上 | `propagate_conservative`（ $\alpha=T=0$） |
 | 噪声 | 同上 | `gpu_fill_thermal_field` |
 | 投影 | 同上 | `project_onto_norm_anchor` |
 
@@ -103,6 +103,6 @@ dt 减半后 $+3.4\%$ → **偏差不随 $\Delta t$ 减小**，属采样/离散�
 |---|---|
 | FDT 方差（6 个 $\alpha$ 用例） | PASS（var 相对偏差 $-9.6\times10^{-3}$，mean/cov $z<1$） |
 | 单自旋平衡在 5% 预注册带宽内 | PASS（+2.9%） |
-| 4 SE 判据 | **FAIL**（$z=4.5$）——已记录，未放宽 |
+| 4 SE 判据 | **FAIL**（ $z=4.5$）——已记录，未放宽 |
 | 二聚体 vs MC/精确求积 | PASS（R1） |
-| $\vert \mathbf S\vert$ 漂移 < 1e-5（20000 步） | PASS（$2.0\times10^{-8}$ / $1.4\times10^{-7}$） |
+| $\vert \mathbf S\vert$ 漂移 < 1e-5（20000 步） | PASS（ $2.0\times10^{-8}$ / $1.4\times10^{-7}$） |

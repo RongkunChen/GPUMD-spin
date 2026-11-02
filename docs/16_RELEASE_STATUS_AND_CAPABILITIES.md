@@ -24,8 +24,8 @@
 | `nep.exe` 预测（`prediction 1`） | **READY** | 只输出帧总量，**无逐原子 $e_i$** |
 | `gpumd_replica.exe`（REMD） | **READY** | 2-replica 短跑（smoke T6） |
 | `spin_llg`（保守分支 $\alpha=T=0$） | **READY** | 模长漂移 ≤1e-4 μB（10 ps） |
-| `spin_llg scheme=geometric`（$T>0$） | **READY** | FDT 门禁见 `docs/13` |
-| `spin_llg scheme=midpoint`（$T>0$） | **READY** | 1.6 M 步 0 次未收敛 |
+| `spin_llg scheme=geometric`（ $T>0$） | **READY** | FDT 门禁见 `docs/13` |
+| `spin_llg scheme=midpoint`（ $T>0$） | **READY** | 1.6 M 步 0 次未收敛 |
 | `dump_restart` + `restart=` | **READY** | 逐位一致 + RNG 续接 |
 | `dump_magnetization`（M, χ, Msat） | **READY** | 本版 $T_c$ 用它（冒烟 + 生产使用） |
 | `add_bfield`（含 FMR 正弦驱动） | **EXPERIMENTAL** | 有代码，未做定量验证 |
@@ -33,7 +33,7 @@
 | `dump_heat_flux` / `compute_heat` | **BLOCKED** | 绝对归一化未验证（差 1e7） |
 | `compute_hac` | **BLOCKED** | 在自旋体系上给负值，5 分量分解丢交叉项 |
 | 耦合动力学（S–V–S） | **PARTIAL** | 0.05/0.1 fs 可用；0.2 fs 门禁 FAIL |
-| 声子/磁子 Hessian（$\Phi,K,C$，$q=0$） | **PARTIAL** | $\Phi,C$ 验证过；$K$ 的 Goldstone 判据未完成 |
+| 声子/磁子 Hessian（ $\Phi,K,C$， $q=0$） | **PARTIAL** | $\Phi,C$ 验证过； $K$ 的 Goldstone 判据未完成 |
 | 声子/磁子色散、寿命 | **NOT_IMPLEMENTED** | 需切空间投影 + 超胞 $q$ 网格 |
 | Berry / 拓扑 | **NOT_IMPLEMENTED** | 无布洛赫基；且模型无 SOC 证据 |
 | 有限尺寸 $T_c$（Binder） | **NOT_RUN** | 只做单尺寸 1 ps 扫描 |
@@ -68,20 +68,20 @@
 - `GUARD_FIX_OK`：F26/F27 修复前后同一输入输出 sha256 相同；历史误杀算例新版跑满。
 - `COUPLED_SLD_OK = false`：0.2 fs 漂移 $1.023\times10^{-5} > 10^{-5}$（超 2.3%），
   误差阶 1.68 ≥ 1.5 通过。**保留 FAIL**。
-- `COUPLED_SLD_SHORT_DT_OK = true`：0.1 / 0.05 fs 短时（0.1 ps）$3.18/1.64\times10^{-6}$，
+- `COUPLED_SLD_SHORT_DT_OK = true`：0.1 / 0.05 fs 短时（0.1 ps） $3.18/1.64\times10^{-6}$，
   且长时间（10 ps）斜率恒为 $4.6\times10^{-9}$ eV/atom/ps。
   **适用范围**：Fe / mask17 / $\alpha=0$ / NVE / 250 K / ≤10 ps。
 - `TRANSPORT_OK = false`：被 `COUPLED_SLD_OK` 与热流归一化双重阻断。
 - `PHONON_MAGNON_OK = false`：只有 $q=0$ 的 $\Phi/K/C$；无色散、无 DOS 验证、无寿命。
 - `TOPOLOGY_OK = false`：机制不可表示（无 SOC），且代码不存在。
 - `FE_MODEL_OK = false`：50k 代模型 DEV 8.8–10.4 meV/atom，仍只能作工程候选。
-- `FE_MAGNETIC_PHYSICS_OK = "ENGINEERING_ONLY"`：$a_0$ −1.4%、$\mu_0$ +9%、
+- `FE_MAGNETIC_PHYSICS_OK = "ENGINEERING_ONLY"`： $a_0$ −1.4%、 $\mu_0$ +9%、
   $T_c$ −9%/−18%（误差棒 ±100 K）。可作半定量参考，不可作定量势的物性预言。
 
 ## 4. 使用限制（必须转述给最终用户）
 
-1. 不得用本包对 Fe 报告 $\kappa$、磁子寿命、DMI、$K_1$ 的数值。
-   $T_c$、$a_0$、$\mu_0$ 只能作为**带误差棒**的半定量结果报。
+1. 不得用本包对 Fe 报告 $\kappa$、磁子寿命、DMI、 $K_1$ 的数值。
+   $T_c$、 $a_0$、 $\mu_0$ 只能作为**带误差棒**的半定量结果报。
 2. 不得把 `mask31` 当作"已验证 SOC 模型"。
 3. 不得把 `spin_restart.bin` 的逐位一致推广到 NPT/热浴链。
 4. 不得声称时间步政策适用于 Fe 之外的材料或超过 10 ps 的时长（外推上限 2 ns 只是

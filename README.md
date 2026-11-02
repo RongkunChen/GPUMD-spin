@@ -88,8 +88,8 @@ The spin equation solved in `src/spin/spin.cu` is the **Landau–Lifshitz form**
 of the stochastic LLG equation (see `src/spin/spin.cuh`):
 
 $$
-\frac{d\mathbf S_i}{dt} = -\gamma\,\mathbf S_i\times\mathbf B_i
--\frac{\gamma\alpha}{|\mathbf S_i|}\,\mathbf S_i\times\big(\mathbf S_i\times\mathbf B_i\big)
+\frac{d\mathbf S_i}{dt} = -\gamma\ \mathbf S_i\times\mathbf B_i
+-\frac{\gamma\alpha}{|\mathbf S_i|}\ \mathbf S_i\times\big(\mathbf S_i\times\mathbf B_i\big)
 $$
 
 with the effective field
@@ -101,28 +101,28 @@ $$
 
 where:
 
-* $\mathbf w_i$ is the magnetic torque produced by the potential, in eV/$\mu_B$;
+* $\mathbf w_i$ is the magnetic torque produced by the potential, in $\mathrm{eV}/\mu_B$;
 * $\mathbf b_i(t)$ is the thermal field of the sLLG thermostat;
-* $\mathbf b_{\rm ext}$ is the field set by `add_bfield`, in eV/$\mu_B$.
+* $\mathbf b_{\rm ext}$ is the field set by `add_bfield`, in $\mathrm{eV}/\mu_B$.
 
 The noise is white in space and time with the fluctuation–dissipation
 amplitude (`src/spin/spin.cuh`):
 
 $$
-\big\langle b_i^{a}(t)\,b_j^{b}(t')\big\rangle
-= \frac{2\alpha k_B T}{\gamma\,(1+\alpha^2)\,|\mathbf S_i|}\,
-\delta_{ij}\,\delta^{ab}\,\delta(t-t')
+\big\langle b_i^{a}(t)\ b_j^{b}(t')\big\rangle
+= \frac{2\alpha k_B T}{\gamma\ (1+\alpha^2)\ |\mathbf S_i|}
+\delta_{ij}\ \delta^{ab}\ \delta(t-t')
 $$
 
 discretised per step as
 
 $$
 \sigma_i = \sqrt{\frac{2\alpha k_B T}
-{\gamma\,(1+\alpha^2)\,|\mathbf S_i|\,\Delta t}},
+{\gamma\ (1+\alpha^2)\ |\mathbf S_i|\ \Delta t}},
 \qquad k_B = 8.617333262\times10^{-5}\ \mathrm{eV/K}
 $$
 
-The normalisation is **per atom** — it divides by $\|\mathbf S_i\|$, not by the
+The normalisation is **per atom** — it divides by $\lVert \mathbf S_i\rVert$, not by the
 volume or the atom count.
 
 **Units.** `gamma` is given in $\mu_B/(\mathrm{eV}\cdot\mathrm{fs})$. The
@@ -130,7 +130,7 @@ physical gyromagnetic ratio $g\mu_B/\hbar$ with $g=2$ equals
 $3.0385\ \mu_B/(\mathrm{eV}\cdot\mathrm{fs})$, which is the value used in the
 examples.
 
-**Spin length.** $\|\mathbf S_i\|$ is conserved by every integration branch: the
+**Spin length.** $\lVert \mathbf S_i\rVert$ is conserved by every integration branch: the
 geometric branch composes two isometries (a Rodrigues rotation and an analytic
 Gilbert relaxation), and the midpoint branches converge to the implicit
 midpoint rule, which is norm preserving.
@@ -153,27 +153,27 @@ $$
 \mathbf e_{ij}=\mathbf r_{ij}/r_{ij},\qquad
 a=\mathbf S_i\cdot\mathbf e_{ij},\qquad
 b=\mathbf S_j\cdot\mathbf e_{ij},\qquad
-s=\|\mathbf S_i\|,
+s=\lVert \mathbf S_i\rVert ,
 $$
 
 which gives the five blocks of layout 3:
 
 | Block | Definition | Physical order |
 |---|---|---|
-| `Sex` | $q^{\mathrm{Sex}}_{i,n}=\sum_j g_n f_c\,(\mathbf S_i\cdot\mathbf S_j)$ | exchange |
-| `San` | $q^{\mathrm{San}}_{i,n}=\sum_j g_n f_c\,a\,b$ | anisotropic exchange |
-| `Sdm` | $q^{\mathrm{Sdm}}_{i,n}=\sum_j g_n f_c\,\mathbf e_{ij}\cdot(\mathbf S_i\times\mathbf S_j)$ | Dzyaloshinskii–Moriya |
-| `Sia` | $q^{\mathrm{Sia}}_{i,n}=\sum_j g_n f_c\,(\tfrac32 a^2-\tfrac12 s^2)$ | single-ion anisotropy |
-| `Smag` | $q^{\mathrm{Smag}}_{i,n}=u^{\,n+1}$ | on-site moment magnitude |
+| `Sex` | $q^{\mathrm{Sex}}\_{i,n}=\sum\_j g\_n f\_c\ (\mathbf S\_i\cdot\mathbf S\_j)$ | exchange |
+| `San` | $q^{\mathrm{San}}\_{i,n}=\sum\_j g\_n f\_c\ a\ b$ | anisotropic exchange |
+| `Sdm` | $q^{\mathrm{Sdm}}\_{i,n}=\sum\_j g\_n f\_c\ \mathbf e\_{ij}\cdot(\mathbf S\_i\times\mathbf S\_j)$ | Dzyaloshinskii–Moriya |
+| `Sia` | $q^{\mathrm{Sia}}\_{i,n}=\sum\_j g\_n f\_c\ (\tfrac32 a^2-\tfrac12 s^2)$ | single-ion anisotropy |
+| `Smag` | $q^{\mathrm{Smag}}_{i,n}=u^{\ n+1}$ | on-site moment magnitude |
 
-`Smag` is a purely on-site term (no neighbour sum), built from $u=s\,m$ where
+`Smag` is a purely on-site term (no neighbour sum), built from $u=s\ m$ where
 $m$ is the scaling factor given by `spin_mag_scale`. The current model layout is
 version 3, written into `nep.txt` as `spin_layout 3 Sex San Sdm Sia Smag`.
 Layout 2 used a deprecated `Senv` block in place of `Sia`.
 
 **Expressive limits worth knowing before choosing a block mask.** `Sia` carries
 spin rank 2 only, so it represents uniaxial/quadrupolar anisotropy but not a
-cubic $l=4$ term of the form $S_x^4+S_y^4+S_z^4$. `Sdm` represents the
+cubic $l=4$ term of the form $S\_x^4+S\_y^4+S\_z^4$. `Sdm` represents the
 bond-parallel (screw) component of DMI only. `Smag` scales with $s$ and is not
 differentiable at zero moment.
 
@@ -182,14 +182,14 @@ differentiable at zero moment.
 The default coupling is the symmetric Strang split
 
 $$
-S(\Delta t/2)\;V(\Delta t)\;S(\Delta t/2)
+S(\Delta t/2)\ V(\Delta t)\ S(\Delta t/2)
 $$
 
 implemented in `Run::perform_run` (`src/main_gpumd/run.cu`): half spin step →
 force → half kick plus drift → force → half kick → half spin step → force and
 thermodynamic output. Each step therefore costs three force evaluations.
 
-Conserved quantities: $\|\mathbf S_i\|$ always; total energy additionally when
+Conserved quantities: $\lVert \mathbf S_i\rVert$ always; total energy additionally when
 $\alpha = 0$ and $T = 0$ (the conservative branch). With $T>0$ the sLLG
 thermostat is a heat bath and the energy is not conserved.
 
@@ -200,8 +200,8 @@ thermostat is a heat bath and the energy is not conserved.
   polymer MD, MSST shock, wall pistons, two-temperature model, and several
   thermodynamic-integration variants.
 * **Transport**: the heat flux is decomposed into a phonon channel and a magnon
-  channel $J_m=\sum_j A_j:\dot{\mathbf S}_j$ with
-  $A_j=\sum_{i\neq j}(\mathbf r_i-\mathbf r_j)\otimes\partial U_i/\partial\mathbf S_j$
+  channel $J\_m=\sum\_j A\_j:\dot{\mathbf S}\_j$ with
+  $A\_j=\sum\_{i\neq j}(\mathbf r\_i-\mathbf r\_j)\otimes\partial U\_i/\partial\mathbf S\_j$
   (`src/measure/dump_heat_flux.cu`, `src/measure/compute_heat.cuh`).
 * **Magnon spectra**: `compute_sed ... spin` uses the spin velocities; LSWT and
   frozen-spiral analysis are provided as Python tools under
@@ -282,12 +282,12 @@ to the dependencies noted below.
 
 | Tag | Parameters | Meaning |
 |---|---|---|
-| `spin_llg` | `<gamma> <alpha> [<T_K> [<seed>]]` or `gamma=… alpha=… [T=…] [seed=…] [scheme=geometric\|midpoint] [restart=<file>]` | Enable spin dynamics. `gamma` in $\mu_B/(\mathrm{eV\,fs})$, `alpha` dimensionless, `T` in K. `alpha=0` with `T=0` selects the conservative branch; `T>0` requires `alpha>0`. Requires a `spin` column in `model.xyz` |
+| `spin_llg` | `<gamma> <alpha> [<T_K> [<seed>]]` or `gamma=… alpha=… [T=…] [seed=…] [scheme=geometric\|midpoint] [restart=<file>]` | Enable spin dynamics. `gamma` in $\mu_B/(\mathrm{eV\ fs})$, `alpha` dimensionless, `T` in K. `alpha=0` with `T=0` selects the conservative branch; `T>0` requires `alpha>0`. Requires a `spin` column in `model.xyz` |
 | `spin_split` | `strang` (default) or `staggered` | Coupling split. `strang` is second order; `staggered` is the legacy first-order path |
 | `spin_substeps` | `<n>` | Spin sub-steps per MD step. Takes effect only in the `staggered` path |
 | `spin_torque_refresh` | `on` or `off` | Recompute the torque between sub-steps. Takes effect only in the `staggered` path |
-| `add_bfield` | `<Bx> <By> <Bz> [<omega_THz>]` | External field in eV/$\mu_B$; `omega > 0` makes it sinusoidal (FMR / spin pumping). Requires `spin_llg` first |
-| `dump_magnetization` | `<interval> [<file>] [warmup <n_samples>]` | Write $M_x, M_y, M_z, \|M\|$, variance, susceptibility and saturation, global and per type |
+| `add_bfield` | `<Bx> <By> <Bz> [<omega_THz>]` | External field in $\mathrm{eV}/\mu_B$; `omega > 0` makes it sinusoidal (FMR / spin pumping). Requires `spin_llg` first |
+| `dump_magnetization` | `<interval> [<file>] [warmup <n_samples>]` | Write $M\_x, M\_y, M\_z, \lVert M\rVert$, variance, susceptibility and saturation, global and per type |
 
 ### 3.4 Output tags
 
@@ -459,7 +459,7 @@ Spin-related parameters:
 |---|---|
 | `spin` | Per-type switch (one value, or one per type); must follow `type` |
 | `spin_blocks` | Restrict the active blocks; disabled blocks are zeroed in energy, force and torque |
-| `spin_mag_scale` | Scale of the `Smag` block; if omitted it is derived from the training data as $1/\max\|\mathbf S\|$ |
+| `spin_mag_scale` | Scale of the `Smag` block; if omitted it is derived from the training data as $1/\max\lVert \mathbf S\rVert$ |
 | `lambda_m` | Weight of the magnetic torque term $-\partial E/\partial\mathbf S$ in the loss |
 
 The remaining loss weights are `lambda_e` (energy), `lambda_f` (force),
@@ -566,7 +566,7 @@ Force::compute(...)
 
 Torques are accumulated in double precision and narrowed to `float` once per
 step. The effective field used by the integrator is
-$\mathbf w_i = -\partial E/\partial\mathbf S_i$.
+$\mathbf w\_i = -\partial E/\partial\mathbf S\_i$.
 
 ### 6.4 Training call chain
 

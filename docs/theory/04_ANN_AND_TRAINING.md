@@ -2,13 +2,13 @@
 
 ## 4.1 结构
 
-单隐层，$\tanh$ 激活：
+单隐层， $\tanh$ 激活：
 
 $$
-e_i=\sum_{n=1}^{N_{\rm neu}} w^{(1)}_n\tanh\!\Big(\sum_{d=1}^{D} w^{(0)}_{nd}q_{i,d}-b^{(0)}_n\Big)-b^{(1)},
+e_i=\sum_{n=1}^{N_{\rm neu}} w^{(1)}_n\tanh \Big(\sum_{d=1}^{D} w^{(0)}_{nd}q_{i,d}-b^{(0)}_n\Big)-b^{(1)},
 $$
 
-$D=$ `dim`（本模型 54），$N_{\rm neu}=30$。参数按 `nep.txt` 的行序排布，
+$D=$ `dim`（本模型 54）， $N_{\rm neu}=30$。参数按 `nep.txt` 的行序排布，
 类型之间共享或按 `num_types` 复制（本模型 1 类 Fe）。
 
 ## 4.2 损失
@@ -20,7 +20,7 @@ L=\lambda_e\sum_i\Big(\frac{e_i^{\rm pred}-e_i^{\rm ref}}{N}\Big)^2
 +\lambda_v\sum(\text{virial})^2 .
 $$
 
-本项目的权重：$\lambda_e=\lambda_f=\lambda_m=1$（`nep.in`）。
+本项目的权重： $\lambda\_e=\lambda\_f=\lambda\_m=1$（`nep.in`）。
 $g$ 的标签按 `spin_forces` 列读入，状态记为 ASSUMED_LABEL_CONTRACT（来源未核实）。
 
 ## 4.3 解析梯度
@@ -32,7 +32,7 @@ $$
 \qquad x_n=\tanh(\cdot).
 $$
 
-再乘 $\partial q/\partial\mathbf S_i$、$\partial q/\partial\mathbf R_i$ 得到 $\mathbf g_i$、$\mathbf F_i$。
+再乘 $\partial q/\partial\mathbf S_i$、 $\partial q/\partial\mathbf R_i$ 得到 $\mathbf g_i$、 $\mathbf F_i$。
 代码里这两条链是手写的（`apply_ann_one_layer` 返回 `Fp[]`，再由描述符核的反向累加得到力）。
 
 ## 4.4 训练机制
@@ -55,7 +55,7 @@ $$
 ## 4.7 验证
 
 * `tests/smoke.py::T1`：单点能量一致性；
-* Stage03A：逐原子 $e_i$、$F$、$g$、virial、描述符逐元素比对（本版本 G6 混合判据 5/5 PASS）；
+* Stage03A：逐原子 $e_i$、 $F$、 $g$、virial、描述符逐元素比对（本版本 G6 混合判据 5/5 PASS）；
 * 训练收敛：loss.out 的 E/F/g 三条曲线（`../11_TRAINING_AND_VALIDATION.md` 有实测表）。
 
 ## 4.8 限制

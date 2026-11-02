@@ -13,11 +13,11 @@
 | `02_DESCRIPTORS.md` | Sex/San/Sdm/Sia/Smag、掩码、镜像枚举 | 描述符与 float64 参考差 1.2e-8 |
 | `03_SYMMETRY_PARITY_CHIRALITY.md` | 空间/时间反演、旋转协变、手性 | 无单离子各向异性（结构限制） |
 | `04_ANN_AND_TRAINING.md` | ANN 结构、损失、进化算法、可复现性 | 同 seed 同数据 → 同模型 |
-| `05_FORCES_GRADIENTS_VIRIAL.md` | $\mathbf F$、$\mathbf g$、virial、Maxwell 互易 | 梯度 PASS 2.6e-5；混合 Hessian 1.3e-3 |
+| `05_FORCES_GRADIENTS_VIRIAL.md` | $\mathbf F$、 $\mathbf g$、virial、Maxwell 互易 | 梯度 PASS 2.6e-5；混合 Hessian 1.3e-3 |
 | `06_LLG_FDT_INTEGRATORS.md` | LL/Gilbert、FDT、Stratonovich、三种 scheme | 二聚体 midpoint 偏差 3% |
 | `07_CONSERVATIVE_SLD.md` | S–V–S 分裂、等时输出、**时间步政策** | 0.05 fs 参考 / 0.1 平衡 / 0.2 不建议 |
 | `08_MC_AND_FINITE_SIZE.md` | Metropolis 测度、固定模长、Binder | MC 可用；有限尺寸标度未实现 |
-| `09_PHONON_MAGNON_HESSIAN.md` | $\Phi$、$K$、$C$、动力学矩阵、ASR | 静态 Hessian 可用；谱 BLOCKED |
+| `09_PHONON_MAGNON_HESSIAN.md` | $\Phi$、 $K$、 $C$、动力学矩阵、ASR | 静态 Hessian 可用；谱 BLOCKED |
 | `10_MAGNETOELASTIC_COUPLING.md` | 耦合矩阵元、反交叉、模态投影 | 矩阵元 PASS；模态分解未实现 |
 | `11_ENERGY_CONTINUITY_HEAT_FLUX.md` | 局域连续性、热流、**PBC 面项** | 连续性判据在 PBC 下不成立 |
 | `12_GREEN_KUBO.md` | GK、单位、统计收敛 | 估计器 PASS；5 ps 不收敛 |

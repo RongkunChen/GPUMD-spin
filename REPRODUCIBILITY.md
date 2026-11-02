@@ -25,12 +25,12 @@ python tests\physics_checks.py --bin src --model models\fe_mask17_2desc_r18.nep.
 | 代码路径 | `python tests/smoke.py --bin src` | 7/7 PASS |
 | 全链路 | `python tests/acceptance.py --bin src` | 5/5 PASS（训练→预测→MD→SLLG→重启） |
 | 晶格常数 | `python tests/physics_checks.py --bin src --quick` | $a_0=2.8258$ Å（−1.4%） |
-| 基态磁矩 | 同上（P2） | $\lvert S\rvert_0=2.413\,\mu_B$ |
-| 能量漂移 | 同上（P4） | $3.5$–$4.4\times10^{-7}$ eV/atom（0.1 ps） |
+| 基态磁矩 | 同上（P2） | $\lvert S\rvert\_0=2.413\ \mu\_B$ |
+| 能量漂移 | 同上（P4） | $3.5$– $4.4\times10^{-7}$ eV/atom（0.1 ps） |
 | guard 回归 | 同上（P5） | 600 K 起步 2000 步：rc=0、无 RUNAWAY |
 | $T_c$ | 同上（P3，3 点快速模式） | $\approx1009$ K（粗） |
 | $a_0$ 精细扫描 | `cd examples/fe_bcc_ground_state && python make_cells.py && python scan.py` | 7 点表 + `a0 = 2.8258` |
-| $T_c$ 曲线 | `cd examples/fe_curie_temperature && python tc_scan.py` | `tc_points.csv`，$T_c\approx950$ K |
+| $T_c$ 曲线 | `cd examples/fe_curie_temperature && python tc_scan.py` | `tc_points.csv`， $T_c\approx950$ K |
 | NVE 步长扫描 | `cd examples/fe_nve_stability && python nve_drift.py --dt 0.05 --ps 1` | $\sim6\times10^{-8}$ eV/atom |
 
 所有示例都**不需要**额外数据：bcc 胞由 `tools/physics_validation/make_fe_system.py`

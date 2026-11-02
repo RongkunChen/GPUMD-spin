@@ -2,7 +2,7 @@
 
 ## 13.1 动态结构因子
 
-自旋：$S(\mathbf q,\omega)=\big|\sum_j\int dt\,e^{i(\mathbf q\cdot\mathbf R_j-\omega t)}\mathbf S_j(t)\big|^2$；
+自旋： $S(\mathbf q,\omega)=\big|\sum\_j\int dt\ e^{i(\mathbf q\cdot\mathbf R\_j-\omega t)}\mathbf S\_j(t)\big|^2$；
 速度/SED：对速度自相关做 FFT 得声子 DOS。
 
 有限采样窗 $T_{\rm win}$ 的展宽 $\Delta\omega\approx2\pi/T_{\rm win}$。
@@ -22,7 +22,7 @@
 $$
 U_\mu(\mathbf k)=\det\langle u_m(\mathbf k)|u_n(\mathbf k+\delta\hat\mu)\rangle ,
 \qquad
-\Omega(\mathbf k)=-2\,\mathrm{Im}\ln\prod_{\square}U_\mu .
+\Omega(\mathbf k)=-2\ \mathrm{Im}\ln\prod_{\square}U_\mu .
 $$
 
 Chern 数 $C=\frac{1}{2\pi}\sum_{\square}\Omega$。
@@ -32,7 +32,7 @@ Chern 数 $C=\frac{1}{2\pi}\sum_{\square}\Omega$。
 
 ## 13.4 手性 vs 拓扑
 
-* 圆极化声子的**角动量投影**是可算的量（$\langle u|\hat L_z|u\rangle$），不需要拓扑；
+* 圆极化声子的**角动量投影**是可算的量（ $\langle u|\hat L_z|u\rangle$），不需要拓扑；
 * **Berry 曲率**是 $\mathbf k$ 空间的几何量；
 * **Chern 数**是它的积分（拓扑不变量）；
 * **边界态**需要开边界计算。
@@ -84,10 +84,10 @@ r18 的核对结果比 r17 文档更细：`src/measure/` 里**确实存在**谱�
 
 1. 用 `examples/fe_bcc_magnetic/` 的 432 原子 bcc 胞，`spin_llg alpha=0.01`，
    `compute_sed 10 1000 1 x spin`；
-2. 与解析磁子色散 $\omega(q)=\gamma J(0)-J(q)$ 对比（$J(q)$ 由 09 篇的 $K$
+2. 与解析磁子色散 $\omega(q)=\gamma J(0)-J(q)$ 对比（ $J(q)$ 由 09 篇的 $K$
    在切空间投影后得到）；
 3. 判据：第一布里渊区边界处的峰位相对误差 < 15%，且 $\mathbf q	o0$ 时
    $\omega	o0$（Goldstone）。
 
-第 2 步是瓶颈：$K$ 的切空间投影还没实现（09 篇 §9.2），所以这条验证链
+第 2 步是瓶颈： $K$ 的切空间投影还没实现（09 篇 §9.2），所以这条验证链
 目前断在中间。

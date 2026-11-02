@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | F19 | R19 runaway guard | DFT 快照起步的 MD 被误判为"势能崩塌" | 参考值在未弛豫构型上 priming | 已修 |
 | F20 | R19 guard | 固定晶格 + 自旋动力学被误判为晶格温升 | 没有"冻结晶格"识别 | 已修 |
-| F21 | R19 guard | 能量注入判据随机触发 | 判据定义错误（$w_{\rm net}$ 被阻尼主导） | 已禁用 |
+| F21 | R19 guard | 能量注入判据随机触发 | 判据定义错误（ $w_{\rm net}$ 被阻尼主导） | 已禁用 |
 | F22 | 测试工具 | 二聚体初态 $\vert \mathbf S_1\vert =1.16619$ | AoS 数组被按 SoA 读 | 已修（测试侧） |
 | F23 | 构建 | `main_replica` 10 处 `nep_acc_t undefined` | typedef 不在副本可见的头里 | 已修 |
 | F24 | 训练 | 磁矩通道分辨率低 | `spin_mag_scale` 被写死 0.25 | 已修（改为数据驱动） |
@@ -25,7 +25,7 @@
 `potential-energy collapse` 并停机。
 
 **根因**：guard 在 step 0 采样 $\mathbf R$ 的势能作为参考。DFT 快照相对模型
-极小值有 $0.1$–$0.5$ eV/atom 的落差，前 1000 步的弛豫是**合法**的能量下降，
+极小值有 $0.1$– $0.5$ eV/atom 的落差，前 1000 步的弛豫是**合法**的能量下降，
 被当成失稳。
 
 **修法**：参考值改为从"已弛豫"的构型 priming（`spin_guard_primed` 标志），
@@ -54,10 +54,10 @@
 
 **症状**：某些算例随机报"energy injection"。
 
-**根因**：判据用 $w_{\rm net}/|w_{\rm guard}[0]|>1.05$ 且 $w_{\rm net}/{\rm atom}>0.02$ eV。
-但 $w_{\rm net}$ 被"阻尼项向噪声场松弛"主导（$\sigma_{\rm SLLG}\sim19$ rms$|B_\perp|$），
+**根因**：判据用 $w\_{\rm net}/|w\_{\rm guard}[0]|>1.05$ 且 $w_{\rm net}/{\rm atom}>0.02$ eV。
+但 $w_{\rm net}$ 被"阻尼项向噪声场松弛"主导（ $\sigma_{\rm SLLG}\sim19$ rms $|B_\perp|$），
 它与 $W_{\rm rot}$ 的 2048 次抵消后剩下的残差是 $\mathcal O(dS^2)$ 离散伪迹。
-Fe 3456 原子实测：$w_{\rm net}=-2.34\times10^{3}$ eV，而总能量只动了 $+5.9$ eV。
+Fe 3456 原子实测： $w_{\rm net}=-2.34\times10^{3}$ eV，而总能量只动了 $+5.9$ eV。
 
 **决策**：**删除判据**，而不是调阈值。删掉的是一个定义错误的量，
 不是放宽一个正确的门禁。判据 (3)(4)（直接读 `thermo.out`）保留。
@@ -68,7 +68,7 @@ Fe 3456 原子实测：$w_{\rm net}=-2.34\times10^{3}$ eV，而总能量只动�
 
 ## F22 — 二聚体初态被按 AoS 读成 SoA
 
-**症状**：S08A 的二聚体 $|\mathbf S_1|=\sqrt{1.36}=1.16619$、$|\mathbf S_2|=0.8$。
+**症状**：S08A 的二聚体 $|\mathbf S_1|=\sqrt{1.36}=1.16619$、 $|\mathbf S_2|=0.8$。
 
 **根因**：`spin` 在 xyz 里按 `[S1x S2x][S1y S2y][S1z S2z]`（SoA）排列，
 测试生成器按 `[S1x S1y S1z][S2x S2y S2z]`（AoS）填充。
@@ -104,7 +104,7 @@ typedef 放在后者里，前者看不到。
 （r17 的 2.60 $\mu_B$ vs 实验 2.22）。
 
 **根因**：`nep.in` 里手写 `spin_mag_scale 0.25`，而 Fe 训练集
-$\max|\mathbf S|=4.27\,\mu_B$。$u={\rm scale}\cdot|\mathbf S|$ 因此只落在
+$\max|\mathbf S|=4.27\ \mu_B$。 $u={\rm scale}\cdot|\mathbf S|$ 因此只落在
 $[0,1.07]$，网络在 $u\approx1$ 附近的分辨率被压缩。
 
 **修法**：`nep.in` **不写**该行，训练器按 $1/\max|\mathbf S|=0.234148785$
@@ -136,7 +136,7 @@ void Measure::post_run(...) {
 
 第二个 `run` 块于是只做积分：`thermo.out` / `traj.xyz` / `restart.xyz` 都不再更新，
 而 stdout 仍在打印进度（重定向到文件时被块缓冲，肉眼更看不到）。"进程存活、CPU 占用、
-文件不动"被读成了挂死；$N$ 越大单块跑得越久、越容易被提前判死，所以阈值看上去在
+文件不动"被读成了挂死； $N$ 越大单块跑得越久、越容易被提前判死，所以阈值看上去在
 $N\approx432$——实际上是"等多长时间"的问题，不是 $N$ 的物理阈值。
 
 修复（r19，`src/measure/measure.cu` + `dump_thermo.cu[h]`）：

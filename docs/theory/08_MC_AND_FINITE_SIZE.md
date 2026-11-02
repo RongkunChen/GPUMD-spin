@@ -2,7 +2,7 @@
 
 ## 8.1 Metropolis（固定模长）
 
-状态 $\{\mathbf S_i\}$，$|\mathbf S_i|=s_i$ 固定。单自旋提议：在球面上均匀取新方向，接受概率
+状态 $\lbrace \mathbf S_i\rbrace$， $|\mathbf S\_i|=s\_i$ 固定。单自旋提议：在球面上均匀取新方向，接受概率
 $p=\min(1,e^{-\beta\Delta E})$。细致平衡由对称提议 + Metropolis 判据保证。
 一个 sweep = $N$ 次提议。热化 $N_{\rm burn}$ sweeps，采样 $N_{\rm sample}$ sweeps，按块平均给误差。
 
@@ -58,8 +58,8 @@ $$
 
 ## 8.6 已验证 / 未验证
 
-* 已验证：二聚体（2 自旋）SLLG vs Metropolis vs 四维求积，$z\le4$（S08A-R1）。
-* 未验证：Fe 的有限尺寸扫描、$T_c$、临界指数。状态 `NOT_RUN_MODEL_GATE`。
+* 已验证：二聚体（2 自旋）SLLG vs Metropolis vs 四维求积， $z\le4$（S08A-R1）。
+* 未验证：Fe 的有限尺寸扫描、 $T_c$、临界指数。状态 `NOT_RUN_MODEL_GATE`。
 
 ## 8.7 限制
 

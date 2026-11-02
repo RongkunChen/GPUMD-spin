@@ -6,20 +6,20 @@
 ## 1.1 完整 Hamiltonian
 
 体系由 $N$ 个原子组成，原子 $i$ 携带位置 $\mathbf R_i\in\mathbb R^3$ 与
-局域磁矩 $\mathbf S_i\in\mathbb R^3$（$|\mathbf S_i|=\mu_i$，单位 $\mu_B$）：
+局域磁矩 $\mathbf S_i\in\mathbb R^3$（ $|\mathbf S\_i|=\mu\_i$，单位 $\mu_B$）：
 
 $$
-\boxed{\;
-E\big(\{\mathbf R\},\{\mathbf S\}\big)
-=\sum_i E_i^{(2)}\big(\{\mathbf R\},\{\mathbf S\}\big)
-+\sum_i E_i^{(3)}\big(\{\mathbf R\},\{\mathbf S\}\big)
-+\sum_i E_i^{\rm mag}\big(\{\mathbf S\}\big)
-\;}
+\boxed{
+E\big(\lbrace \mathbf R\rbrace ,\lbrace \mathbf S\rbrace \big)
+=\sum_i E_i^{(2)}\big(\lbrace \mathbf R\rbrace ,\lbrace \mathbf S\rbrace \big)
++\sum_i E_i^{(3)}\big(\lbrace \mathbf R\rbrace ,\lbrace \mathbf S\rbrace \big)
++\sum_i E_i^{\rm mag}\big(\lbrace \mathbf S\rbrace \big)
+\ }
 \tag{1.1}
 $$
 
 * $E^{(2)}$：两体径向项。主要依赖 $\mathbf R$，但每条键的权重被环境自旋投影
-  $a_{ij}=\hat{\mathbf S}_i\cdot\hat{\mathbf S}_j$ 调制（§1.3）。没有这一层调制，
+  $a\_{ij}=\hat{\mathbf S}\_i\cdot\hat{\mathbf S}\_j$ 调制（§1.3）。没有这一层调制，
   模型无法描述磁致伸缩与自旋–晶格耦合。
 * $E^{(3)}$：三体角向项。依赖 $\cos\theta_{jik}$，同样被自旋环境调制。
 * $E^{\rm mag}$：局域磁项。只依赖自旋方向，是固定晶格、共线自旋下唯一
@@ -29,8 +29,8 @@ $$
 
 | 参数 | 符号 | Fe 取值 | 作用对象 |
 |---|---|---|---|
-| 径向截断 | $r_c^{\rm rad}$ | 6.0 Å | $E^{(2)}$、$S^{\rm ex}$、$S^{\rm an}$、$S^{\rm dm}$、$S^{\rm ia}$ |
-| 角向截断 | $r_c^{\rm ang}$ | 3.0 Å | $E^{(3)}$ 的 $j$–$i$–$k$ 三角形 |
+| 径向截断 | $r_c^{\rm rad}$ | 6.0 Å | $E^{(2)}$、 $S^{\rm ex}$、 $S^{\rm an}$、 $S^{\rm dm}$、 $S^{\rm ia}$ |
+| 角向截断 | $r_c^{\rm ang}$ | 3.0 Å | $E^{(3)}$ 的 $j$– $i$– $k$ 三角形 |
 | 磁截断 | $r_c^{\rm mag}$ | 6.0 Å（默认＝径向） | $S^{\rm mag}$ |
 
 `nep.in` 里 `cutoff 6.0 3.0` 一次给出前两个。**注意**：截断半径决定
@@ -42,7 +42,7 @@ $$
 每个原子先被映射为描述符向量，再由前馈网络映射为能量：
 
 $$
-\mathbf q_i=\Big[\,q^{S}_{i},\ q^{2}_{i},\ q^{3}_{i},\ q^{\rm mag}_{i}\Big]
+\mathbf q_i=\Big[\ q^{S}_{i},\ q^{2}_{i},\ q^{3}_{i},\ q^{\rm mag}_{i}\Big]
 \in\mathbb R^{n_{\rm desc}},
 \qquad
 E_i=\mathcal N\big(\mathbf q_i\big).
@@ -53,8 +53,8 @@ $\mathcal N$ 是单隐层网络（`neuron 30`），激活 $\tanh^2$（NEP4 约�
 输出层线性。
 
 **关键设计选择**：所有自旋依赖都进入**描述符**，而不是作为一个显式的
-$\mathbf S_i\cdot\mathbf S_j$ 项加进能量。交换作用、DMI、各向异性都是网络的
-隐式拟合结果。因此不能把拟合参数直接解释为 $J_{ij}$、$D_{ij}$，只能通过
+$\mathbf S\_i\cdot\mathbf S\_j$ 项加进能量。交换作用、DMI、各向异性都是网络的
+隐式拟合结果。因此不能把拟合参数直接解释为 $J_{ij}$、 $D_{ij}$，只能通过
 后处理（09、10 篇）反演；反演出来的"有效交换"是温度与磁场相关的量，
 不是微观常数。
 
@@ -72,14 +72,14 @@ $$
 径向项展开为
 
 $$
-E_i^{(2)}=\sum_{j\in n(i)}\sum_{n=1}^{n_{\max}} c_n^{2}\big(a_{ij}\big)\;
+E_i^{(2)}=\sum_{j\in n(i)}\sum_{n=1}^{n_{\max}} c_n^{2}\big(a_{ij}\big)
 f_n\big(r_{ij}\big),
 \qquad
-f_n(r)=T_n\!\Big(2\frac{r-r_c}{r_c}+1\Big)\Theta(r_c-r),
+f_n(r)=T_n \Big(2\frac{r-r_c}{r_c}+1\Big)\Theta(r_c-r),
 \tag{1.4}
 $$
 
-$T_n$ 是 Chebyshev 多项式，$c_n^{(2)}(a)$ 是 $a$ 的多项式（阶数由
+$T_n$ 是 Chebyshev 多项式， $c_n^{(2)}(a)$ 是 $a$ 的多项式（阶数由
 `basis_size` 控制）。式 (1.4) 的物理含义：
 
 * $a_{ij}=+1$（铁磁对齐）与 $a_{ij}=-1$（反铁磁对齐）可以有**不同的键刚度**，
@@ -90,7 +90,7 @@ $T_n$ 是 Chebyshev 多项式，$c_n^{(2)}(a)$ 是 $a$ 的多项式（阶数由
 角向项同理：
 
 $$
-E_i^{(3)}=\sum_{(j,k)\in n(i)}\sum_{n} c_n^{3}\big(a_{ij},a_{ik},\cos\theta_{jik}\big)\,
+E_i^{(3)}=\sum_{(j,k)\in n(i)}\sum_{n} c_n^{3}\big(a_{ij},a_{ik},\cos\theta_{jik}\big)
 f_n(r_{ij})f_n(r_{ik}).
 \tag{1.5}
 $$
@@ -99,7 +99,7 @@ $$
 
 $$
 E_i^{\rm mag}=\sum_{j\in n_{\rm mag}(i)}\sum_{n} c_n^{\rm mag}
-\big(\hat{\mathbf S}_i\cdot\hat{\mathbf S}_j\big)\,
+\big(\hat{\mathbf S}_i\cdot\hat{\mathbf S}_j\big)
 g_n(r_{ij}),
 \tag{1.6}
 $$
@@ -118,38 +118,38 @@ $g_n$ 是另一组径向基。注意 $E^{\rm mag}$ **不含** $\mathbf S_i$ 与�
 | 量 | 输入/输出 | 内部 | 换算 |
 |---|---|---|---|
 | 长度 | Å | Å | — |
-| 时间（`time_step`） | fs | nat（$1$ nat $=10.1805$ fs） | $\Delta t_{\rm nat}=\Delta t_{\rm fs}/10.1805$ |
+| 时间（`time_step`） | fs | nat（ $1$ nat $=10.1805$ fs） | $\Delta t\_{\rm nat}=\Delta t\_{\rm fs}/10.1805$ |
 | 能量 | eV | eV | — |
 | 力 | eV/Å | eV/Å | — |
 | 速度（`dump_xyz velocity`） | Å/fs | Å/nat | $\times 10.1805$ |
 | 速度（`thermo.out` 隐含） | — | Å/nat | 同上 |
 | 磁矩 $\vert \mathbf S\vert$ | $\mu_B$ | $\mu_B$ | — |
-| 磁梯度 $\mathbf g=-\partial E/\partial\mathbf S$ | eV/$\mu_B$ | eV/$\mu_B$ | — |
+| 磁梯度 $\mathbf g=-\partial E/\partial\mathbf S$ | $\mathrm{eV}/\mu_B$ | $\mathrm{eV}/\mu_B$ | — |
 | 旋磁比 $\gamma$ | $\mu_B$/(eV·fs) | $\mu_B$/(eV·fs) | **无转换**：`Spin::parse` 直接 `atof`，无任何缩放 |
-| 动能 | — | eV | $\frac12 m v^2\times1.0364269\times10^{-4}$（$m$ 用 u，$v$ 用 Å/fs） |
+| 动能 | — | eV | $\frac12 m v^2\times1.0364269\times10^{-4}$（ $m$ 用 u， $v$ 用 Å/fs） |
 | 热流（`heat_flux.out`） | eV/(Å²·ps)？ | eV/(Å²·nat) | $\times 98.23$ **（归一化存疑，11 篇 §11.7）** |
 
 **动能那一行必须记住**：`thermo.out` 的 KE 已经乘过 $1.0364269\times10^{-4}$。
 
-**旋磁比那一行也必须记住**：$\gamma$ 的单位是 $\mu_B/(\mathrm{eV}\cdot\mathrm{fs})$，代码里
+**旋磁比那一行也必须记住**： $\gamma$ 的单位是 $\mu_B/(\mathrm{eV}\cdot\mathrm{fs})$，代码里
 **没有** ps→fs 的内部换算——`Spin::parse` 就是一句 `atof`（`src/spin/spin.cu`），
-`spin_llg` 给什么数值就按什么数值用。物理值 $g\mu_B/\hbar\approx3.0385$（$g=2$）
+`spin_llg` 给什么数值就按什么数值用。物理值 $g\mu_B/\hbar\approx3.0385$（ $g=2$）
 正是按这个单位给的，见 `spin.cu` 中 `gamma_phys = 3.0385 // g*mu_B/hbar in mu_B/(eV fs)`。
-（旧版曾写作 rad·$\mu_B$/(eV·ps) 且"内部 $\times10^{-3}$"，与实现不符，已更正。）
-若按"per ps"的数值输入，自旋动力学会快 1000 倍：平衡量（$M$、$\chi$）看不出问题，
-但磁子寿命、$\kappa_{mm}$、磁化弛豫时间全部错掉。
+（旧版曾写作 rad· $\mu_B$/(eV·ps) 且"内部 $\times10^{-3}$"，与实现不符，已更正。）
+若按"per ps"的数值输入，自旋动力学会快 1000 倍：平衡量（ $M$、 $\chi$）看不出问题，
+但磁子寿命、 $\kappa_{mm}$、磁化弛豫时间全部错掉。
 自己从 `dump_xyz` 的 Å/fs 速度重算时若漏掉它，KE 会大 $9.6\times10^{3}$ 倍；
 PV1 阶段就因为漏乘质量与漏乘该因子，两次算出荒谬的温度。
 
 ## 1.6 局域能量的可加性
 
-$E_i$ 是局域能量，$E=\sum_i E_i$。两体项在 $i,j$ 之间对称分配，
+$E_i$ 是局域能量， $E=\sum\_i E\_i$。两体项在 $i,j$ 之间对称分配，
 因此 $E_i$ 只包含每条键的一半。两个后果：
 
 1. `dump_xyz potential` 的每原子能量之和严格等于 `thermo.out` 的总 PE。
    在 `heat_audit` 的 128 原子算例上逐帧验证，偏差 < 1 ulp。
-2. 由 $E_i$ 直接构造的"能量矩" $\sum_i\mathbf R_i\dot e_i$ 只在非周期体系里
-   等于键矢形式；周期体系多出面项 $\sum \mathbf n\mathbf L\,\dot e_{ij}$。
+2. 由 $E_i$ 直接构造的"能量矩" $\sum\_i\mathbf R\_i\dot e\_i$ 只在非周期体系里
+   等于键矢形式；周期体系多出面项 $\sum \mathbf n\mathbf L\ \dot e_{ij}$。
    这一点在 PV1 被实测否定（11 篇 §11.6）。
 
 ## 1.7 与 NEP4 上游的关系
@@ -168,6 +168,6 @@ $E_i$ 是局域能量，$E=\sum_i E_i$。两体项在 $i,j$ 之间对称分配�
 |---|---|---|
 | 式 (1.1) 的分解与 `dump_xyz potential` 一致 | **PASS** | `heat_audit` 128 原子，逐帧 < 1 ulp |
 | $\mathbf g=-\partial E/\partial\mathbf S$ | **PASS** | float64 参考求值器，最大相对差 2.6e-5（05 篇） |
-| $\mathbf F=-\partial E/\partial\mathbf R$ | **PASS** | 同参考求值器，$3\times10^{-6}$ eV/Å |
+| $\mathbf F=-\partial E/\partial\mathbf R$ | **PASS** | 同参考求值器， $3\times10^{-6}$ eV/Å |
 | 单离子各向异性可被表示 | **FAIL（结构限制）** | 09 篇 §9.6：整体旋转自旋能量不变 |
-| 混合导数 $\partial^2E/\partial R\,\partial S$ | **PASS** | Frobenius 相对差 1.3e-3（05 篇 §5.6） |
+| 混合导数 $\partial^2E/\partial R\ \partial S$ | **PASS** | Frobenius 相对差 1.3e-3（05 篇 §5.6） |

@@ -12,7 +12,7 @@
 
 ## 3.2 为什么“描述符的宇称”≠“能量的宇称”
 
-$P$ 作用后 $q^{\rm Sdm}\to-q^{\rm Sdm}$，$q^{\rm Sex}\to+q^{\rm Sex}$。
+$P$ 作用后 $q^{\rm Sdm}\to-q^{\rm Sdm}$， $q^{\rm Sex}\to+q^{\rm Sex}$。
 ANN 是 $q$ 的非线性函数，所以
 
 $$
@@ -26,16 +26,16 @@ $$
 
 ## 3.3 旋转协变性的逐块分类
 
-| 块 | 整体旋转 $\mathbf S_i\to Q\mathbf S_i$ | 整体旋转 $\mathbf R$ |
+| 块 | 整体旋转 $\mathbf S\_i\to Q\mathbf S\_i$ | 整体旋转 $\mathbf R$ |
 |---|---|---|
-| Sex | 不变（$\mathbf S_i\cdot\mathbf S_j$） | 不变 |
+| Sex | 不变（ $\mathbf S\_i\cdot\mathbf S\_j$） | 不变 |
 | San | **变**（依赖 $\hat{\mathbf r}$） | 与自旋一起转则不变 |
 | Sdm | **变**（三重积） | 同上 |
 | Sia | **变** | 同上 |
 | Smag | 不变（只有 $\vert \mathbf S\vert$） | 不变 |
 
 所以只有 `mask17 = Sex|Smag` 的模型具有“自旋空间整体旋转不变性” → 它必须有一个 Goldstone 模
-（整体旋转零能）。实测：旋转 0.3 rad，$\Delta E=0.0$ eV（mask17），$\Delta E=-2.9\times10^{-3}$ eV（mask31）。
+（整体旋转零能）。实测：旋转 0.3 rad， $\Delta E=0.0$ eV（mask17）， $\Delta E=-2.9\times10^{-3}$ eV（mask31）。
 这是**区分两种参数化的一个可测判据**，也是判断能否谈论各向异性的前提。
 
 ## 3.4 手性与拓扑的门槛
@@ -55,6 +55,6 @@ $$
 
 ## 3.6 验证与限制
 
-* 已验证：mask17 的整体旋转不变性（0.0 eV）；mask31 的不变性破缺（$-2.9\times10^{-3}$ eV）。
+* 已验证：mask17 的整体旋转不变性（0.0 eV）；mask31 的不变性破缺（ $-2.9\times10^{-3}$ eV）。
 * 未验证：真正的反演测试需要对完整势做 $P$ 变换（需要成对构型），本项目只做了描述符级与
   单构型级的检查；这一点写进 `KNOWN_LIMITATIONS.md`。

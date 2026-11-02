@@ -105,11 +105,11 @@ python -c "import sys;sys.path.insert(0,'tools/physics_validation');import post_
 AFM-A 从 20 万代起出现 −1.6…−1.8 THz 的真软模，AFM-G 始终不稳。
 → **可用于 FM α-Fe，不可用于 AFM 态的声子。**
 
-> **更正说明（2026-11-01）**：$\hbar\omega$ 的换算误写为 $2S\Delta E/N$（正确为
+> **更正说明（2026-11-01）**： $\hbar\omega$ 的换算误写为 $2S\Delta E/N$（正确为
 > $2\Delta E/(NS)$），D 闭式误写为 $\frac{S}{6}\Sigma Jzr^2$（正确为
 > $\frac{1}{6S}\Sigma Jzr^2$），同一错误同时进入冻结螺旋与 LSWT 两条路线，因此两者
 > 比值永远一致、长期未被发现。更正后 D 由 436–476 降至 **292–316**，"D 偏硬源于磁矩
-> 偏大（$D\propto m^{2.35}$）"的解释同时作废（正确的 $d\ln D/d\ln m=0.02$–$0.35$）。
+> 偏大（ $D\propto m^{2.35}$）"的解释同时作废（正确的 $d\ln D/d\ln m=0.02$– $0.35$）。
 > 判据脚本 `tools/physics_validation/frozen_magnon_test.py`，原始记录
 > `results/validation/magnon_dynamics/`。
 

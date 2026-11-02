@@ -5,27 +5,27 @@
 对称（Strang）分裂，一个宏观步 $\Delta t$：
 
 $$
-\underbrace{S(\Delta t/2)}_{\text{自旋半步}}\;\underbrace{V(\Delta t)}_{\text{晶格 Verlet}}\;\underbrace{S(\Delta t/2)}_{\text{自旋半步}} .
+\underbrace{S(\Delta t/2)}_{\text{自旋半步}}\ \underbrace{V(\Delta t)}_{\text{晶格 Verlet}}\ \underbrace{S(\Delta t/2)}_{\text{自旋半步}} .
 \tag{7.1}
 $$
 
-* $S(\Delta t/2)$：在**固定** $\mathbf R$ 下推进自旋。$\alpha=T=0$ 时是保守中点，
+* $S(\Delta t/2)$：在**固定** $\mathbf R$ 下推进自旋。 $\alpha=T=0$ 时是保守中点，
   等价于把 $\mathbf S$ 沿有效场旋转一个角度，能量守恒到求值精度。
-* $V(\Delta t)$：速度 Verlet，力取中间态 $(\mathbf R_n,\mathbf S_{n+1/2})$。
+* $V(\Delta t)$：速度 Verlet，力取中间态 $(\mathbf R\_n,\mathbf S\_{n+1/2})$。
 
-为什么这样分：$S$ 与 $V$ 各自的向量场在子流形上可逆且保辛，对称复合给出
+为什么这样分： $S$ 与 $V$ 各自的向量场在子流形上可逆且保辛，对称复合给出
 二阶、时间可逆、保体积的格式。代价是每步要算两次力。
 
 ## 7.2 求力时刻与等时输出
 
 | 时刻 | 状态 | 动作 |
 |---|---|---|
-| $t_n$ | $(\mathbf R_n,\mathbf S_n)$ | 输出（等时点） |
+| $t_n$ | $(\mathbf R\_n,\mathbf S\_n)$ | 输出（等时点） |
 | $t_n+\Delta t/2$ | $\mathbf S_{n+1/2}$ | 第一个自旋半步 |
-| — | $(\mathbf R_n,\mathbf S_{n+1/2})$ | 重算力（$V$ 的 kick 用中间态） |
-| $t_{n+1}$ | $(\mathbf R_{n+1},\mathbf S_{n+1/2})$ | 晶格推进 |
+| — | $(\mathbf R\_n,\mathbf S\_{n+1/2})$ | 重算力（ $V$ 的 kick 用中间态） |
+| $t_{n+1}$ | $(\mathbf R\_{n+1},\mathbf S\_{n+1/2})$ | 晶格推进 |
 | $t_{n+1}$ | $\mathbf S_{n+1}$ | 第二个自旋半步 |
-| $t_{n+1}$ | $(\mathbf R_{n+1},\mathbf S_{n+1})$ | **再算一次力/能量**，输出 |
+| $t_{n+1}$ | $(\mathbf R\_{n+1},\mathbf S\_{n+1})$ | **再算一次力/能量**，输出 |
 
 最后一次重算是关键：否则输出帧的力/能量属于中间态，与输出的
 $(\mathbf R,\mathbf S)$ 不对应——这是"续算不逐位一致"的常见原因。
@@ -41,7 +41,7 @@ $$
 \tag{7.2}
 $$
 
-分裂误差 $\propto\Delta t^2$。判据：$\max_t|\Delta E|/N\le10^{-5}$ eV/atom，
+分裂误差 $\propto\Delta t^2$。判据： $\max_t|\Delta E|/N\le10^{-5}$ eV/atom，
 且把 $\Delta t$ 减半后误差比值的 $\log_2$ 平均 $\ge1.5$。
 
 本版本实测（4 原子强交换场，100 fs）：
@@ -61,11 +61,11 @@ $$
 ## 7.4 可逆性与时间对称
 
 对称分裂要求两个半步严格互逆。工程上靠：同一有效场迭代器、同一收敛容差、
-同一噪声序列（$T=0$ 时无噪声）。
+同一噪声序列（ $T=0$ 时无噪声）。
 
 `restart=` 从 `spin_restart.bin` 恢复 $(\mathbf R,\mathbf S,\mathbf v)$、
-每原子 curandState、$\gamma,\alpha,T,\Delta t$、scheme、物理步数与模型哈希。
-三组连续 vs 分段重启实测**逐位相同**（$\max|\Delta S|=0$，RNG 768 B 相同），
+每原子 curandState、 $\gamma,\alpha,T,\Delta t$、scheme、物理步数与模型哈希。
+三组连续 vs 分段重启实测**逐位相同**（ $\max|\Delta S|=0$，RNG 768 B 相同），
 负向控制（损坏载荷、改 scheme、改模型）全部 rc=4。
 
 ## 7.5 时间步政策（r18 正式采用）
@@ -75,10 +75,10 @@ $$
 
 | 档位 | $\Delta t$ | 依据 |
 |---|---|---|
-| **参考（推荐）** | **0.05 fs** | Fe 1024 原子、250 K、1–10 ps：$\delta E=5.9\times10^{-8}\to1.9\times10^{-7}$ eV/atom，漂移速率 $4.6\times10^{-9}$ eV/atom/ps |
-| 平衡 | 0.1 fs | 同条件 1 ps：$8.4\times10^{-8}$，余量 119× |
-| 不建议 | 0.2 fs | 同条件 1 ps：$1.22\times10^{-7}$（比 0.05 高 54%）；强场小胞直接失守 |
-| 只做诊断 | 0.025 fs | 与 0.05 同量级（$9.0\times10^{-8}$），无收益，慢一倍 |
+| **参考（推荐）** | **0.05 fs** | Fe 1024 原子、250 K、1–10 ps： $\delta E=5.9\times10^{-8}\to1.9\times10^{-7}$ eV/atom，漂移速率 $4.6\times10^{-9}$ eV/atom/ps |
+| 平衡 | 0.1 fs | 同条件 1 ps： $8.4\times10^{-8}$，余量 119× |
+| 不建议 | 0.2 fs | 同条件 1 ps： $1.22\times10^{-7}$（比 0.05 高 54%）；强场小胞直接失守 |
+| 只做诊断 | 0.025 fs | 与 0.05 同量级（ $9.0\times10^{-8}$），无收益，慢一倍 |
 
 适用边界写死为：**Fe / `mask17` / $\alpha=0$ / NVE / $T\approx250$ K / $\le10$ ps**。
 外推依据是"漂移速率恒定"（5 ps 与 10 ps 的斜率一致到 3%），

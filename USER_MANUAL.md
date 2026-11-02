@@ -52,7 +52,7 @@ Fe  0.0 0.0 0.0   0.0 0.0 0.0   0.0 0.0 2.2
 Fe  1.5 1.5 1.5   0.0 0.0 0.0   0.0 0.0 2.2
 ```
 
-`spin` 列写成三个数（$\mu_B$）。**注意排列**：多帧文件的 `spin` 是逐原子三元组，
+`spin` 列写成三个数（ $\mu_B$）。**注意排列**：多帧文件的 `spin` 是逐原子三元组，
 不是"先所有 $x$ 再所有 $y$"；`tests/physics_checks.py` 与
 `tools/physics_validation/make_fe_system.py` 都按逐原子三元组写。
 
@@ -117,7 +117,7 @@ Lattice="..." Properties=species:S:1:pos:R:3:force:R:3:spin:R:3:spin_force:R:3 e
 ```
 
 `energy=` 是**总能量**（eV），`force=1` 表示下面有 3 列力，
-`spin_force=1` 表示有 3 列磁梯度（$-\partial E/\partial\mathbf S$）。
+`spin_force=1` 表示有 3 列磁梯度（ $-\partial E/\partial\mathbf S$）。
 若要做预测，这几列仍要占位（训练器会校验列数），详见 `MODEL_FORMAT.md`。
 
 ### 2.4 训练输出
@@ -160,7 +160,7 @@ Lattice="..." Properties=species:S:1:pos:R:3:force:R:3:spin:R:3:spin_force:R:3 e
 |---|---|---|
 | `spin_llg` | `spin_llg gamma=3.0385 alpha=0.1 T=300 seed=1 scheme=geometric` | 启用 SLLG。`alpha=0 T=0` → 确定性保守分支 |
 | | 可选 `restart=spin_restart.bin` | 从检查点恢复（含 RNG） |
-| `add_bfield` | `add_bfield Bx By Bz [omega_THz]` | 外磁场（eV/$\mu_B$）；`omega>0` 时为正弦驱动（FMR） |
+| `add_bfield` | `add_bfield Bx By Bz [omega_THz]` | 外磁场（ $\mathrm{eV}/\mu_B$）；`omega>0` 时为正弦驱动（FMR） |
 | `spin_substeps` | `spin_substeps <n>` | 每个 MD 步内做 n 个自旋子步 |
 | `spin_torque_refresh` | `spin_torque_refresh on/off` | 子步之间是否只刷新力矩（省一次全力计算） |
 | `spin_split` | `spin_split strang` 等 | 分裂方式（默认对称 Strang） |
@@ -204,7 +204,7 @@ done
 
 ### 5.2 基态磁矩
 
-固定 $a=a_0$，扫 $|\mathbf S|\in\{2.0,2.2,2.4,2.6,2.8\}$，取 $E$ 极小。
+固定 $a=a_0$，扫 $|\mathbf S|\in\lbrace 2.0,2.2,2.4,2.6,2.8\rbrace$，取 $E$ 极小。
 R18 给 **2.413 $\mu_B$**（实验 2.22，+8.7%）。
 
 ### 5.3 居里温度（推荐用 `dump_magnetization`）
@@ -218,13 +218,13 @@ gpumd.exe > stdout.txt
 ```
 
 `magnetization.out` 的 `|M|` 列直接给磁化强度，`chi` 列给磁化率
-（$=(\langle\mathbf M\cdot\mathbf M\rangle-\langle\mathbf M\rangle\cdot\langle\mathbf M\rangle)/(Nk_BT)$，单位 $\mu_B^2$/eV）。
+（ $=(\langle\mathbf M\cdot\mathbf M\rangle-\langle\mathbf M\rangle\cdot\langle\mathbf M\rangle)/(Nk_BT)$，单位 $\mu_B^2$/eV）。
 
-**判据**：$|M|(T)$ 在 $T_c$ 附近陡降，$\chi$ 在 $T_c$ 出现峰。
-R18 的两个模型：A（mask17）$\approx950$ K，B（mask31）$\approx850$ K，实验 1043 K。
+**判据**： $|M|(T)$ 在 $T_c$ 附近陡降， $\chi$ 在 $T_c$ 出现峰。
+R18 的两个模型：A（mask17） $\approx950$ K，B（mask31） $\approx850$ K，实验 1043 K。
 **误差棒约 ±100 K**（每点 1 ps、432 原子）。
 
-要更准：每点 ≥50 ps、多尺寸（$L=4,6,8$）做 Binder cumulant 交点。
+要更准：每点 ≥50 ps、多尺寸（ $L=4,6,8$）做 Binder cumulant 交点。
 本项目**没做**这一步（见 `docs/theory/08_MC_AND_FINITE_SIZE.md`）。
 
 ### 5.4 保守动力学（无热浴）
@@ -267,9 +267,9 @@ printf '...\nspin_llg gamma=3.0385 alpha=0 T=0 restart=spin_restart.bin\nrun 100
 | 力 | eV/Å | |
 | 速度（dump） | Å/fs | 内部是 Å/nat，要 ×10.1805 |
 | 自旋 $\vert \mathbf S\vert$ | $\mu_B$ | |
-| 磁梯度/力矩列 | eV/$\mu_B$ | `torque` 列存的是 $-\partial E/\partial\mathbf S$，不是 $\mathbf S\times\mathbf g$ |
-| 外磁场 | eV/$\mu_B$ | `add_bfield` |
-| 动能 | — | $\frac12 m v^2\times1.0364269\times10^{-4}$（$m$ 用 u，$v$ 用 Å/fs） |
+| 磁梯度/力矩列 | $\mathrm{eV}/\mu_B$ | `torque` 列存的是 $-\partial E/\partial\mathbf S$，不是 $\mathbf S\times\mathbf g$ |
+| 外磁场 | $\mathrm{eV}/\mu_B$ | `add_bfield` |
+| 动能 | — | $\frac12 m v^2\times1.0364269\times10^{-4}$（ $m$ 用 u， $v$ 用 Å/fs） |
 | 热流 | eV/(Å²·ps)？ | **归一化存疑**，见 §8 |
 
 自己从 `dump_xyz` 重算温度时，务必用上表最后两行；漏乘因子会让 KE 差 4 个数量级。
@@ -293,13 +293,13 @@ printf '...\nspin_llg gamma=3.0385 alpha=0 T=0 restart=spin_restart.bin\nrun 100
 
 ## 8. 已知缺陷与禁止事项（务必先读）
 
-1. **0.2 fs 的耦合能量门禁仍 FAIL**（$1.02\times10^{-5}>10^{-5}$）。用 0.05 或 0.1 fs。
+1. **0.2 fs 的耦合能量门禁仍 FAIL**（ $1.02\times10^{-5}>10^{-5}$）。用 0.05 或 0.1 fs。
 2. **热流的绝对归一化未验证**：同一条轨迹三个 $\kappa_{zz}$ 相差 $10^{7}$。
    **不要**用 `compute_hac` 或 `dump_heat_flux` 报热导率；`compute_hac` 在自旋体系上
    给出负值。详见 `docs/theory/11`、`12`。
-3. ~~NVT→NVE 写在同一个 `run.in` 里，$N\ge432$ 会挂死~~ —— **r19 已修复**（F-25）。现在可以写 `ensemble nvt_lan ...` + `run` + `ensemble nve` + `run`，两个块的 `dump_thermo` / `dump_xyz` 会接在同一个文件后面。
+3. ~~NVT→NVE 写在同一个 `run.in` 里， $N\ge432$ 会挂死~~ —— **r19 已修复**（F-25）。现在可以写 `ensemble nvt_lan ...` + `run` + `ensemble nve` + `run`，两个块的 `dump_thermo` / `dump_xyz` 会接在同一个文件后面。
    拆成两次 `gpumd.exe` 调用（第一次 dump 末帧，第二次从该帧起跑）。
-4. **没有单离子各向异性**：固定晶格整体旋转自旋能量不变，$K_1$ 不可表示。
+4. **没有单离子各向异性**：固定晶格整体旋转自旋能量不变， $K_1$ 不可表示。
 5. **`seed` 在 `alpha=0 T=0` 的 NVE 里是空操作**：换初态才算换种子。
 6. **`thermo.out` 是追加写**：同一目录重跑会得到两段拼接的文件，分析时取最后一块。
 7. `dump_heat_flux` 的列顺序：`time, Jtot(3), Jp(3), 标量, Jm(3)`。
@@ -312,7 +312,7 @@ printf '...\nspin_llg gamma=3.0385 alpha=0 T=0 restart=spin_restart.bin\nrun 100
 |---|---|---|
 | `RUNAWAY GUARD STOP: lattice temperature excursion (limit 300)` | r17 的 F26 缺陷 | 用 r18（已修）；若仍出现，检查是否用错 `gpumd.exe` |
 | rc=4 且提示 restart 不匹配 | 模型/参数/文件损坏 | 确认 `nep.txt` 与检查点同源 |
-| 温度爆炸（$10^5$ K） | 单位错（速度当 Å/nat 用）或 dt 太大 | 用 `velocity 300` 让程序自己采样；dt ≤ 0.1 fs |
+| 温度爆炸（ $10^5$ K） | 单位错（速度当 Å/nat 用）或 dt 太大 | 用 `velocity 300` 让程序自己采样；dt ≤ 0.1 fs |
 | 力全是 0 | 用了非训练 `nep.in` 做预测，架构不匹配 | 用训练时的 `nep.in` |
 | `thermo.out` 有两段表头 | 追加写 | 删旧文件或用新目录 |
 | 第二段之后文件不再增长 | 使用的是 r18 及更早的二进制（F-25） | 升级到 r19，或拆成两次调用 |
