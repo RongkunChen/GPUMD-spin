@@ -26,9 +26,9 @@ $$
 
 | 量 | 解析 | 差分 | 相对差 |
 |---|---|---|---|
-| $F\_x=-\partial E/\partial r\_x$ | $-3.172968$ | $-3.171921$ | $3.3\times10^{-4}$ |
-| $g\_x=-\partial E/\partial S\_x$ | $-0.040138$ | $-0.040054$ | $2.1\times10^{-3}$ |
-| $\partial F\_x/\partial S\_x$ vs $\partial g\_x/\partial r\_x$ | $+0.143528$ | $+0.143619$ | $6.4\times10^{-4}$ |
+| $F_x=-\partial E/\partial r_x$ | $-3.172968$ | $-3.171921$ | $3.3\times10^{-4}$ |
+| $g_x=-\partial E/\partial S_x$ | $-0.040138$ | $-0.040054$ | $2.1\times10^{-3}$ |
+| $\partial F_x/\partial S_x$ vs $\partial g_x/\partial r_x$ | $+0.143528$ | $+0.143619$ | $6.4\times10^{-4}$ |
 
 脚本：`tools/one_shot/phase2_s05b_r2.py`；证据：`evidence/final_one_shot_*/phase_2_results.json`。
 差分误差随 $h$ 的收敛已验证（ $h=10^{-6}$ 落入 float32 噪声地板， $h=10^{-3}$ 最优点）。
@@ -50,7 +50,7 @@ $$
 ## 4. 数值算法
 
 1. 力/梯度在同一 kernel：先算 $q$，再 $\partial q/\partial\mathbf r$、 $\partial q/\partial\mathbf S$，最后乘 ANN 的 $\partial e/\partial q$。
-2. 累加顺序：float32 逐邻居累加（**这是 G6 差异的根源**，见 `13`）。
+2. 累加顺序：float32 逐邻居累加（**这是 G6 差异的根源**，见 `VALIDATION_REPORT.md`）。
 3. `spin_work` 记账： $dU=-B_{\rm det} \cdot d\mathbf S$ 拆成 rotation / noise / external 三项（`src/spin/spin.cu` F16）。
 
 ## 5. 常见错误（验收反例）

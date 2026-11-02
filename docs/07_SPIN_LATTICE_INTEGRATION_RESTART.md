@@ -32,14 +32,14 @@
 | $\max\vert \Delta E\vert /\text{atom}$， $\Delta t=0.2$ fs | $1.0\times10^{-5}$ eV | **$1.0673\times10^{-5}$（FAIL）** |
 | 同， $\Delta t=0.1$ fs | — | $4.3321\times10^{-6}$ |
 | 同， $\Delta t=0.05$ fs | — | $1.6758\times10^{-6}$ |
-| 误差阶 $p=\log\_2(\Delta E\_{0.2}/\Delta E\_{0.1})$ | $\ge1.5$ | $\approx1.30$ |
+| 误差阶 $p=\log_2(\Delta E_{0.2}/\Delta E_{0.1})$ | $\ge1.5$ | $\approx1.30$ |
 | 固定晶格（A 组） | PASS | PASS |
 | 等时单点（C 组） | PASS | PASS |
 
-> **当前版本状态：`COUPLED_NOT_VALIDATED`。** 本轮未重跑该 harness（见 `13`），因此
+> **当前版本状态：`COUPLED_NOT_VALIDATED`。** 本轮未重跑该 harness（见 `VALIDATION_REPORT.md`），因此
 > 耦合热流（`08`）与耦合输运一律 BLOCKED；不得用“能量差很小”替代门禁。
 
-解析玩具模型（两原子磁弹性）用于机制反例： $E=-J\ \mathbf S\_1 \cdot \mathbf S\_2+\frac{k}{2}(r-r\_0)^2+\lambda(r-r\_0)(\mathbf S\_1 \cdot \mathbf S\_2)$。
+解析玩具模型（两原子磁弹性）用于机制反例： $E=-J\ \mathbf S_1 \cdot \mathbf S_2+\frac{k}{2}(r-r_0)^2+\lambda(r-r_0)(\mathbf S_1 \cdot \mathbf S_2)$。
 在该模型上可以直接算出精确能量守恒，用来判断生产分裂是否「结构正确」而非仅「数值小」。
 
 ## 3. Checkpoint 格式（`spin_restart.bin`）

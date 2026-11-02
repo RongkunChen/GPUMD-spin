@@ -160,10 +160,10 @@ which gives the five blocks of layout 3:
 
 | Block | Definition | Physical order |
 |---|---|---|
-| `Sex` | $q^{\mathrm{Sex}}\_{i,n}=\sum\_j g\_n f\_c\ (\mathbf S\_i\cdot\mathbf S\_j)$ | exchange |
-| `San` | $q^{\mathrm{San}}\_{i,n}=\sum\_j g\_n f\_c\ a\ b$ | anisotropic exchange |
-| `Sdm` | $q^{\mathrm{Sdm}}\_{i,n}=\sum\_j g\_n f\_c\ \mathbf e\_{ij}\cdot(\mathbf S\_i\times\mathbf S\_j)$ | Dzyaloshinskii–Moriya |
-| `Sia` | $q^{\mathrm{Sia}}\_{i,n}=\sum\_j g\_n f\_c\ (\tfrac32 a^2-\tfrac12 s^2)$ | single-ion anisotropy |
+| `Sex` | $q^{\mathrm{Sex}}_{i,n}=\sum_j g_n f_c\ (\mathbf S_i\cdot\mathbf S_j)$ | exchange |
+| `San` | $q^{\mathrm{San}}_{i,n}=\sum_j g_n f_c\ a\ b$ | anisotropic exchange |
+| `Sdm` | $q^{\mathrm{Sdm}}_ {i,n}=\sum_j g_n f_c\ \mathbf e_{ij}\cdot(\mathbf S_i\times\mathbf S_j)$ | Dzyaloshinskii–Moriya |
+| `Sia` | $q^{\mathrm{Sia}}_{i,n}=\sum_j g_n f_c\ (\tfrac32 a^2-\tfrac12 s^2)$ | single-ion anisotropy |
 | `Smag` | $q^{\mathrm{Smag}}_{i,n}=u^{\ n+1}$ | on-site moment magnitude |
 
 `Smag` is a purely on-site term (no neighbour sum), built from $u=s\ m$ where
@@ -173,7 +173,7 @@ Layout 2 used a deprecated `Senv` block in place of `Sia`.
 
 **Expressive limits worth knowing before choosing a block mask.** `Sia` carries
 spin rank 2 only, so it represents uniaxial/quadrupolar anisotropy but not a
-cubic $l=4$ term of the form $S\_x^4+S\_y^4+S\_z^4$. `Sdm` represents the
+cubic $l=4$ term of the form $S_x^4+S_y^4+S_z^4$. `Sdm` represents the
 bond-parallel (screw) component of DMI only. `Smag` scales with $s$ and is not
 differentiable at zero moment.
 
@@ -200,8 +200,8 @@ thermostat is a heat bath and the energy is not conserved.
   polymer MD, MSST shock, wall pistons, two-temperature model, and several
   thermodynamic-integration variants.
 * **Transport**: the heat flux is decomposed into a phonon channel and a magnon
-  channel $J\_m=\sum\_j A\_j:\dot{\mathbf S}\_j$ with
-  $A\_j=\sum\_{i\neq j}(\mathbf r\_i-\mathbf r\_j)\otimes\partial U\_i/\partial\mathbf S\_j$
+  channel $J_m=\sum_j A_j:\dot{\mathbf S}_j$ with
+  $A_j=\sum_{i\neq j}(\mathbf r_i-\mathbf r_j)\otimes\partial U_i/\partial\mathbf S_j$
   (`src/measure/dump_heat_flux.cu`, `src/measure/compute_heat.cuh`).
 * **Magnon spectra**: `compute_sed ... spin` uses the spin velocities; LSWT and
   frozen-spiral analysis are provided as Python tools under
@@ -287,7 +287,7 @@ to the dependencies noted below.
 | `spin_substeps` | `<n>` | Spin sub-steps per MD step. Takes effect only in the `staggered` path |
 | `spin_torque_refresh` | `on` or `off` | Recompute the torque between sub-steps. Takes effect only in the `staggered` path |
 | `add_bfield` | `<Bx> <By> <Bz> [<omega_THz>]` | External field in $\mathrm{eV}/\mu_B$; `omega > 0` makes it sinusoidal (FMR / spin pumping). Requires `spin_llg` first |
-| `dump_magnetization` | `<interval> [<file>] [warmup <n_samples>]` | Write $M\_x, M\_y, M\_z, \lVert M\rVert$, variance, susceptibility and saturation, global and per type |
+| `dump_magnetization` | `<interval> [<file>] [warmup <n_samples>]` | Write $M_x, M_y, M_z, \lVert M\rVert$, variance, susceptibility and saturation, global and per type |
 
 ### 3.4 Output tags
 
@@ -566,7 +566,7 @@ Force::compute(...)
 
 Torques are accumulated in double precision and narrowed to `float` once per
 step. The effective field used by the integrator is
-$\mathbf w\_i = -\partial E/\partial\mathbf S\_i$.
+$\mathbf w_i = -\partial E/\partial\mathbf S_i$.
 
 ### 6.4 Training call chain
 

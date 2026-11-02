@@ -225,7 +225,7 @@ R18 的两个模型：A（mask17） $\approx950$ K，B（mask31） $\approx850$ 
 **误差棒约 ±100 K**（每点 1 ps、432 原子）。
 
 要更准：每点 ≥50 ps、多尺寸（ $L=4,6,8$）做 Binder cumulant 交点。
-本项目**没做**这一步（见 `docs/theory/08_MC_AND_FINITE_SIZE.md`）。
+本项目**没做**这一步（见 `docs/06_SPIN_LLG_FDT_AND_MC.md`）。
 
 ### 5.4 保守动力学（无热浴）
 
@@ -234,7 +234,7 @@ ensemble nve
 spin_llg gamma=3.0385 alpha=0 T=0
 ```
 
-时间步按 `docs/theory/07_CONSERVATIVE_SLD.md` §7.5：**0.05 fs 参考、0.1 fs 平衡、
+时间步按 `docs/07_SPIN_LATTICE_INTEGRATION_RESTART.md`：**0.05 fs 参考、0.1 fs 平衡、
 0.2 fs 不建议**。Fe 1024 原子 250 K 下漂移速率 4.6e-9 eV/atom/ps。
 
 ### 5.5 分段续算
@@ -296,7 +296,7 @@ printf '...\nspin_llg gamma=3.0385 alpha=0 T=0 restart=spin_restart.bin\nrun 100
 1. **0.2 fs 的耦合能量门禁仍 FAIL**（ $1.02\times10^{-5}>10^{-5}$）。用 0.05 或 0.1 fs。
 2. **热流的绝对归一化未验证**：同一条轨迹三个 $\kappa_{zz}$ 相差 $10^{7}$。
    **不要**用 `compute_hac` 或 `dump_heat_flux` 报热导率；`compute_hac` 在自旋体系上
-   给出负值。详见 `docs/theory/11`、`12`。
+   给出负值。详见 `docs/08_THERMAL_CURRENT_GREEN_KUBO.md`。
 3. ~~NVT→NVE 写在同一个 `run.in` 里， $N\ge432$ 会挂死~~ —— **r19 已修复**（F-25）。现在可以写 `ensemble nvt_lan ...` + `run` + `ensemble nve` + `run`，两个块的 `dump_thermo` / `dump_xyz` 会接在同一个文件后面。
    拆成两次 `gpumd.exe` 调用（第一次 dump 末帧，第二次从该帧起跑）。
 4. **没有单离子各向异性**：固定晶格整体旋转自旋能量不变， $K_1$ 不可表示。
@@ -325,7 +325,7 @@ printf '...\nspin_llg gamma=3.0385 alpha=0 T=0 restart=spin_restart.bin\nrun 100
 
 | 想了解 | 看 |
 |---|---|
-| 理论推导 | `docs/theory/00_INDEX.md` |
+| 理论推导 | `docs/04_HAMILTONIAN_AND_DESCRIPTOR_THEORY.md` |
 | 安装与构建 | `INSTALL_WINDOWS.md`、`BUILD_FROM_SOURCE.md` |
 | 开发与扩展 | `DEVELOPER_GUIDE.md` |
 | 模型文件格式 | `MODEL_FORMAT.md` |

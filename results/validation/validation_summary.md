@@ -42,7 +42,7 @@ FM 在 9 种磁构型中能量最低、交换参数自洽。
 |---|---|
 | A1 加载 | 16 原子 bcc 胞 $E=-4.2110921144$ eV，rc=0 |
 | A2 能量/力 | 完美晶体 $\max\lvert F\rvert=6.7\times10^{-5}$ eV/Å；位移 0.01 Å 后回复力 −0.152 eV/Å（符号正确） |
-| A3 自旋参与 | $E\_{\rm FM}-E\_{S=0}=-7.290$ eV（16 原子）；AFM-II 比 FM 高 $+92.4$ meV/atom |
+| A3 自旋参与 | $E_{\rm FM}-E_{S=0}=-7.290$ eV（16 原子）；AFM-II 比 FM 高 $+92.4$ meV/atom |
 | A4 全局旋转不变 | 旋转 1.1 rad 与随机旋转： $\Delta E=1.3\times10^{-6}$ eV，**在 10×数值地板（ $1.2\times10^{-5}$ eV，用整体平移测得）之内** |
 | A5 局域倾斜 | $\theta=2^\circ$ 起单调上升， $E=k\theta^2$， $k=158.9$ meV/rad² |
 | A6 磁矩是否动力学量 | **否**：SLLG 用 $\vert \mathbf S\vert$ 锚点投影，每步把模长钉回输入值； $\vert \mathbf S\vert$ 是输入，不是被积分的自由度 |
@@ -70,7 +70,7 @@ BM3 拟合**不适用**：残差 2.06 meV/atom、 $B_p=11.3$、 $B_0=95.5$ GPa�
 
 $m=0\to3.0\ \mu_B$ 步长 0.1，31 个静态点，三点抛物线取极小：
 
-**$m\_{\rm eq}=2.417\ \mu\_B$**（实验 2.22，**+9.9%**，阈值 10% → **PASS**，边缘通过）。
+**$m_{\rm eq}=2.417\ \mu_B$**（实验 2.22，**+9.9%**，阈值 10% → **PASS**，边缘通过）。
 
 曲率 $0.567$ $\mathrm{eV}/\mu_B^2$；网格最小值在 2.4 μB，抛物线把极小放在 2.417 μB。
 
@@ -101,8 +101,8 @@ $\lvert \mathbf S\rvert=0$ 的 0.192322 eV/atom（未弛豫）与弛豫后的 0.
 
 ### C1 有效交换参数（8×8×8 = 1024 原子，自旋螺旋 + Fourier 拟合）
 
-约定： $H=-\tfrac12\sum\_{ij}J\_{ij}\mathbf e\_i \cdot \mathbf e\_j$（ $\mathbf e$ 为单位矢量）。
-由 $E(q)/N-E\_{\rm FM}/N=\tfrac12\sum\_n J\_n[z\_n-S\_n(q)]$ 线性最小二乘。
+约定： $H=-\tfrac12\sum_{ij}J_{ij}\mathbf e_i \cdot \mathbf e_j$（ $\mathbf e$ 为单位矢量）。
+由 $E(q)/N-E_{\rm FM}/N=\tfrac12\sum_n J_n[z_n-S_n(q)]$ 线性最小二乘。
 
 | 壳层 | $r$ (Å) | $z$ | $J_n$ (meV) | $J_n/m^2$ (meV/μB²) |
 |---|---|---|---|---|
@@ -170,7 +170,7 @@ $\lvert \mathbf S\rvert=0$ 的 0.192322 eV/atom（未弛豫）与弛豫后的 0.
 2. 采样器本身有 8% 的 dt 偏差（D3）；
 3. 包含晶格热运动（nvt_lan），与纯自旋模型的 $T_c$ 定义不同。
 
-$T_c$ 的 MFA 交叉检验： $\sum\_n z\_nJ\_n=422.8$ meV → $k\_BT\_c^{\rm MFA}=141$ meV →
+$T_c$ 的 MFA 交叉检验： $\sum_n z_nJ_n=422.8$ meV → $k_BT_c^{\rm MFA}=141$ meV →
 1635 K，MFA 通常高估 1.3–1.5× → 1090–1260 K，与 1150 K 一致。这是**独立方法的一致性**，
 不是把它当参考值。
 
@@ -205,7 +205,7 @@ $|S|=0$ 给 −0.1081 eV/Å）。据此在 `scripts/phonon_fd.py` 里自建：
 
 ### 6.3 色散（`figures/phonon_dispersion_fd.png`、`phonon_dos_fd.png`）
 
-| 点 | $\omega\_1,\omega\_2,\omega\_3$ (THz) | 说明 |
+| 点 | $\omega_1,\omega_2,\omega_3$ (THz) | 说明 |
 |---|---|---|
 | $\Gamma$ | 0, 0, 0（ $10^{-7}$） | 3 条声学支，ASR 精确 |
 | H | 10.273 ×3 | **三重简并**（见 6.5） |
@@ -215,7 +215,7 @@ $|S|=0$ 给 −0.1081 eV/Å）。据此在 `scripts/phonon_fd.py` 里自建：
 
 声速（长波拟合 $q=0.02\ldots0.10\times2\pi/a$）：
 
-| 方向 | 模型 (km/s) | 实验（由 $C\_{11},C\_{12},C\_{44},\rho$ 推） | 偏差 |
+| 方向 | 模型 (km/s) | 实验（由 $C_{11},C_{12},C_{44},\rho$ 推） | 偏差 |
 |---|---|---|---|
 | $v_L[001]$ | **8.26** | 5.44 | **+52%** |
 | $v_T[001]$ | 4.87 | 3.87 | +26% |
@@ -299,7 +299,7 @@ $g_1=72.9$ meV/Å（三种差分 72.9 / 89.3 / 68.8，最大相对差 **23%** > 
 
 模型唯一的自旋–晶格耦合是交换致伸缩型（对自旋双线性、对位移线性 → 两磁子一声子），
 无 SOC（全局旋转能量不变到 $1.3\times10^{-6}$ eV）。故不存在一磁子–一声子反交叉，
-$\lvert g\_{mp}\rvert=\Delta E\_{\rm gap}/2$ 不适用。
+$\lvert g_{mp}\rvert=\Delta E_{\rm gap}/2$ 不适用。
 
 ---
 
@@ -487,7 +487,7 @@ $$
 
 噪声底这么大是因为 $\Delta E=C\cdot4\delta u\ \delta\varepsilon\sim10^{-6}$ eV，
 已经到 float32 总能噪声。**结构上它必须是零**：共线态下能量只通过
-$\mathbf S\_i \cdot \mathbf S\_j$ 依赖自旋，单原子横向转动在角度上是偶函数，
+$\mathbf S_i \cdot \mathbf S_j$ 依赖自旋，单原子横向转动在角度上是偶函数，
 线性顶点恒为零；这也正是 G3 的结论（无 SOC ⇒ 只有双线性耦合 ⇒ 两磁子一声子）。
 
 **真正的耦合有两个可测的量**（都已给出）：
@@ -966,7 +966,7 @@ J₁ +8…14%、J₀ −5…−7%、D 在区间内，唯一剩下的真实差异
 
 ### 17.1 先复现
 
-复现条件按 `docs/theory/15` 的记载：`run.in` 里先 `ensemble nvt_lan` 跑一段，再
+复现条件按 `CHANGELOG.md` 的 F-25 记载：`run.in` 里先 `ensemble nvt_lan` 跑一段，再
 `ensemble nve` 跑一段； $N=432$ 与 $N=1024$ 各复现过，"进程存活、CPU 占用、26 分钟无输出"。
 本轮的复现矩阵（模型 = 500k 权重，`time_step 0.05`）：
 
@@ -1049,7 +1049,7 @@ final_delivery_20261101_r18/
   GPUMD-spin-V3-WINDOWS-CUDA-v3.1.0-r19.zip   100 files, gpumd.exe sha256 1492eda5...
   gpumd_r18_orig.exe.bak                      修复前二进制（留作回归对照）
   staging/GPUMD-spin-V3-SOURCE-v3.1.0-r19/    CHANGELOG / KNOWN_LIMITATIONS /
-                                              USER_MANUAL / docs/theory/15 已同步
+                                              USER_MANUAL / CHANGELOG 已同步
 validation/BCC_Fe_full_physics/raw_data/nvt_nve_switch/
   verify_fix.py     验收脚本（N=250/432/1024 × 4 种块组合 + 轨迹）
   regress.py        单块逐字节回归

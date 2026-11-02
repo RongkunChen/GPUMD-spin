@@ -50,7 +50,7 @@ run.cu ──► Integrate ──► Ensemble(…) ──► Force::compute ─�
 
 - Windows 需要 `OS=Windows_NT`（对象后缀 `.obj`、cl 主机编译器）；`-arch=sm_XY` 必须匹配 GPU。
 - `main_replica` 是**独立编译的代码副本**：它有自己的 `force/nep.cu`。v3.0.0 修了它的
-  `-I..` 包含路径与 `ParaMB::spin_block_mask`。**长期风险：副本会与主树漂移**（见 `13`）。
+  `-I..` 包含路径与 `ParaMB::spin_block_mask`。**长期风险：副本会与主树漂移**（见 `VALIDATION_REPORT.md`）。
 
 ## 5. 新增一个测量量的步骤
 

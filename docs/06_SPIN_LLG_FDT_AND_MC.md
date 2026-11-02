@@ -12,8 +12,8 @@ $$
 
 - $\gamma$：代码里的 `gamma`，单位 $\mu_B/(\mathrm{eV\ fs})$，物理值 $g\mu_B/\hbar\approx3.0385$（ $g=2$）。
 - $\alpha$：无量纲 Gilbert 阻尼。
-- $\mathbf B\_i=-\partial E/\partial\mathbf S\_i=\mathbf g\_i$（ $\mathrm{eV}/\mu_B$）。
-- 与 Gilbert 形式的换算：LL 的 $\gamma\_{\rm LL}=\gamma\_G/(1+\alpha^2)$。**代码里 `gamma` 是 LL 的 $\gamma_{\rm LL}$**，因此噪声振幅必须带 $1/(1+\alpha^2)$，否则双重修正（阶段04 冻结结论）。
+- $\mathbf B_i=-\partial E/\partial\mathbf S_i=\mathbf g_i$（ $\mathrm{eV}/\mu_B$）。
+- 与 Gilbert 形式的换算：LL 的 $\gamma_{\rm LL}=\gamma_G/(1+\alpha^2)$。**代码里 `gamma` 是 LL 的 $\gamma_{\rm LL}$**，因此噪声振幅必须带 $1/(1+\alpha^2)$，否则双重修正（阶段04 冻结结论）。
 
 ## 2. 涨落–耗散（FDT）
 
@@ -53,9 +53,9 @@ $$
 \quad \mathbf m=\frac{\mathbf S_n+\mathbf S_{n+1}}{2},
 $$
 
-$\mathbf H=\mathbf B\_{\rm det}(\mathbf m)+\mathbf b\_n+\mathbf B\_{\rm ext}$。
+$\mathbf H=\mathbf B_{\rm det}(\mathbf m)+\mathbf b_n+\mathbf B_{\rm ext}$。
 **噪声每步只抽一次并在整个不动点迭代期间保持不变**（否则不是同一个随机格式）。
-精确算术下 $\mathbf S\_{n+1}-\mathbf S\_n\perp\mathbf m$ 且 $\mathbf S\_{n+1}+\mathbf S\_n=2\mathbf m$ → $|\mathbf S|$ 严格守恒。
+精确算术下 $\mathbf S_{n+1}-\mathbf S_n\perp\mathbf m$ 且 $\mathbf S_{n+1}+\mathbf S_n=2\mathbf m$ → $|\mathbf S|$ 严格守恒。
 
 迭代终止： $\max_i|\mathbf S^{(k+1)}-\mathbf S^{(k)}|\le$ `midpoint_tolerance`（默认 $10^{-6}\mu_B$），
 上限 `midpoint_max_iterations`（默认 50）。不收敛时**保留最后迭代值**并计数，绝不回退到冻结场。
@@ -76,14 +76,14 @@ $\mathbf H=\mathbf B\_{\rm det}(\mathbf m)+\mathbf b\_n+\mathbf B\_{\rm ext}$。
 
 | 量 | 精确 | MC | SLLG geometric | SLLG midpoint |
 |---|---|---|---|---|
-| $\langle\mathbf S\_1 \cdot \mathbf S\_2\rangle$ | 0.2625 | 0.2615 | 0.2583 ($z=2.0$) | 0.2709 ($z=3.7$) |
+| $\langle\mathbf S_1 \cdot \mathbf S_2\rangle$ | 0.2625 | 0.2615 | 0.2583 ($z=2.0$) | 0.2709 ($z=3.7$) |
 
 $z_{\max}=4$（冻结）。单自旋： $\langle\cos\theta\rangle=\coth x-1/x$，实测 $+2.9$%（ $x=1$，64 replica），
 dt 减半后 $+3.4$% → **偏差不随 $\Delta t$ 减小**，属采样/离散化之外的系统效应，已记录为已知问题。
 
 ## 5. 统计与误差
 
-- 样本间隔取 $2\tau_G$， $\tau\_G=1/(\gamma\alpha k\_BT)$；仍用**分块标准误**与积分自相关时间双口径。
+- 样本间隔取 $2\tau_G$， $\tau_G=1/(\gamma\alpha k_BT)$；仍用**分块标准误**与积分自相关时间双口径。
 - 不得把相关帧当独立样本： $\tau_{\rm int}$ 用初始正序列截断的积分自相关（FFT 计算）。
 - 误差条报告：replica 间标准误（保守）+ 自相关修正后的有效样本数标准误。
 

@@ -32,3 +32,6 @@ Thumbs.db
 /restart.bin
 /dump_*.out
 *.out.tmp
+
+# ---- 内部理论推导笔记（本地保留，不入库）----
+/docs/theory/

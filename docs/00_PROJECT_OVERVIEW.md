@@ -7,8 +7,8 @@
 
 在 GPUMD（GPU 分子动力学，r17）之上加了一条**磁自由度**支路：
 
-- 局域能量模型 $E(\mathbf R,\mathbf S)=\sum\_i e\_i(\mathbf R,\mathbf S)$，其中 $\mathbf S_i$ 是原子 $i$ 的磁矩矢量（单位 $\mu_B$，由 `spin_length * initial_magmoms` 给出）。
-- 自旋描述符把 $\mathbf S\_i,\mathbf S\_j$ 与键向 $\hat{\mathbf r}_{ij}$ 耦合进 NEP 的局域环境，因此能量、力 $\mathbf F=-\partial E/\partial\mathbf R$、磁梯度 $\mathbf g=-\partial E/\partial\mathbf S$ 来自**同一个**标量函数。
+- 局域能量模型 $E(\mathbf R,\mathbf S)=\sum_i e_i(\mathbf R,\mathbf S)$，其中 $\mathbf S_i$ 是原子 $i$ 的磁矩矢量（单位 $\mu_B$，由 `spin_length * initial_magmoms` 给出）。
+- 自旋描述符把 $\mathbf S_i,\mathbf S_j$ 与键向 $\hat{\mathbf r}_{ij}$ 耦合进 NEP 的局域环境，因此能量、力 $\mathbf F=-\partial E/\partial\mathbf R$、磁梯度 $\mathbf g=-\partial E/\partial\mathbf S$ 来自**同一个**标量函数。
 - 在此能量面上提供：LLG 自旋动力学（有限温度、含 FDT 噪声）、保守自旋–晶格分裂积分、完整重启、REMD 副本、以及静态/动力学分析工具。
 
 ## 2. 与上游 GPUMD 的真实差别
@@ -47,10 +47,11 @@
 - 上游：GPUMD r17（许可证见 `LICENSES/`，第三方归属保留）。
 - 本机验证环境：Windows 11 + MSVC 2022 + CUDA 12.8 + RTX 4060 Ti (sm_89)。
 - Linux：构建脚本已给（`build.sh`），**未在本机验证**，标 `UNTESTED`。
-- 复现入口：`INSTALL.ps1` → `tests/smoke.py` → `docs/15_REPRODUCIBILITY_COOKBOOK.md`。
+- 复现入口：`INSTALL.ps1` → `tests/smoke.py` → `REPRODUCIBILITY.md`。
 
 ## 6. 文档地图
 
 理论：`04`（Hamiltonian/描述符）、`05`（力/磁梯度/应力）、`06`（LLG/FDT/MC）、`07`（耦合积分/重启）、`08`（热流/GK）、`09`（声子/磁子/寿命）、`10`（Berry/拓扑）。
 工程：`01`/`02`（安装）、`03`（快速上手）、`12`（开发者架构）。
-验收：`11`（训练与验证）、`13`（验证与已知问题）、`14`（发表方法学）、`15`（复现手册）、`16`（发布状态）。
+验收：`11`（训练与验证）；顶层 `VALIDATION_REPORT.md`（验证结果）、`KNOWN_LIMITATIONS.md`（已知限制）、
+`REPRODUCIBILITY.md`（复现命令）。

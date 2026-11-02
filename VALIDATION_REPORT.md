@@ -1,7 +1,6 @@
 # 验证报告（r18，2026-11-01）
 
-本文件是给使用者看的汇总。逐条证据见 `docs/13_VALIDATION_AND_KNOWN_ISSUES.md`、
-`docs/theory/15_DEFECTS_AND_FIXES.md` 与交付包里的 `FINAL_TEST_MATRIX.csv`。
+本文件是给使用者看的汇总。逐条证据见 `KNOWN_LIMITATIONS.md` 与交付包里的 `FINAL_TEST_MATRIX.csv`。
 **所有历史 FAIL 都保留**，没有因为换了更好的判据就删除。
 
 ## 1. 构建与基本可运行性
@@ -34,7 +33,7 @@
 |---|---|---|---|
 | 连续 vs 分段重启（三组，含 RNG） | 逐位相同 | $\max\lvert\Delta S\rvert=0$，RNG 768 B 相同 | **PASS** |
 | 重启负向控制 | 损坏/改 scheme/改模型应拒绝 | 全部 rc=4 | **PASS** |
-| 二聚体 $\langle\mathbf S\_1\cdot\mathbf S\_2\rangle$ | 与精确求积一致 | midpoint 0.2709 vs 0.2625（+3.2%） | **PASS** |
+| 二聚体 $\langle\mathbf S_1\cdot\mathbf S_2\rangle$ | 与精确求积一致 | midpoint 0.2709 vs 0.2625（+3.2%） | **PASS** |
 | midpoint 隐式收敛 | 不收敛计数 0 | 1.6 M 步，0 次，最大残差 $9.998\times10^{-7}$ | **PASS** |
 
 ## 4. Fe 长时间稳定性（PV1，28 算例）
@@ -109,7 +108,7 @@
 ## 9. 补充：50 万代训练与逐检查点全物理电池（2026-11-01 晚）
 
 在 §5 的两个 50k 模型之外，另训了一个**50 万代**的 5 描述符模型（C，
-$\lambda\_e=5,\lambda\_f=1,\lambda\_m=1$，batch 1000），每 10 万步抓一次权重跑完整电池。
+$\lambda_e=5,\lambda_f=1,\lambda_m=1$，batch 1000），每 10 万步抓一次权重跑完整电池。
 原始产物见 `results/training/C_5desc_500k/` 与 `results/validation/validation_summary.md` §14。
 
 | 量 | 110k | 200k | 300k | 400k | 500k | 走势 |
@@ -138,7 +137,7 @@ $\lambda\_e=5,\lambda\_f=1,\lambda\_m=1$，batch 1000），每 10 万步抓一�
 
 J 要换算到同一约定才能比文献： $J_{fit}=55.5$（单位矢量，模型自身 2.44 μB）、
 $J^S=J_{fit}/S^2=37.2$、按实验磁矩 2.2 μB 重拟合 $J_1^S=41.4$（文献 36.34，**+14%**）。
-但 $J_2=2.2$（文献 20.65，小一个量级）、 $J_4$ 符号相反—— $J\_0=\Sigma z\_nJ\_n=315$
+但 $J_2=2.2$（文献 20.65，小一个量级）、 $J_4$ 符号相反—— $J_0=\Sigma z_nJ_n=315$
 （文献 337，−7%）能对上是因为 $J_1$ 偏大恰好补偿了 $J_2$ 偏小。
 **单个 $J_n$ 不能拿去和文献比，必须与 $J_0$、D 一起看。**
 

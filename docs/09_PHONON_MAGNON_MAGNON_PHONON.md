@@ -14,7 +14,7 @@ $$
 符号约定与 `05` 一致： $\mathbf F=-\partial E/\partial\mathbf R$、 $\mathbf g=-\partial E/\partial\mathbf S$，
 因此 $\partial\mathbf F/\partial\mathbf S=\partial\mathbf g/\partial\mathbf R$（混合导数互易）。
 
-**固定模长**： $\mathbf S_i$ 被约束在球面 $|\mathbf S\_i|=S\_i$ 上，磁 Hessian 必须投影到切平面
+**固定模长**： $\mathbf S_i$ 被约束在球面 $|\mathbf S_i|=S_i$ 上，磁 Hessian 必须投影到切平面
 
 $$
 K^{\perp}_{i\alpha,j\beta}=\Big(\delta_{\alpha\gamma}-\hat S_{i\alpha}\hat S_{i\gamma}\Big)
@@ -33,7 +33,7 @@ D_{\alpha\beta}(\mathbf q)=\frac{1}{\sqrt{m_i m_j}}\sum_{\mathbf R}\Phi_{i0,j\ma
 $$
 
 验收：
-- 声学求和规则（ASR）： $\sum\_j \Phi\_{i\alpha,j\beta}=0$ → 3 个 $\mathbf q=0$ 声学模频率 $\to0$；
+- 声学求和规则（ASR）： $\sum_j \Phi_{i\alpha,j\beta}=0$ → 3 个 $\mathbf q=0$ 声学模频率 $\to0$；
 - 有限差分步长收敛： $h$ 扫描必须出现误差平台；
 - 超胞与 $\mathbf q$ 网格收敛。
 

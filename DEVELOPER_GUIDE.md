@@ -1,7 +1,7 @@
 # 开发者指南（GPUMD-spin V3, r18）
 
 面向要改代码、加功能或做审计的人。读之前建议先读
-`docs/theory/05`（导数结构）、`docs/theory/14`（精度）、`docs/theory/15`（缺陷日志）。
+`docs/05`（导数结构与数值精度）、`KNOWN_LIMITATIONS.md`（缺陷日志）。
 
 ---
 
@@ -136,7 +136,7 @@ python tests/acceptance.py --bin src
 | 自旋/力矩 | float32 | 改它需要重写 ~800 行求导链（P3，已 BLOCKED） |
 | 能量聚合 `sum_pe` | double | 已定 |
 
-要动精度，先读 `docs/theory/14` §14.8 的决策表：P2/P3/P4 的重启条件
+要动精度，先读 `docs/05` §4 的数值算法：P2/P3/P4 的重启条件
 （当前一条都不满足）。**不要**为了"看起来更准"把某处单独改 double——
 混合精度会在相邻实现之间引入 $10^{-6}$ 量级的差，正好落在门禁阈值上，
 会让所有历史对比失效。
@@ -179,7 +179,7 @@ open(out, 'w', newline='').write(''.join(difflib.unified_diff(a, b, ...)))
 
 * 改完立刻跑 `smoke.py`；如果碰了力/描述符，再跑
   `tools/numerical_accuracy/run_A_magnetic_gradient.py`。
-* 提交前更新：`CHANGELOG.md`、`docs/theory/15_DEFECTS_AND_FIXES.md`、
+* 提交前更新：`CHANGELOG.md`、`KNOWN_LIMITATIONS.md`、
   `VALIDATION_REPORT.md`。
 
 ---
@@ -193,7 +193,7 @@ open(out, 'w', newline='').write(''.join(difflib.unified_diff(a, b, ...)))
 | 温度离谱 | 速度单位（Å/fs vs Å/nat）；KE 因子 `1.0364269e-4` |
 | 力与参考差很多 | 预测用的 `nep.in` 架构是否与训练一致 |
 | 重启不逐位一致 | 是否漏了第二次力计算；RNG 状态是否入盘 |
-| guard 乱报 | 看 `docs/theory/15` 的 F19/F20/F21/F26；判据语义比数值更容易错 |
+| guard 乱报 | 看 `KNOWN_LIMITATIONS.md` 的 F19/F20/F21/F26；判据语义比数值更容易错 |
 | 第二段不产数据 | F-25（r19 已修复）：`Measure::post_run` 曾清空 actions_ |
 | 编译报 `nep_acc_t undefined` | typedef 必须在 `spin_descriptor_kernels.cuh` 且带守卫 |
 | `main_replica` 链接重复 `main` | 排除 `main_gpumd/main.obj` |
@@ -224,9 +224,9 @@ open(out, 'w', newline='').write(''.join(difflib.unified_diff(a, b, ...)))
 
 | 功能 | 难点 | 起点 |
 |---|---|---|
-| 磁子谱 | 切空间投影 + $6N\times6N$ 复本征 | `docs/theory/09` §9.2、§9.6 |
+| 磁子谱 | 切空间投影 + $6N\times6N$ 复本征 | `docs/09` |
 | Goldstone 零模计数 | 同上 | 同上 |
-| 热流归一化钉死 | 需要解析模型（LJ 晶体）对照 | `docs/theory/11` §11.6 |
-| NVT→NVE 第二段无输出（F-25） | r19 已修复（dump action 跨段保留） | `docs/theory/15` |
-| P3 全 double 求导链 | ~800 行、与训练器共用 | `docs/theory/14` §14.8 |
-| Binder cumulant / 有限尺寸标度 | 需要多尺寸 + 长采样 | `docs/theory/08` |
+| 热流归一化钉死 | 需要解析模型（LJ 晶体）对照 | `docs/08` |
+| NVT→NVE 第二段无输出（F-25） | r19 已修复（dump action 跨段保留） | `KNOWN_LIMITATIONS.md` |
+| P3 全 double 求导链 | ~800 行、与训练器共用 | `docs/05` §4 |
+| Binder cumulant / 有限尺寸标度 | 需要多尺寸 + 长采样 | `docs/06` |

@@ -115,7 +115,7 @@ run 200
 | `thermo.out` | T, KE, PE, 应力张量分量 | PE/KE 是**总量**不是每原子 |
 | `traj.xyz` | 每 `dump_xyz` 间隔一帧 | 头部 `Time=` 不是 `Step=` |
 | `restart.xyz` | 可直接当 `model.xyz` 用 | 只有 R,v,S；磁自由度另见 `spin_restart.bin` |
-| `spin_work.out` | $W\_{\rm rot},W\_{\rm noise},W\_{\rm ext}$ | 累积量，单位 eV |
+| `spin_work.out` | $W_{\rm rot},W_{\rm noise},W_{\rm ext}$ | 累积量，单位 eV |
 | `loss.out` | 训练损失分项 | 首列是 generation |
 
 ## 7. 示例目录

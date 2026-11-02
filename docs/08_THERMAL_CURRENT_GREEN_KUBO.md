@@ -6,7 +6,7 @@
 
 ## 1. 局域能量与连续性
 
-模型是局域的： $E=\sum\_i e\_i$， $e_i$ 只依赖截断内的 $(\mathbf r,\mathbf S)$。对时间求导：
+模型是局域的： $E=\sum_i e_i$， $e_i$ 只依赖截断内的 $(\mathbf r,\mathbf S)$。对时间求导：
 
 $$
 \frac{dE}{dt}=\sum_i\dot e_i=\sum_i\Big[\frac{\partial e_i}{\partial \mathbf r_i} \cdot \dot{\mathbf r}_i
@@ -21,7 +21,7 @@ $$
 $$
 
 其中 $j_{ij}$ 是 $i\to j$ 的能流。**这是构造热流算符的前提**：热流不是“把三列加起来”，
-而是必须让 $\sum\_i \mathbf r\_i \dot e\_i$ 与 $\mathbf J$ 的散度项对应。
+而是必须让 $\sum_i \mathbf r_i \dot e_i$ 与 $\mathbf J$ 的散度项对应。
 
 ## 2. 热流算符
 
@@ -33,11 +33,11 @@ $$
 +\underbrace{\sum_i \mathbf r_i\ (-\mathbf g_i \cdot \dot{\mathbf S}_i)}_{\mathbf J_S},
 $$
 
-- $\mathbf J_L$ 的可用形式： $\sum\_i \dot{\mathbf r}\_i\ \epsilon\_i+\sum\_{i<j}\mathbf r\_{ij}(\mathbf F\_{ij} \cdot \dot{\mathbf r}\_i)$（依能量分配约定）。
-- $\mathbf J\_S=-\sum\_i \mathbf g\_i\ (\dot{\mathbf S}\_i \cdot \mathbf r\_i)$ 的**非局域**部分来自 $\mathbf g_i$ 依赖邻居 $\mathbf S_j$，
-  必须按键拆分，不能只写 $-\mathbf g\_i \cdot \dot{\mathbf S}\_i$（后者散度不为零）。
+- $\mathbf J_L$ 的可用形式： $\sum_i \dot{\mathbf r}_ i\ \epsilon_i+\sum_{i<j}\mathbf r_{ij}(\mathbf F_{ij} \cdot \dot{\mathbf r}_ i)$（依能量分配约定）。
+- $\mathbf J_S=-\sum_i \mathbf g_i\ (\dot{\mathbf S}_i \cdot \mathbf r_i)$ 的**非局域**部分来自 $\mathbf g_i$ 依赖邻居 $\mathbf S_j$，
+  必须按键拆分，不能只写 $-\mathbf g_i \cdot \dot{\mathbf S}_i$（后者散度不为零）。
 - **规范非唯一**：能量零点、 $\mathbf r_i$ 的原点、是否包含 $\mathbf J_S$ 的“对流项”都会改变分解；
-  只有 $\mathbf J_{\rm total}$ 的散度是物理的， $\kappa\_{LL}/\kappa\_{SS}/\kappa\_{LS}$ 的拆分依赖规范。
+  只有 $\mathbf J_{\rm total}$ 的散度是物理的， $\kappa_{LL}/\kappa_{SS}/\kappa_{LS}$ 的拆分依赖规范。
 
 代码入口：`src/measure/compute_heat.cu`、`src/measure/dump_heat_flux.cu`（列名与上面两项对应），
 自旋项用 `atom.spin_gamma/alpha` 由 $(\mathbf S,\mathbf g)$ 重建 $\dot{\mathbf S}$。
@@ -73,7 +73,7 @@ $$
 
 | 检查 | 判据 | 状态 |
 |---|---|---|
-| 能量矩守恒： $d(\sum\_i \mathbf r\_i e\_i)/dt$ vs $\mathbf J$ | 相对偏差 < 1%（解析二体模型） | 设计完成，未运行 |
+| 能量矩守恒： $d(\sum_i \mathbf r_i e_i)/dt$ vs $\mathbf J$ | 相对偏差 < 1%（解析二体模型） | 设计完成，未运行 |
 | 平移不变性、最小像 | 平移整体坐标 $\mathbf J$ 不变 | 未运行 |
 | 力/场功率闭合 | $\sum\mathbf F \cdot \dot{\mathbf r}+\sum\mathbf g \cdot \dot{\mathbf S}+\dot E=0$ | 部分（`spin_work` 记账） |
 | EMD 平台 | $\kappa(t)$ 出现平台，块误差收敛 | 未运行 |
@@ -84,13 +84,13 @@ $$
 
 ## 5. 分解与符号
 
-$\mathbf J=\mathbf J\_L+\mathbf J\_S$ 时
+$\mathbf J=\mathbf J_L+\mathbf J_S$ 时
 
 $$
 \kappa_{\rm total}=\kappa_{LL}+\kappa_{SS}+\kappa_{LS}+\kappa_{SL},
 $$
 
-$\kappa\_{\rm cross}\equiv\kappa\_{LS}+\kappa\_{SL}$ **不保证为正**，且随规范变化。
+$\kappa_{\rm cross}\equiv\kappa_{LS}+\kappa_{SL}$ **不保证为正**，且随规范变化。
 报告中必须写明：分解方式、能量零点、是否含对流项、是否做了质心速度扣除。
 
 ## 6. 本版本状态
@@ -101,4 +101,4 @@ $\kappa\_{\rm cross}\equiv\kappa\_{LS}+\kappa\_{SL}$ **不保证为正**，且�
 | `compute_heat.cu` 审计 | 已完成（列名/单位对照，见阶段6 证据） |
 | 数值连续性测试 | NOT_RUN |
 | EMD/NEMD $\kappa$ | **BLOCKED_CONSERVATION** |
-| Fe 的 $\kappa\_{ph}/\kappa\_{mag}/\kappa\_{cross}$ | **禁止报告** |
+| Fe 的 $\kappa_{ph}/\kappa_{mag}/\kappa_{cross}$ | **禁止报告** |

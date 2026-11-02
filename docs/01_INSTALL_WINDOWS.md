@@ -109,4 +109,4 @@ python tests\smoke.py --bin src --json smoke_result.json
 | CUDA | 12.8（`nvcc --version` 见 `build.log`） |
 | 构建命令 | 见 `BUILD.ps1` 生成的 `build.log` |
 | 构建耗时 | 全量约 6–9 min（`-j 6`，含 `main_replica`） |
-| fresh-extract 验收 | 见 `docs/13_VALIDATION_AND_KNOWN_ISSUES.md` 与 `FINAL_REPORT.md` |
+| fresh-extract 验收 | 见 `VALIDATION_REPORT.md` 与 `FINAL_REPORT.md` |

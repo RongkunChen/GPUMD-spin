@@ -1,7 +1,7 @@
 # 04 — Hamiltonian 与自旋描述符理论
 
 本篇给出 $E(\mathbf R,\mathbf S)$ 的完整定义、五个自旋块的公式、对称性分类，以及每一条公式对应的生产代码位置。
-记号： $\mathbf r\_{ij}=\mathbf r\_j-\mathbf r\_i$， $\hat{\mathbf r}\_{ij}=\mathbf r\_{ij}/|\mathbf r\_{ij}|$，
+记号： $\mathbf r_{ij}=\mathbf r_j-\mathbf r_i$， $\hat{\mathbf r}_ {ij}=\mathbf r_{ij}/|\mathbf r_{ij}|$，
 $\mathbf S_i$ 单位 $\mu_B$，长度量 $\text{\AA}$，能量 eV。
 
 ## 1. 局域能量模型
@@ -32,32 +32,32 @@ $$
 
 ## 3. 五个自旋块
 
-设 $\mathbf u\_i=\mathbf S\_i/|\mathbf S\_i|$（ $|\mathbf S_i|>0$）， $\tilde{\mathbf S}\_i=s\ \mathbf S\_i$， $s=$`spin_mag_scale`。
+设 $\mathbf u_i=\mathbf S_i/|\mathbf S_i|$（ $|\mathbf S_i|>0$）， $\tilde{\mathbf S}_i=s\ \mathbf S_i$， $s=$`spin_mag_scale`。
 
 | 块 | 定义 | 变量 | 对称性 |
 |---|---|---|---|
-| **Sex** | $q^{\rm ex}\_{i,n}=\sum\_{j\in n(i)} g\_n(r\_{ij})\ (\mathbf u\_i \cdot \mathbf u\_j)$ | 1 | 旋转不变（联合/自旋单独均可）、P-even、T-even |
-| **San** | $q^{\rm an}\_{i,n,l}=\sum\_{j<k} g\_n g\_n\ P\_l(\hat{\mathbf r}\_{ij} \cdot \hat{\mathbf r}\_{ik})\ (\mathbf u\_i \cdot \hat{\mathbf r}\_{ij})(\mathbf u\_i \cdot \hat{\mathbf r}\_{ik})$ | $l$ 通道 | 旋转不变、P-even |
-| **Sdm** | $q^{\rm dm}\_{i,n}=\sum\_{j\in n(i)} g\_n(r\_{ij})\ \hat{\mathbf r}\_{ij} \cdot (\mathbf u\_i\times\mathbf u\_j)$ | 1 | **P-odd**、T-even、仅联合旋转不变 |
-| **Sia** | $q^{\rm sia}\_{i,n,(ab)}=\sum\_{j\in n(i)} g\_n(r\_{ij})\left(u\_{i,a}u\_{i,b}-\tfrac13\delta\_{ab}\right)$ | 5（对称无迹） | 旋转不变、P-even、 $l=2$ |
-| **Smag** | $q^{\rm mag}\_{i,n}=\big(s\vert \mathbf S\_i\vert \big)^{n+1}$ | $n=0..$ | 旋转不变、P-even、原点不可微 |
+| **Sex** | $q^{\rm ex}_ {i,n}=\sum_{j\in n(i)} g_n(r_{ij})\ (\mathbf u_i \cdot \mathbf u_j)$ | 1 | 旋转不变（联合/自旋单独均可）、P-even、T-even |
+| **San** | $q^{\rm an}_ {i,n,l}=\sum_{j<k} g_n g_n\ P_l(\hat{\mathbf r}_ {ij} \cdot \hat{\mathbf r}_ {ik})\ (\mathbf u_i \cdot \hat{\mathbf r}_ {ij})(\mathbf u_i \cdot \hat{\mathbf r}_ {ik})$ | $l$ 通道 | 旋转不变、P-even |
+| **Sdm** | $q^{\rm dm}_ {i,n}=\sum_{j\in n(i)} g_n(r_{ij})\ \hat{\mathbf r}_ {ij} \cdot (\mathbf u_i\times\mathbf u_j)$ | 1 | **P-odd**、T-even、仅联合旋转不变 |
+| **Sia** | $q^{\rm sia}_ {i,n,(ab)}=\sum_{j\in n(i)} g_n(r_{ij})\left(u_{i,a}u_{i,b}-\tfrac13\delta_{ab}\right)$ | 5（对称无迹） | 旋转不变、P-even、 $l=2$ |
+| **Smag** | $q^{\rm mag}_{i,n}=\big(s\vert \mathbf S_i\vert \big)^{n+1}$ | $n=0..$ | 旋转不变、P-even、原点不可微 |
 
 旧布局的 **Senv** 占据 slot 4，是 T-odd 通道；无外场/无破 T 物理时不应无条件启用，v3 已被 `Sia` 取代（`spin_layout 3`）。
 
 ### 3.1 为什么 Sdm 是 P-odd 而 $E$ 不必是 P-odd
 
-反演： $\mathbf r\_{ij}\to-\mathbf r\_{ij}$（极矢量）， $\mathbf S\to+\mathbf S$（轴矢量）。于是
-$\hat{\mathbf r} \cdot (\mathbf u\_i\times\mathbf u\_j)\to-\ \hat{\mathbf r} \cdot (\mathbf u\_i\times\mathbf u\_j)$。
+反演： $\mathbf r_{ij}\to-\mathbf r_{ij}$（极矢量）， $\mathbf S\to+\mathbf S$（轴矢量）。于是
+$\hat{\mathbf r} \cdot (\mathbf u_i\times\mathbf u_j)\to-\ \hat{\mathbf r} \cdot (\mathbf u_i\times\mathbf u_j)$。
 所以**单个 Sdm 通道**在反演下变号。但总能量是这些通道经 ANN 的非线性组合：
 $e_i=\mathcal F(\lbrace q\rbrace )$， $\mathcal F$ 一般不是奇函数，因此 $E$ 在反演下**既不自动偶也不自动奇**。
-只有 DMI 型能量 $\propto \mathbf D\_{ij} \cdot (\mathbf S\_i\times\mathbf S\_j)$（ $\mathbf D\_{ij}\propto\hat{\mathbf r}\_{ij}$）才是整体 P-odd 的物理项。
+只有 DMI 型能量 $\propto \mathbf D_{ij} \cdot (\mathbf S_i\times\mathbf S_j)$（ $\mathbf D_{ij}\propto\hat{\mathbf r}_{ij}$）才是整体 P-odd 的物理项。
 **因此：不能用“Sdm 是 P-odd 描述符”推断“模型表达了 DMI”，也不能推断“能量满足宇称”。**
 
 ### 3.2 Sia 的能力边界
 
-$\left(u\_a u\_b-\tfrac13\delta\_{ab}\right)$ 是 $l=2$ 的四极矩。对严格立方局域环境，
-$\sum\_{j}g\_n(r\_{ij})$ 权重下的一阶矩各向同性 → 该块**恒为零**。
-而 bcc Fe 的单离子各向异性主导项是 $K\_1(S\_x^4+S\_y^4+S\_z^4)$，属 $l=4$。
+$\left(u_a u_b-\tfrac13\delta_{ab}\right)$ 是 $l=2$ 的四极矩。对严格立方局域环境，
+$\sum_{j}g_n(r_{ij})$ 权重下的一阶矩各向同性 → 该块**恒为零**。
+而 bcc Fe 的单离子各向异性主导项是 $K_1(S_x^4+S_y^4+S_z^4)$，属 $l=4$。
 **结论：Sia 无法表示 bcc 的四阶立方各向异性；要表示必须新增 $l=4$ 描述符并新 layout + 重训。**
 
 ### 3.3 Smag 的可微性
@@ -88,7 +88,7 @@ spin_mag_scale 0.25
 
 | 变换 | mask17 | mask31 | 检验方式 | 本版本结果 |
 |---|---|---|---|---|
-| 整体自旋旋转（无 SOC） | 必须不变 | 不应不变（Sia/Sdm 破各向同性） | 旋转所有 $\mathbf S$ 比较 $E$ | mask17： $\Delta E=0.0$ eV（`docs/13`） |
+| 整体自旋旋转（无 SOC） | 必须不变 | 不应不变（Sia/Sdm 破各向同性） | 旋转所有 $\mathbf S$ 比较 $E$ | mask17： $\Delta E=0.0$ eV（`VALIDATION_REPORT.md`） |
 | 空间反演 | $E$ 不变（无 DMI） | 视权重而定 | 反演 $\mathbf r$、保持 $\mathbf S$ | NOT_VALIDATED |
 | 时间反演 | $E$ 偶 | $E$ 偶（Senv 除外） | $\mathbf S\to-\mathbf S$ 后 $E$ 比较 | NOT_VALIDATED |
 
@@ -139,7 +139,7 @@ $\lvert q\rvert\sim10$ 时这是 $5\times10^{-6}$，经 $J=\partial e/\partial q
 $10^{-6}$ eV 的能量差——正好是冻结的逐原子门禁的量级。
 
 **现在的做法。** 累加器类型 `nep_acc_t = double`，循环结束后一次性窄化：
-$q^{\rm stored}\_n={\rm fl}\_{32}\big(\sum\_j \cdots\big)$。一次确定性舍入与顺序无关，
+$q^{\rm stored}_ n={\rm fl}_ {32}\big(\sum_j \cdots\big)$。一次确定性舍入与顺序无关，
 两条路径在 $10^{-15}$ 相对精度上一致。
 
 **代码入口。** `utilities/nep_utilities.cuh`（`nep_acc_t`、`accumulate_s`、`find_q_one` 模板）、
@@ -149,13 +149,13 @@ $q^{\rm stored}\_n={\rm fl}\_{32}\big(\sum\_j \cdots\big)$。一次确定性舍�
 **单位。** 与描述符同（无量纲的基函数乘系数）；累加精度不影响单位。
 
 **验收反例（必须能失败）。** Stage03A 冻结的 5 个 case，逐元素判据
-$\lvert e^{\rm cand}\_i-e^{\rm ref}\_i\rvert\le10^{-6}+10^{-6}\lvert e^{\rm ref}\_i\rvert$。
+$\lvert e^{\rm cand}_i-e^{\rm ref}_i\rvert\le10^{-6}+10^{-6}\lvert e^{\rm ref}_i\rvert$。
 修复前 3/5 FAIL（最差 $1.192\times10^{-6}$ 对阈值 $1.055\times10^{-6}$）；
-修复后 5/5 PASS（最差 $7.15\times10^{-7}$）。详细表在 `docs/13` §2。
+修复后 5/5 PASS（最差 $7.15\times10^{-7}$）。详细表在 `VALIDATION_REPORT.md` §2。
 
 **本版本测试状态。** PASS。残余 $7\times10^{-7}$ 来自训练器坐标存 float32 而 MD 存 double，
 不是累加顺序问题；要消掉它必须把训练器坐标改成 double（改变整条流水线的内存与格式），
-未做，已在 `docs/13` §3 记录。
+未做，已在 `VALIDATION_REPORT.md` §3 记录。
 
 **影响范围。** 存下来的 $q$ 仍是 float32，`q_scaler`、ANN 宽度、`nep.txt` 布局不变，
 所以**旧模型无需重训**：同一个 `nep.txt` 的能量在 $10^{-6}$ eV 量级上更准确，含义不变。

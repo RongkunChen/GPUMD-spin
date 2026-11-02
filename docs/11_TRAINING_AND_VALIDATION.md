@@ -48,7 +48,7 @@ $$
 
 - 能量：meV/atom；力：eV/Å（逐分量）；磁梯度： $\mathrm{eV}/\mu_B$（逐分量）。
 - **置信区间按帧分块**（不是按原子分量，那会把相关性当独立样本）。
-- 磁矩方向分解： $g_\parallel=\mathbf g \cdot \hat{\mathbf S}$、 $g\_\perp=|\mathbf g-g\_\parallel\hat{\mathbf S}|$；
+- 磁矩方向分解： $g_\parallel=\mathbf g \cdot \hat{\mathbf S}$、 $g_\perp=|\mathbf g-g_\parallel\hat{\mathbf S}|$；
   角力矩 $\boldsymbol\tau=\mathbf S\times\mathbf g$（eV）。
 
 ## 5. 本版本实测（2k / 8k 帧，20000 代；工程候选）

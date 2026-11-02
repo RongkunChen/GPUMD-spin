@@ -65,8 +65,8 @@ NVE 生产）现在能正常工作，并且与"拆成两次 `gpumd.exe` 调用"�
   `examples/fe_nve_stability/`：可直接运行的复现示例（均已实测）。
 - `models/`：三个 Fe 模型 + 训练输入 + DEV 指标。
 - `tools/physics_validation/`：长时间稳定性与热流审计脚本。
-- `docs/theory/15_DEFECTS_AND_FIXES.md`：F19–F27 缺陷日志。
-- `docs/theory/` 全篇改写：单位表、验证状态词表、PBC 面项、GK 自检、精度决策表。
+- 缺陷日志 F19–F27：见 `KNOWN_LIMITATIONS.md` 与 `CHANGELOG.md`。
+- 理论推导文档全篇改写：单位表、验证状态词表、PBC 面项、GK 自检、精度决策表。
 
 ### Kept as-is (deliberately)
 - FDT 系数、S05A 保守分支、所有冻结阈值、全部历史 FAIL。
@@ -166,4 +166,4 @@ $d\ln D/d\ln m = 0.02$– $0.35$，即 **D 基本与所用磁矩无关**。详�
 - All frozen tolerances; historical FAILs (Stage03A G6, Stage04, Stage05B, Stage08A original).
 
 ### Known gaps
-See `docs/13_VALIDATION_AND_KNOWN_ISSUES.md`.
+See `VALIDATION_REPORT.md` and `KNOWN_LIMITATIONS.md`.
