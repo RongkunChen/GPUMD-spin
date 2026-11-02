@@ -76,7 +76,7 @@ ILP_TERSOFF::ILP_TERSOFF(FILE* fid_ilp, FILE* fid_tersoff, int num_types, int nu
   printf("\n");
 
   // read ILP group method
-  PRINT_SCANF_ERROR(fscanf(fid_ilp, "%d", &ilp_group_method), 1, 
+  PRINT_SCANF_ERROR(fscanf(fid_ilp, "%d", &ilp_group_method), 1,
   "Reading error for ILP group method.");
   printf("Use group method %d to identify molecule for ILP.\n", ilp_group_method);
 
@@ -317,7 +317,7 @@ static __device__ __forceinline__ float calc_Tap(const float r_ij, const float R
 static __device__ __forceinline__ float calc_dTap(const float r_ij, const float Rcut, const float Rcutinv)
 {
   float dTap, r;
-  
+
   r = r_ij * Rcutinv;
   if (r >= Rcut) {
     dTap = 0.0f;
@@ -378,9 +378,9 @@ static __global__ void ILP_neighbor(
     ilp_neighbor_number[n1] = count;
 
     if (count > MAX_ILP_NEIGHBOR_CBN) {
-      // error, there are too many neighbors for some atoms, 
+      // error, there are too many neighbors for some atoms,
       printf("\n===== ILP neighbor number[%d] is greater than 3 =====\n", count);
-      
+
       int nei1 = ilp_neighbor_list[0 * number_of_particles + n1];
       int nei2 = ilp_neighbor_list[1 * number_of_particles + n1];
       int nei3 = ilp_neighbor_list[2 * number_of_particles + n1];
@@ -488,7 +488,7 @@ static __device__ void calc_normal(
     n1[2] = pv12[2];
     // the magnitude of the normal vector
     nninv = rnorm3df(n1[0], n1[1], n1[2]);
-    
+
 
     // the unit normal vector
     normal[0] = n1[0] * nninv;
@@ -615,7 +615,6 @@ static __device__ void calc_normal(
     dpv23[2][1][2] = vet[1][0];
     dpv23[2][2][2] = 0.0f;
 
-    //############################################################################################
     // average the normal vectors by using the 3 neighboring planes
     n1[0] = (pv12[0] + pv31[0] + pv23[0]) * continv;
     n1[1] = (pv12[1] + pv31[1] + pv23[1]) * continv;
@@ -659,7 +658,6 @@ static __device__ void calc_normal(
       }
     }
   } else {
-    // TODO: error! too many neighbors for calculating normals
   }
 }
 
@@ -685,7 +683,6 @@ static __device__ void calc_vdW(
   r6inv = r2inv * r2inv * r2inv;
   r8inv = r2inv * r6inv;
 
-  // TSvdw = 1.0 + exp(-d_Seff * r + d);
   // use double to avoid inf from exp function
   TSvdw = 1.0 + exp((double) (-d_Seff * r + d));
   TSvdwinv_double = 1.0 / TSvdw;
@@ -698,7 +695,7 @@ static __device__ void calc_vdW(
 
   p2_vdW = Tap * Vilp;
   f2_vdW = fsum;
-  
+
 }
 
 // force evaluation kernel
@@ -847,7 +844,7 @@ static __global__ void gpu_find_force(
         dTap,
         p2_vdW,
         f2_vdW);
-      
+
       float f12x = -f2_vdW * x12f * 0.5f;
       float f12y = -f2_vdW * y12f * 0.5f;
       float f12z = -f2_vdW * z12f * 0.5f;
@@ -870,7 +867,7 @@ static __global__ void gpu_find_force(
       s_szy += z12f * f21y;
       s_szz += z12f * f21z;
 
-      
+
       // calc rep
       float CC = ilp_para.CC[type1][type2];
       float lambda_ = ilp_para.lambda[type1][type2];
@@ -915,11 +912,11 @@ static __global__ void gpu_find_force(
       float Vilp_m_dTap_m_rinv = Vilp * dTap * rinv;
 
       // derivatives of the product of rij and ni, the result is a vector
-      dprodnorm1[0] = 
+      dprodnorm1[0] =
         dnormdri[0][0] * delx + dnormdri[1][0] * dely + dnormdri[2][0] * delz;
-      dprodnorm1[1] = 
+      dprodnorm1[1] =
         dnormdri[0][1] * delx + dnormdri[1][1] * dely + dnormdri[2][1] * delz;
-      dprodnorm1[2] = 
+      dprodnorm1[2] =
         dnormdri[0][2] * delx + dnormdri[1][2] * dely + dnormdri[2][2] * delz;
       fp1[0] = prodnorm1_m_fpair1 * normal[0];
       fp1[1] = prodnorm1_m_fpair1 * normal[1];
@@ -992,7 +989,6 @@ static __global__ void gpu_find_force(
     g_f12z_ilp_neigh[index_ilp_vec[1]] = fk_temp[7];
     g_f12z_ilp_neigh[index_ilp_vec[2]] = fk_temp[8];
 
-    // save virial
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2
@@ -1006,7 +1002,6 @@ static __global__ void gpu_find_force(
     g_virial[n1 + 7 * number_of_particles] += s_szx;
     g_virial[n1 + 8 * number_of_particles] += s_szy;
 
-    // save potential
     g_potential[n1] += s_pe;
 
   }
@@ -1177,7 +1172,6 @@ static __global__ void reduce_force_many_body(
     g_fy[n1] += s_fy;
     g_fz[n1] += s_fz;
 
-    // save virial
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2
@@ -1481,7 +1475,6 @@ static __global__ void find_force_tersoff_step2(
       g_f12y[index] = f12y;
       g_f12z[index] = f12z;
     }
-    // save potential
     g_potential[n1] += pot_energy;
   }
 }
@@ -1499,7 +1492,6 @@ void ILP_TERSOFF::compute(
   // nothing
 }
 
-//#define USE_FIXED_NEIGHBOR 1
 #define UPDATE_TEMP 10
 #define BIG_ILP_CUTOFF_SQUARE 50.0
 // find force and related quantities
@@ -1515,7 +1507,6 @@ void ILP_TERSOFF::compute_ilp(
   const int number_of_atoms = type.size();
   int grid_size = (N2 - N1 - 1) / BLOCK_SIZE_FORCE + 1;
 
-  // ILP group labels
   const int *group_label = group[ilp_group_method].label.data();
 
 #ifdef USE_FIXED_NEIGHBOR
@@ -1538,7 +1529,7 @@ void ILP_TERSOFF::compute_ilp(
       ilp_data.NL,
       ilp_data.big_ilp_NN,
       ilp_data.big_ilp_NL);
-    
+
     find_neighbor_SW(
       N1,
       N2,
@@ -1667,7 +1658,7 @@ void ILP_TERSOFF::compute_ilp(
     g_f12z_ilp_neigh);
     GPU_CHECK_KERNEL
 
-  
+
   // pre-compute the bond order functions and their derivatives
   find_force_tersoff_step1<<<grid_size, BLOCK_SIZE_FORCE>>>(
     number_of_atoms,

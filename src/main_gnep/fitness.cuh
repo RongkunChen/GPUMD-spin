@@ -57,14 +57,14 @@ protected:
   bool has_test_set = false;
   int N; // max atom number
   int num_batches = 0;
-  int number_of_variables = 10; // number of variables
-  int number_of_variables_ann = 0; // number of variables in ANN
-  int number_of_variables_descriptor = 0; // number of variables in descriptor
+  int number_of_variables = 10;
+  int number_of_variables_ann = 0;
+  int number_of_variables_descriptor = 0;
   int maximum_epochs = 50; // maximum number of epochs
   int maximum_steps = 10000; // maximum number of steps
   float lr; // learning rate
   float start_lr;     // start learning rate
-  float stop_lr; // stop learning rate 
+  float stop_lr; // stop learning rate
   int max_NN_radial;  // radial neighbor list size
   int max_NN_angular; // angular neighbor list size
   Adam* optimizer;

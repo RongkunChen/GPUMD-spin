@@ -527,7 +527,6 @@ void AngularRDF::pre_run(
   // calculate radial step size
   r_step_ = r_cut_ / rdf_r_bins_;
 
-  // calculate theta step size
   theta_step_ = 2 * PI / rdf_theta_bins_; // total angle is 360 degrees, theta step size is 360
                                           // degrees divided by theta bin number
 
@@ -781,7 +780,6 @@ void AngularRDF::parse(
 
   printf("    radial cutoff will be divided into %d bins.\n", rdf_r_bins_);
 
-  // 角度方向的bin数量
   if (!is_valid_int(tokens[3], &rdf_theta_bins_)) {
     PRINT_INPUT_ERROR("number of theta bins should be an integer.\n");
   }

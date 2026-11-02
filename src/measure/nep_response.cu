@@ -593,7 +593,6 @@ static __global__ void find_force_radial(
     g_fx[n1] += s_fx;
     g_fy[n1] += s_fy;
     g_fz[n1] += s_fz;
-    // save virial
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2
@@ -755,7 +754,6 @@ static __global__ void find_properties_many_body_response(
       float f12x = g_f12x[index];
       float f12y = g_f12y[index];
       float f12z = g_f12z[index];
-      // int offset = 0;
 
       int l = 0;
       int r = g_neighbor_number[n2];
@@ -772,12 +770,6 @@ static __global__ void find_properties_many_body_response(
           break;
         }
       }
-      // for (int k = 0; k < neighbor_number_2; ++k) {
-      //   if (n1 == g_neighbor_list[n2 + number_of_particles * k]) {
-      //     offset = k;
-      //     break;
-      //   }
-      // }
       index = ((l + r) >> 1) * number_of_particles + n2;
       float f21x = g_f12x[index];
       float f21y = g_f12y[index];
@@ -814,7 +806,6 @@ static __global__ void find_properties_many_body_response(
     g_fy[n1] += s_fy;
     g_fz[n1] += s_fz;
 
-    // save virial
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2

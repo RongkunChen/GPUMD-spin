@@ -81,7 +81,6 @@ NEP_Compile_Config make_nep_compile_config(
   const float* c6_ref_sqrt = nullptr);
 
 // The one and only generator of `nep_special_config.cuh`.
-//
 // It is pure C++ (no dlopen, no POSIX), so it compiles on Windows too.  The
 // Linux runtime JIT (NEP_Compile::compile) and the offline exporter used by the
 // Windows verification build both call this function; no other code is allowed

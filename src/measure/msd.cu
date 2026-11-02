@@ -213,11 +213,11 @@ void MSD::pre_run(
 {
   if (!compute_)
     return;
-  
+
   if (num_correlation_steps_ > number_of_steps / sample_interval_) {
     PRINT_INPUT_ERROR("MSD correlation times sampling interval should be <= number of MD steps.\n");
   }
-    
+
   if (grouping_method_ < 0) {
     num_atoms_ = atom.number_of_atoms;
     num_groups_ = 1;
@@ -229,7 +229,7 @@ void MSD::pre_run(
     num_atoms_per_group_.resize(num_groups_);
     group_per_atom_cpu_.resize(num_atoms_);
     group_per_atom_gpu_.resize(num_atoms_);
-    
+
     for (int i=0; i<num_groups_; i++) {
       int atoms_in_group = groups[grouping_method_].cpu_size[i];
       int group_offset = groups[grouping_method_].cpu_size_sum[i];
@@ -241,14 +241,14 @@ void MSD::pre_run(
       }
     }
     group_per_atom_gpu_.copy_from_host(group_per_atom_cpu_.data());
-    
+
   } else {
     num_atoms_per_group_.resize(1);
     num_atoms_ = groups[grouping_method_].cpu_size[group_id_];
     num_groups_ = 1;
     num_atoms_per_group_[0] = num_atoms_;
   }
-  
+
   dt_in_natural_units_ = time_step * sample_interval_;
   dt_in_ps_ = dt_in_natural_units_ * TIME_UNIT_CONVERSION / 1000.0;
   for (int i = 0; i < 9; ++i)
@@ -365,7 +365,7 @@ void MSD::end_of_step(
 void MSD::write(const char* filename)
 {
   CHECK(gpuDeviceSynchronize()); // needed for pre-Pascal GPU
-    
+
   std::vector<double> sdc_x(num_correlation_steps_ * num_groups_, 0.0);
   std::vector<double> sdc_y(num_correlation_steps_ * num_groups_, 0.0);
   std::vector<double> sdc_z(num_correlation_steps_ * num_groups_, 0.0);
@@ -373,13 +373,13 @@ void MSD::write(const char* filename)
   // normalize by the number of atoms and number of time origins
   for (int group_id=0; group_id < num_groups_; group_id++) {
     int num_atoms = num_atoms_per_group_[group_id];
-    
+
     // This is the case for empty groups and if the msd has yet to be computed
     double msd_scaler = 0.0;
     if (num_atoms > 0 && num_time_origins_ > 0) {
       // num_time_origins_ should be different for each nc
       msd_scaler = 1.0 / ((double)num_atoms * (double)num_time_origins_);
-    } 
+    }
 
     int group_index = group_id * num_correlation_steps_;
     for (int nc = group_index + 0; nc < group_index + num_correlation_steps_; nc++) {
@@ -482,7 +482,6 @@ void MSD::parse(const std::vector<std::string>& tokens, const std::vector<Group>
     PRINT_INPUT_ERROR("compute_msd should have at least 2 parameters.\n");
   }
 
-  // sample interval
   if (!is_valid_int(tokens[1], &sample_interval_)) {
     PRINT_INPUT_ERROR("sample interval should be an integer.\n");
   }

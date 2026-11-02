@@ -46,7 +46,7 @@ public:
     int K[3];               // number of mesh points in the box vector directions
     int K_half[3];          // K/2
     float alpha;            // The Ewald parameter
-    float alpha_factor;     // 1 / (4 * alpha * alpha)
+    float alpha_factor;
     float two_pi_over_V;    // 4pi/(2V)
     float potential_factor; // K_C_SP / N
     float b[3][3];          // b-vectors in reciprocal space

@@ -59,7 +59,7 @@ DP::DP(const char* filename_dp, int num_atoms)
   dp_nl.numneigh.resize(num_atoms);
   dp_nl.firstneigh.resize(num_atoms);
   dp_nl.neigh_storage.resize(num_atoms * MAX_NEIGH_NUM_DP);
-  
+
   // init ghost lists
   danger_list.resize(num_atoms);
   ghost_count.resize(num_atoms);
@@ -184,7 +184,6 @@ static __global__ void transpose_and_update_unit_no_ghost(
 }
 
 // force and virial need transpose from dp to gpumd
-// TODO: use share memory to speed up
 static __global__ void transpose_and_update_unit(
   const double* e_f_v_in,
   double* e_out,
@@ -486,7 +485,6 @@ static __global__ void create_ghost_map(
     if (ghost_count[n1] == 0) {
       danger_list[n1] = -1;
       return;
-      // TODO: may use less threads? use more memory to save messages
     }
     int ghost_id = N + ghost_sum[n1];
     int ghost_idx = danger_list[n1];
@@ -946,7 +944,6 @@ void DP::compute(
   // Always use DeePMD's internal neighbor list construction (bypass path).
   // This avoids ghost atom construction which causes force inconsistency
   // for message-passing networks on both bulk and slab systems.
-  //
   // For non-periodic directions, we inflate the box and center atoms so that
   // DeePMD's internal PBC won't create spurious periodic images in those directions.
   // DeePMD's C++ API only supports box=all-zero (cluster) or box=non-zero (full PBC).
@@ -970,7 +967,6 @@ void DP::compute(
     // thickness in that direction >= atom_extent + 4*rc, preventing DeePMD
     // from finding periodic-image neighbors across the free boundary.
     // We also shift atoms to be centered in the inflated box.
-    //
     // Box matrix layout in GPUMD (column-major lattice vectors):
     //   a = (cpu_h[0], cpu_h[3], cpu_h[6])  -- 1st lattice vector
     //   b = (cpu_h[1], cpu_h[4], cpu_h[7])  -- 2nd lattice vector

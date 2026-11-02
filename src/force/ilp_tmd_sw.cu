@@ -16,7 +16,7 @@
 /*----------------------------------------------------------------------------80
 The class dealing with the interlayer potential(ILP) and SW.
 
-Ref: Wenwu Jiang, Ting Liang, Hekai Bu, Jianbin Xu, and Wengen Ouyang, 
+Ref: Wenwu Jiang, Ting Liang, Hekai Bu, Jianbin Xu, and Wengen Ouyang,
 Moiré-driven interfacial thermal transport in twisted transition metal dichalcogenides, ACS Nano 19, 16287 (2025).
 
 Implemented by: Hekai Bu (Wuhan University), hekai_bu@whu.edu.cn
@@ -256,7 +256,7 @@ static __device__ __forceinline__ float calc_Tap(const float r_ij, const float R
 static __device__ __forceinline__ float calc_dTap(const float r_ij, const float Rcut, const float Rcutinv)
 {
   float dTap, r;
-  
+
   r = r_ij * Rcutinv;
   if (r >= Rcut) {
     dTap = 0.0f;
@@ -383,7 +383,7 @@ static __global__ void ILP_neighbor(
         double deljz = g_z[l] - g_z[j];
         apply_mic(box, deljx, deljy, deljz);
         double rsqlj = deljx * deljx + deljy * deljy + deljz * deljz;
-        
+
         if (abs(rsqlj) >= 1e-6 && rsqlj < ilp_para.rcutsq_ilp[ltype][jtype]) {
           neighsort[jj + 1] = l;
           check[ll] = -1;
@@ -495,7 +495,7 @@ static __device__ void calc_normal(
       Nave[ip] /= (cont - 1);
     }
     nninv = rnorm3df(Nave[0], Nave[1], Nave[2]);
-    
+
     // the unit normal vector
     normal[0] = Nave[0] * nninv;
     normal[1] = Nave[1] * nninv;
@@ -603,7 +603,6 @@ static __device__ void calc_normal(
       Nave[ip] /= NNEI;
     }
     // the magnitude of the normal vector
-    // nn2 = Nave[0] * Nave[0] + Nave[1] * Nave[1] + Nave[2] * Nave[2];
     nninv = rnorm3df(Nave[0], Nave[1], Nave[2]);
     // the unit normal vector
     normal[0] = Nave[0] * nninv;
@@ -676,7 +675,6 @@ static __device__ void calc_vdW(
   r6inv = r2inv * r2inv * r2inv;
   r8inv = r2inv * r6inv;
 
-  // TSvdw = 1.0 + exp(-d_Seff * r + d);
   // use double to avoid inf from exp function
   TSvdw = 1.0 + exp((double) (-d_Seff * r + d));
   TSvdwinv_double = 1.0 / TSvdw;
@@ -689,7 +687,7 @@ static __device__ void calc_vdW(
 
   p2_vdW = Tap * Vilp;
   f2_vdW = fsum;
-  
+
 }
 
 // force evaluation kernel
@@ -787,7 +785,7 @@ static __global__ void gpu_find_force(
       delkiy_half[i1] = float(y12d) * 0.5f;
       delkiz_half[i1] = float(z12d) * 0.5f;
     }
-    
+
     calc_normal(vet, cont, normal, dnormdri, dnormal);
 
     // calculate energy and force
@@ -838,7 +836,7 @@ static __global__ void gpu_find_force(
         dTap,
         p2_vdW,
         f2_vdW);
-      
+
       float f12x = -f2_vdW * x12f * 0.5f;
       float f12y = -f2_vdW * y12f * 0.5f;
       float f12z = -f2_vdW * z12f * 0.5f;
@@ -861,7 +859,7 @@ static __global__ void gpu_find_force(
       s_szy += z12f * f21y;
       s_szz += z12f * f21z;
 
-      
+
       // calc rep
       float C = ilp_para.C[type1][type2];
       float lambda_ = ilp_para.lambda[type1][type2];
@@ -890,8 +888,6 @@ static __global__ void gpu_find_force(
       rdsq1 = rhosq1 * delta2inv;
 
       // store exponents
-      // exp0 = exp(-lambda_ * (r - z0));
-      // exp1 = exp(-rdsq1);
       exp0 = expf(-lambda_ * (r - z0));
       exp1 = expf(-rdsq1);
 
@@ -908,11 +904,11 @@ static __global__ void gpu_find_force(
       float Vilp_m_dTap_m_rinv = Vilp * dTap * rinv;
 
       // derivatives of the product of rij and ni, the result is a vector
-      dprodnorm1[0] = 
+      dprodnorm1[0] =
         dnormdri[0][0] * delx + dnormdri[1][0] * dely + dnormdri[2][0] * delz;
-      dprodnorm1[1] = 
+      dprodnorm1[1] =
         dnormdri[0][1] * delx + dnormdri[1][1] * dely + dnormdri[2][1] * delz;
-      dprodnorm1[2] = 
+      dprodnorm1[2] =
         dnormdri[0][2] * delx + dnormdri[1][2] * dely + dnormdri[2][2] * delz;
       fp1[0] = prodnorm1_m_fpair1 * normal[0];
       fp1[1] = prodnorm1_m_fpair1 * normal[1];
@@ -976,7 +972,6 @@ static __global__ void gpu_find_force(
     g_fy[n1] += s_fy;
     g_fz[n1] += s_fz;
 
-    // save virial
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2
@@ -990,7 +985,6 @@ static __global__ void gpu_find_force(
     g_virial[n1 + 7 * number_of_particles] += s_szx;
     g_virial[n1 + 8 * number_of_particles] += s_szy;
 
-    // save potential
     g_potential[n1] += s_pe;
 
   }
@@ -1161,7 +1155,6 @@ static __global__ void reduce_force_many_body(
     g_fy[n1] += s_fy;
     g_fz[n1] += s_fz;
 
-    // save virial
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2
@@ -1269,7 +1262,6 @@ static __global__ void gpu_find_force_sw3_partial(
         double one_over_d12d13 = 1.0 / (d12 * d13);
         double cos123 = (x12 * x13 + y12 * y13 + z12 * z13) * one_over_d12d13;
         double cos123_over_d12d12 = cos123 * d12inv * d12inv;
-        // cos123 - cos0
         double delta_cos = cos123 - cos0;
 
         // modification to (cos123 - cos0)
@@ -1301,7 +1293,6 @@ static __global__ void gpu_find_force_sw3_partial(
       g_f12y[index] = f12y;
       g_f12z[index] = f12z;
     }
-    // save potential
     g_potential[n1] += potential_energy;
   }
 }
@@ -1359,7 +1350,7 @@ void ILP_TMD_SW::compute_ilp(
       ilp_data.NL,
       ilp_data.big_ilp_NN,
       ilp_data.big_ilp_NL);
-    
+
     find_neighbor_SW(
       N1,
       N2,

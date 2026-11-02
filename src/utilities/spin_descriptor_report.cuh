@@ -17,7 +17,6 @@
 // One line per block of the active layout, then the consequences that a user
 // has to know about: which blocks are dead for this geometry class, which one
 // is deprecated, and whether the model asserts SOC.
-//
 // `mask` is the F26 ablation mask actually in force; a block that is switched
 // off is reported as "off" rather than silently omitted, because "trained
 // without this block" and "trained with it and it came out zero" are different

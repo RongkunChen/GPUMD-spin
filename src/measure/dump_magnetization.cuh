@@ -26,26 +26,19 @@ class Force;
 class Integrate;
 
 // Dump the total and the per-type magnetisation of the spin system.
-//
 //   dump_magnetization <interval> [<filename>]
-//
 // M = sum_i S_i, written every <interval> steps to <filename>
 // (magnetization.out by default), together with the instantaneous
 // temperature so that an M(T) curve can be read off directly.  Per type the
 // average vector is reported, that is M_type / N_type, so that the numbers
 // are comparable between types with different site counts.
-//
 // The same file also carries the running fluctuation of M,
-//
 //   var(M) = <M.M> - <M>.<M>,      chi = var(M) / (N kB T),
-//
 // which is what an M(T) plot cannot show: chi peaks at the Curie temperature,
 // so Tc can be located straight from the dump without a separate analysis
 // pass.  The running sums accumulate over the dump samples of the current run
 // and are reset in pre_run(), i.e. they describe this run only.
-//
 //   dump_magnetization <interval> [<filename>] [warmup <n>]
-//
 // `warmup <n>` drops the first n dump samples from the fluctuation (they are
 // still written as rows).  Without it the initial relaxation of a spin system
 // started from a DFT configuration dominates the variance.

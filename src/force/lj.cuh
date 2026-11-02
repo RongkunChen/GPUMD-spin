@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <vector>
 
-// TODO allow a much larger MAX_TYPE -> need to allocate GPU memory
 #define MAX_TYPE 10 // == max number of potentials
 
 struct LJ_Para {

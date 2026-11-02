@@ -226,7 +226,6 @@ void HAC::post_run(
   std::vector<double> hac_cpu(Nc * NUM_OF_HEAT_COMPONENTS);
 
   // Subtract the sample mean of the heat current before correlating.
-  //
   // Green-Kubo needs the autocorrelation of the *fluctuation* delta-J =
   // J - <J>.  Over a finite trajectory the sample mean is not zero (its
   // standard error is sigma/sqrt(N_indep)), and its square adds a spurious

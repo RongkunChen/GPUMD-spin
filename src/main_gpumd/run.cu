@@ -380,16 +380,12 @@ void Run::perform_a_run(const int number_of_steps)
       max_distance_per_step, atom.velocity_per_atom, initial_time_step, time_step);
     global_time += time_step;
 
-    // ------------------------------------------------------------------
     // S05B: symmetric (Strang) spin-lattice splitting
-    //
     //     S(dt/2)  V(dt)  S(dt/2)
-    //
     // Every force evaluation below belongs to a state that actually exists in
     // the splitting, and the step *ends* with a force/energy evaluation at the
     // final (r_{n+1}, S_{n+1}) so that thermo, trajectory, restart and the
     // magnetisation dumps all read one and the same state:
-    //
     //   A  S: S_n -> S_{n+1/2}        field at (r_n,     S_n)
     //   B  F(r_n,     S_{n+1/2})      first VV kick
     //   C  VV: half kick + drift      r_n -> r_{n+1}
@@ -397,12 +393,10 @@ void Run::perform_a_run(const int number_of_steps)
     //   E  VV: second half kick
     //   F  S: S_{n+1/2} -> S_{n+1}    field at (r_{n+1}, S_{n+1/2})
     //   G  F(r_{n+1}, S_{n+1})        the isochronous output state
-    //
     // `spin_split staggered` keeps the historical ordering (spin advanced once,
     // after the force call, so the VV kick uses the previous step's spin state
     // and the reported energy belongs to S_{n+1/2}).  It is kept only to
     // reproduce pre-S05B runs and warns when selected.
-    // ------------------------------------------------------------------
     const bool symmetric_split = spin.enabled && g_spin_split == 1;
 
     // A: first spin half step.  The conservative branch re-evaluates the field
@@ -995,7 +989,6 @@ void Run::parse_one_keyword(
     has_seen_dftd3_command = true;
   } else if (tokens[0] == "run") {
     // Re-apply the global seed right before the integration starts.
-    //
     // `velocity ... seed <n>` is implemented by calling srand() for every
     // velocity component of every atom (main_gpumd/velocity.cu), which leaves
     // the process-wide rand() state at a deterministic place; `fix`, the

@@ -63,13 +63,11 @@ const char* mode_name(const NEP_Compile_Mode mode)
 
 #if !defined(USE_HIP)
 
-// ---------------------------------------------------------------------------
 // This block must compile on Windows as well: the offline configuration
 // exporter (tools/spin_validation/export_special_config.cu) calls
 // make_config_text() so that the exported header and the Linux runtime JIT
 // come from exactly the same generator.  Only the pieces that really need
 // POSIX (readlink/dlsym) are guarded below.
-// ---------------------------------------------------------------------------
 
 bool file_exists(const std::string& filename)
 {

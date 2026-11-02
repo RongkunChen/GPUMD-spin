@@ -143,7 +143,6 @@ def main():
         if rc1 == 0 and os.path.exists(p):
             e_train = float(open(p, encoding="utf-8").read().split()[0]) * n
 
-        # MD path
         open(os.path.join(w, "run.in"), "w", encoding="utf-8", newline="\n").write(
             "potential nep.txt\ntime_step 0.0001\nensemble nve\ndump_thermo 1\nrun 1\n")
         rc2, log2 = run([GPUMD], w)
@@ -164,7 +163,6 @@ def main():
     g = out["g6"]
     g["n_fail"] = sum(1 for c in g["cases"] if not c["pass_frozen_gate"])
     g["all_pass"] = g["n_fail"] == 0
-    # The frozen gate is *per-atom* (Stage03A.1: "逐原子能量", 3/336 frames at
     # 1.19e-6 vs 1.05e-6 eV).  The shipped binaries expose only total energies,
     # so this session measures total trainer-vs-MD parity on the same 5 frames
     # and reports it as an auxiliary check with its per-atom equivalent.  It is

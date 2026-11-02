@@ -694,7 +694,7 @@ void LSQT::pre_run(
     return;
   }
 
-  const int number_of_neighbors_per_atom = 10; // TODO
+  const int number_of_neighbors_per_atom = 10;
   const int number_of_neighbors_per_orbital =
     number_of_neighbors_per_atom * number_of_orbitals_per_atom;
 
@@ -793,7 +793,6 @@ void LSQT::find_dos_and_velocity(Atom& atom, Box& box)
 
   initialize_state(number_of_orbitals, sr, si);
 
-  // dos
   find_dos_or_others(
     number_of_orbitals,
     number_of_moments,
@@ -982,7 +981,6 @@ void LSQT::parse(const std::vector<std::string>& tokens)
     PRINT_INPUT_ERROR("transport direction should be x or y or z.\n");
   }
 
-  // number of moments
   if (!is_valid_int(tokens[2], &number_of_moments)) {
     PRINT_INPUT_ERROR("number of moments should be an integer.\n");
   }
@@ -991,7 +989,6 @@ void LSQT::parse(const std::vector<std::string>& tokens)
   }
   printf("    number of moments is %d.\n", number_of_moments);
 
-  // number of energy points
   if (!is_valid_int(tokens[3], &number_of_energy_points)) {
     PRINT_INPUT_ERROR("number of energy points should be an integer.\n");
   }
@@ -1018,7 +1015,6 @@ void LSQT::parse(const std::vector<std::string>& tokens)
     PRINT_INPUT_ERROR("starting energy should < ending energy.\n");
   }
 
-  // maximum energy
   if (!is_valid_real(tokens[6], &maximum_energy)) {
     PRINT_INPUT_ERROR("maximum energy should be a number.\n");
   }

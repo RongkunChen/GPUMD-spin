@@ -21,7 +21,6 @@ class Group
 {
 public:
   int number; // number of groups
-  // GPU data
   GPU_Vector<int> label;    // atom label
   GPU_Vector<int> size;     // # atoms in each group
   GPU_Vector<int> size_sum; // # atoms in all previous groups

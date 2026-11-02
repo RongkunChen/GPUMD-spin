@@ -241,7 +241,6 @@ static void read_xyz_line_2(
     }
   }
 
-  // properties
   const int num_properties = 7;
   std::string property_name[num_properties] = {
     "species", "pos", "mass", "charge", "vel", "group", "spin"};

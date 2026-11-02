@@ -57,7 +57,6 @@
 #define gpuDeviceEnablePeerAccess hipDeviceEnablePeerAccess
 #define gpuDeviceSynchronize hipDeviceSynchronize
 
-// stream
 #define gpuStream_t hipStream_t
 #define gpuStreamCreate hipStreamCreate
 #define gpuStreamCreateWithFlags hipStreamCreateWithFlags
@@ -68,7 +67,6 @@
 #define gpuStreamDefault hipStreamDefault
 #define gpuStreamNonBlocking hipStreamNonBlocking
 
-// event
 #define gpuEvent_t hipEvent_t
 #define gpuEventCreate hipEventCreate
 #define gpuEventCreateWithFlags hipEventCreateWithFlags
@@ -86,7 +84,6 @@
 #define gpurand_normal hiprand_normal
 #define gpurand_init hiprand_init
 
-// blas
 #define gpublasHandle_t hipblasHandle_t
 #define gpublasSgemv hipblasSgemv
 #define gpublasSgemm hipblasSgemm
@@ -122,7 +119,6 @@
 #define gpusolverDnZheevjBatched_bufferSize hipsolverDnZheevjBatched_bufferSize
 #define gpusolverDnZheevjBatched hipsolverDnZheevjBatched
 
-// FFT
 #define gpufftHandle hipfftHandle
 #define gpufftComplex hipfftComplex
 #define gpufftExecC2C hipfftExecC2C
@@ -175,7 +171,6 @@
 #define gpuDeviceEnablePeerAccess cudaDeviceEnablePeerAccess
 #define gpuDeviceSynchronize cudaDeviceSynchronize
 
-// stream
 #define gpuStream_t cudaStream_t
 #define gpuStreamCreate cudaStreamCreate
 #define gpuStreamCreateWithFlags cudaStreamCreateWithFlags
@@ -186,7 +181,6 @@
 #define gpuStreamDefault cudaStreamDefault
 #define gpuStreamNonBlocking cudaStreamNonBlocking
 
-// event
 #define gpuEvent_t cudaEvent_t
 #define gpuEventCreate cudaEventCreate
 #define gpuEventCreateWithFlags cudaEventCreateWithFlags
@@ -204,7 +198,6 @@
 #define gpurand_normal curand_normal
 #define gpurand_init curand_init
 
-// blas
 #define gpublasHandle_t cublasHandle_t
 #define gpublasSgemv cublasSgemv
 #define gpublasSgemm cublasSgemm
@@ -243,7 +236,6 @@
 #define gpusolverDnZheevjBatched_bufferSize cusolverDnZheevjBatched_bufferSize
 #define gpusolverDnZheevjBatched cusolverDnZheevjBatched
 
-// FFT
 #define gpufftHandle cufftHandle
 #define gpufftComplex cufftComplex
 #define gpufftExecC2C cufftExecC2C

@@ -940,7 +940,6 @@ static __global__ void find_force_radial(
     g_fx[n1] += s_fx;
     g_fy[n1] += s_fy;
     g_fz[n1] += s_fz;
-    // save virial
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2

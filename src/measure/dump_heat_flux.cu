@@ -202,7 +202,6 @@ void Dump_Heat_Flux::pre_run(
   // jx_in, jx_out, jy_in, jy_out, jz.  This is the SAME convention used by
   // `compute_hac` and `compute_hnemd`, so the numbers written here are
   // directly comparable with hac.out and kappa.out.
-  //
   // The 5-argument form of `compute_heat` additionally adds the convective
   // term sum_i epsilon_i v_i.  It must NOT be used here: `potential_per_atom`
   // carries the raw DFT total-energy scale (about -1.3e3 eV/atom for this

@@ -257,7 +257,6 @@ public:
     GPU_CHECK_KERNEL
   }
 
-  // the [] operator
   T& operator[](int index) { return data_[index]; }
 
   // some getters

@@ -220,7 +220,6 @@ ax.set_title("B1 energy-volume")
 fig.tight_layout()
 fig.savefig(os.path.join(FIG, "eos.png"), dpi=150)
 
-# moment
 rows = list(csv.DictReader(open(os.path.join(RD, "B", "energy_moment.csv"))))
 m = np.array([float(r["m"]) for r in rows])
 em = np.array([float(r["E_per_atom"]) for r in rows])
@@ -236,7 +235,6 @@ ax.set_title("B2 energy vs moment")
 fig.tight_layout()
 fig.savefig(os.path.join(FIG, "moment_curve.png"), dpi=150)
 
-# magnon
 p = os.path.join(RD, "C", "magnon_dispersion.dat")
 if os.path.exists(p):
     d = np.loadtxt(p, skiprows=1, usecols=(3, 4), ndmin=2)

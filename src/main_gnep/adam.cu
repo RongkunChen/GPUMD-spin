@@ -20,7 +20,7 @@
  * Adam: A method for stochastic optimization
  * doi: 10.48550/arXiv.1412.6980
 ------------------------------------------------------------------------------*/
- 
+
 #include "adam.cuh"
 #include "device_guard.cuh"
 #include "parameters.cuh"
@@ -67,8 +67,7 @@ static __global__ void apply_updates(
     // calculate bias correction
     const float m_hat = m[i] / (1.0f - beta1_t);
     const float v_hat = v[i] / (1.0f - beta2_t);
-    
-    // update parameters
+
     parameters[i] -= lr * (m_hat / (sqrt(v_hat) + eps) + weight_decay * parameters[i]);
   }
 }
@@ -88,8 +87,8 @@ __global__ void adam_update(
         float bc1 = 1.0f - beta1_power;
         float bc2 = 1.0f - beta2_power;
 
-        float m_hat = m[i] / bc1;   
-        float v_hat = v[i] / bc2;   
+        float m_hat = m[i] / bc1;
+        float v_hat = v[i] / bc2;
 
         // param[i] -= step_size * (m_hat / (sqrt(v_hat) + eps));
         param[i] = param[i] - step_size * (m_hat / (sqrt(v_hat) + eps));
@@ -101,19 +100,19 @@ __global__ void compute_gradient_norm(const float* grad, int n, float* norm_resu
   __shared__ float shared_sum[1024];
   const int tid = threadIdx.x;
   shared_sum[tid] = 0.0f;
-  
+
   for (int i = tid; i < n; i += blockDim.x) {
     shared_sum[tid] += grad[i] * grad[i];
   }
   __syncthreads();
-  
+
   for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
     if (tid < stride) {
       shared_sum[tid] += shared_sum[tid + stride];
     }
     __syncthreads();
   }
-  
+
   if (tid == 0) {
     *norm_result = shared_sum[0];
   }
@@ -132,39 +131,38 @@ __global__ void apply_gradient_clipping(float* grad, int n, float norm, float ma
 
 void clip_gradients(float* d_grad, int size, float* d_norm)
 {
-  static float avg_norm = -1.0f; 
+  static float avg_norm = -1.0f;
 
   CHECK(cudaMemset(d_norm, 0, sizeof(float)));
-  
+
   // calculate the norm of the gradient
   int block_size = 1024;
   compute_gradient_norm<<<1, block_size>>>(d_grad, size, d_norm);
-  
+
   // apply gradient clipping
   int grid_size = (size + block_size - 1) / block_size;
   float h_norm;
   CHECK(cudaMemcpy(&h_norm, d_norm, sizeof(float), cudaMemcpyDeviceToHost));
   h_norm = sqrt(h_norm);
-  
+
   if (avg_norm < 0) {
     avg_norm = h_norm;
   } else {
     avg_norm = 0.9f * avg_norm + 0.1f * h_norm;
   }
-  
+
   const float alpha = 1.0f;
   const float MAX_CLIP_NORM = 10.0f; //modified by parameters?
   float max_norm = avg_norm * alpha;
   if (max_norm > MAX_CLIP_NORM) max_norm = MAX_CLIP_NORM;
-  
+
   apply_gradient_clipping<<<grid_size, block_size>>>(d_grad, size, h_norm, max_norm);
-  
+
 }
 
 Adam::Adam(Parameters& para)
 {
   DeviceGuard guard(0);
-  // initialize the parameters
   number_of_variables = para.number_of_variables;
   weight_decay = para.weight_decay;
 
@@ -271,7 +269,7 @@ void Adam::update(float lr, const std::vector<float>& gradients) {
     gpu_v.data()
   );
   GPU_CHECK_KERNEL
-  
+
   // calculate bias correction
   const float beta1_t = pow(beta1, step + 1);
   const float beta2_t = pow(beta2, step + 1);
@@ -291,7 +289,7 @@ void Adam::update(float lr, const std::vector<float>& gradients) {
   GPU_CHECK_KERNEL
 
   gpu_parameters.copy_to_host(parameters.data());
-  step++; 
+  step++;
 }
 
 void Adam::output_parameters(Parameters& para) {

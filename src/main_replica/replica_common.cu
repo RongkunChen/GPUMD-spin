@@ -558,7 +558,6 @@ void Replica_Runtime::advance_device(
           slot.spin_field.get());
 
         // F15 — REJECTED BY A/B MEASUREMENT IN main_gpumd/run.cu, DO NOT RE-ENABLE.
-        //
         // The symmetric "refresh F(r, S) after the spin update" fix was
         // implemented there and measured on the alpha = 0 NVE case:
         //   F15 on  : +2.161e-09 eV/atom/step  (energy pumped in)
@@ -566,7 +565,6 @@ void Replica_Runtime::advance_device(
         // The one-step force lag is part of the staggered (r, S) leapfrog, not
         // a bug.  The replica path keeps the same ordering as the main tree so
         // that the two executables stay bit-comparable.
-        //
         // force.compute(
         //   slot.box,
         //   slot.atom.position_per_atom,

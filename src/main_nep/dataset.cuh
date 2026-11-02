@@ -48,7 +48,7 @@ public:
   GPU_Vector<int> NN_angular_sum; // prefix sum of NN_angular
 
   GPU_Vector<float> charge;      // calculated charge in GPU
-  GPU_Vector<float> charge_shifted;      // shifted charge in GPU
+  GPU_Vector<float> charge_shifted;
   GPU_Vector<float> bec;         // Born effective charge in GPU
   GPU_Vector<float> energy;      // calculated energy in GPU
   GPU_Vector<float> virial;      // calculated virial in GPU
@@ -61,7 +61,7 @@ public:
   // force_ref_cpu and are compared against torque_cpu by get_rmse_spin().
   GPU_Vector<float> spin_ref_gpu;   // reference magnetic torque in GPU (3N)
   GPU_Vector<int> use_spin_gpu;     // per-type spin switch (Route B)
-  std::vector<float> spin_cpu;   // spin vectors in CPU
+  std::vector<float> spin_cpu;
   std::vector<float> torque_cpu; // calculated torque in CPU
   std::vector<float> spin_ref_cpu; // reference torque in CPU
   GPU_Vector<float> avirial; // calculated atomic virial in GPU
@@ -74,7 +74,7 @@ public:
   GPU_Vector<double> total_energy_pred_gpu; // calculated total energy of each configuration (eV)
   std::vector<double> total_energy_pred_cpu;
 
-  GPU_Vector<float> energy_weight_gpu;    // energy weight in GPU
+  GPU_Vector<float> energy_weight_gpu;
   GPU_Vector<float> charge_ref_gpu;       // reference charge in GPU
   GPU_Vector<float> energy_ref_gpu;       // reference energy in GPU
   GPU_Vector<float> virial_ref_gpu;       // reference virial in GPU
@@ -82,7 +82,7 @@ public:
   GPU_Vector<float> bec_ref_gpu;          // reference BEC in GPU
   GPU_Vector<float> avirial_ref_gpu;     // reference atomic virial in GPU
   GPU_Vector<float> temperature_ref_gpu;  // reference temperature in GPU
-  std::vector<float> energy_weight_cpu;   // energy weight in CPU
+  std::vector<float> energy_weight_cpu;
   std::vector<float> charge_ref_cpu;      // reference charge in CPU
   std::vector<float> energy_ref_cpu;      // reference energy in CPU
   std::vector<float> virial_ref_cpu;      // reference virial in CPU

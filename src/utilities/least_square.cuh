@@ -34,25 +34,16 @@
   {                                                                                                \
     cusolverStatus_t status = call;                                                                \
     if (status != CUSOLVER_STATUS_SUCCESS) {                                                       \
-      fprintf(stderr, "cuSOLVER错误: %d 于文件 %s 行 %d\n", status, __FILE__, __LINE__);           \
+      fprintf(stderr, "cuSOLVER error: %d in file %s at line %d\n", status, __FILE__, __LINE__);           \
       exit(EXIT_FAILURE);                                                                          \
     }                                                                                              \
   }
 
-// -------------------------------------------
-// - A_d：整型数组，大小 n，存放 type_sum (每种原子类型的个数)
-// - b_d：单个 double，存放 energy_ref (总能量)
-// - x_d：double 数组，大小 n，输出每种类型对应的能量 E[i]
-// - n  ：类型数 num_types
-//
-// 数学公式：
 //   E_i = (A[i] * b) / ( ∑(A[j]^2) )    (j=0..n-1)
-// -------------------------------------------
 __global__ void kernelComputePseudoInverse1xN(const int* A_d, const float* b_d, float* x_d, int n)
 {
   __shared__ float sum_of_squares;
 
-  // 线程0 串行计算 ∑(A[j]^2)，并写入 sum_of_squares
   if (threadIdx.x == 0) {
     float tmp = 0.0f;
     for (int i = 0; i < n; i++) {
@@ -63,7 +54,6 @@ __global__ void kernelComputePseudoInverse1xN(const int* A_d, const float* b_d, 
   }
   __syncthreads();
 
-  // 每个线程计算 x_d[i] = (A_d[i] * b) / sum_of_squares
   int i = threadIdx.x;
   if (i < n) {
     float val_i = static_cast<float>(A_d[i]);
@@ -75,13 +65,12 @@ __global__ void kernelComputePseudoInverse1xN(const int* A_d, const float* b_d, 
 __global__ void kernelComputePseudoInverseReg1xN(
   const int* A_d,
   const float* b_d,
-  const float* lambda_d, // 分母加入l2正则化
+  const float* lambda_d,
   float* x_d,
   int n)
 {
   __shared__ float sum_of_squares;
 
-  // (1) 线程0 计算 ∑(A_d[j]^2)
   if (threadIdx.x == 0) {
     float tmp = 0.0f;
     for (int j = 0; j < n; j++) {
@@ -92,27 +81,16 @@ __global__ void kernelComputePseudoInverseReg1xN(
   }
   __syncthreads();
 
-  // (2) 每个线程计算 x_d[i]
   int i = threadIdx.x;
   if (i < n) {
     float val_i = static_cast<float>(A_d[i]); // type_sum[i]
     float b_val = b_d[0];                     // energy_ref
     float lambda_val = lambda_d[0];           // λ
 
-    // 分母: sum_of_squares + λ
     x_d[i] = (val_i * b_val) / (sum_of_squares + lambda_val);
   }
 }
 
-// -------------------------------------------
-// 封装函数：在 GPU 上计算每种类型的能量 E[i]
-// 输入：
-//  - num_types           : 原子类型数
-//  - type_sum[]     : 整型数组(长度 num_types)，各类型原子个数
-//  - energy_ref     : 总能量 (float)
-// 输出：
-//  - energy_per_type[] : float 数组(长度 num_types)，每种类型的能量
-// -------------------------------------------
 void computeEnergyPerType(
   int num_types, const int* type_sum, float energy_ref, float* energy_per_type)
 {

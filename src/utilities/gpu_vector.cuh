@@ -190,7 +190,6 @@ public:
     }
   }
 
-  // the [] operator
   T& operator[](int index) { return data_[index]; }
 
   // some getters

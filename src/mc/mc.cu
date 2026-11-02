@@ -43,7 +43,6 @@ MC::MC(
 
 void MC::initialize(void)
 {
-  // todo
 }
 
 void MC::finalize(void) { do_mcmd = false; }

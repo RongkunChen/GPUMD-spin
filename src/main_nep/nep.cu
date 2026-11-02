@@ -163,18 +163,14 @@ static __global__ void find_descriptors_angular(
   }
 }
 
-// ---------------------------------------------------------------------------
 // Spin (magnetic) descriptor, Route B: the spin vector S_i enters as a rank-1
 // equivariant feature. No virtual/pseudo atoms, no doubled type map.
-//
 //   Sex  q_n = sum_j g_n(r) (S_k . S_j)
 //   San  q_n = sum_j g_n(r) (S_k.rhat)(S_j.rhat)
 //   Sdm  q_n = sum_j g_n(r) rhat.(S_k x S_j)     (pseudoscalar, DM interaction)
 //   Senv q_n = sqrt(3/4pi) sum_j g_n(r) (S_k.rhat)
-//
 // The radial functions g_n(r) share the trainable Chebyshev coefficients of the
 // angular descriptor, so no extra descriptor parameters are introduced.
-// ---------------------------------------------------------------------------
 // The SPIN_ENV_FACTOR and SPIN_LAYOUT_VERSION constants now come from the
 // shared descriptor core in utilities/spin_descriptor.cuh, which the MD kernel
 // (force/nep.cu), the replica kernel (main_replica/force/nep.cu) and the JIT
@@ -753,7 +749,7 @@ static __global__ void find_force_angular(
     }
     for (int n = 0; n < paramb.n_max_angular + 1; ++n) {
       for (int abc = 0; abc < (paramb.L_max + 1) * (paramb.L_max + 1) - 1; ++abc) {
-        sum_fxyz[n * NUM_OF_ABC + abc] = 
+        sum_fxyz[n * NUM_OF_ABC + abc] =
           g_sum_fxyz[(n * ((paramb.L_max + 1) * (paramb.L_max + 1) - 1) + abc) * N + n1];
       }
     }
@@ -793,7 +789,7 @@ static __global__ void find_force_angular(
           gn12 += fn12[k] * annmb.c[c_index];
           gnp12 += fnp12[k] * annmb.c[c_index];
         }
-        accumulate_f12(paramb.L_max, paramb.has_q_222, paramb.has_q_1111, paramb.has_q_112, paramb.has_q_123, paramb.has_q_233, paramb.has_q_134, 
+        accumulate_f12(paramb.L_max, paramb.has_q_222, paramb.has_q_1111, paramb.has_q_112, paramb.has_q_123, paramb.has_q_233, paramb.has_q_134,
           paramb.num_L, n, paramb.n_max_angular + 1, d12, r12, gn12, gnp12, Fp, sum_fxyz, f12);
       }
 

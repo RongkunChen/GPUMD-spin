@@ -10,16 +10,11 @@
 // Boltzmann constant in eV/K
 #define SPIN_KB_EV_PER_K 8.617333262e-5
 
-// ---------------------------------------------------------------------------
 // F13: geometric LLG integrator.
-//
 // The previous update was explicit Euler followed by a renormalisation of |S|:
-//
 //     s' = s + dt * (-gamma s x B) + dt * (-gamma alpha/|s|) s x (s x B)
 //     s  = s' * |s| / |s'|
-//
 // It has two defects that were measured, not guessed:
-//
 //  (1) The renormalised rotation angle is arctan(theta) instead of theta, with
 //      theta = gamma |B| dt, so every step lags by ~theta^3/3.  The lag has a
 //      fixed sign, so it accumulates linearly instead of averaging out:
@@ -30,7 +25,6 @@
 //      |B|, which raises the error: a positive feedback loop.  It is what makes
 //      long NVE + SLLG runs diverge (R1): theta = gamma|B|dt reaches O(1) and
 //      explicit Euler leaves the stability region entirely.
-//
 // The replacement below is *exact* for a field frozen over one step:
 //   * precession  -> Rodrigues rotation about B-hat by gamma |B| dt;
 //   * damping     -> analytic relaxation of the angle theta between S and B,
@@ -41,7 +35,6 @@
 // radial error), both are unconditionally stable in theta, and the O(theta^3)
 // energy pump disappears.  A Strang split (half precession, damping, half
 // precession) keeps the scheme second order in dt.
-// ---------------------------------------------------------------------------
 
 // Rodrigues rotation: rotate v about the *unit* axis k by the angle a.
 __device__ inline void spin_rotate(
@@ -117,18 +110,14 @@ static __global__ void gpu_llg_step(
   // potential energy by  dU = (dU/dS).dS = -B_det.dS  with B_det = w = -dU/dS
   // (the deterministic torque).  The kernel rotates about the *total* field
   // b = B_det + b_noise + b_ext, so split the same quantity exactly:
-  //
   //     dU = -b.dS  +  b_noise.dS  +  b_ext.dS
-  //          \____/     \________/     \______/
   //          W_rot       W_noise       W_ext
-  //
   // W_rot is the part coming from the geometric maps: a Rodrigues rotation
   // about b-hat leaves b.dS = 0, so W_rot is entirely due to the Gilbert
   // relaxation and is <= 0 (a one-way energy sink).  W_noise is the work done
   // by the stochastic field -- this is the term that makes the SLLG thermal
   // field a net energy SOURCE (risk R12) and it is what was previously only
   // inferred by differencing two 300k-step runs.
-  //
   // Each block reduces its three contributions in shared memory and issues one
   // atomicAdd per block, so the diagnostic costs ~3 atomics per block per step
   // (not per atom).
@@ -274,13 +263,10 @@ static __global__ void gpu_fill_thermal_field(
   g_state[n] = state;
 }
 
-// ---------------------------------------------------------------------------
 // S05A: conservative implicit midpoint, fixed lattice, alpha = 0, T = 0.
-//
 //     S_mid = (S_old + S_new)/2
 //     B_mid = w(S_mid)                      (whole-system field, re-evaluated)
 //     S_new = S_old - gamma*dt (S_mid x B_mid)
-//
 // iterated until S_new stops moving.  This is the implicit midpoint rule: it is
 // time-symmetric and second order, and |S| is conserved exactly in exact
 // arithmetic -- with dS = S_new - S_old = -gamma dt S_mid x B_mid and
@@ -288,10 +274,8 @@ static __global__ void gpu_fill_thermal_field(
 // hence |S_new|^2 = |S_old|^2.  No renormalisation is applied: a scheme that
 // has to rescale |S| every step has not earned the right to be called
 // conservative, and it would hide exactly the drift this stage must measure.
-//
 // The field handed to propagate() is NOT used here: it is the field at the
 // beginning of the step, which is the defect this branch removes.
-// ---------------------------------------------------------------------------
 static __global__ void gpu_midpoint_average(
   const int N,
   const float* s_ox, const float* s_oy, const float* s_oz,
@@ -307,7 +291,6 @@ static __global__ void gpu_midpoint_average(
 
 // S_new = S_old - gamma*dt*(S_mid x B_mid), with B_mid = deterministic field at
 // S_mid plus the uniform `add_bfield` field.
-//
 // No bookkeeping here: this kernel runs once per trial iteration, and only the
 // update that is finally accepted may be counted as physical work (S05B item 3;
 // before, every trial iteration added to W_rot/W_ext and the F16 budget was
@@ -375,16 +358,12 @@ static __global__ void gpu_midpoint_work(
   }
 }
 
-// ---------------------------------------------------------------------------
 // S08A: stochastic implicit-midpoint update.
-//
 //     S_new = S_old - gdt (m x H) - (gdt alpha/|m|) m x (m x H),   m = midway
 //     H     = B_det(m) + b_noise(step) + b_ext
-//
 // b_noise is drawn once per step and held fixed for every iteration: letting it
 // depend on the iterate would turn a fixed-point iteration into a different
 // (and non-reproducible) stochastic scheme.
-//
 // In exact arithmetic (S_new - S_old) is perpendicular to m, and
 // (S_new + S_old) = 2m, so |S_new| = |S_old| exactly.  The residual norm error
 // is therefore pure float32 rounding, which is why it is measured instead of
@@ -869,7 +848,6 @@ void Spin::propagate(
       }
     }
 
-    // Debug hook (SPIN_NOISE_DEBUG=1): append, for every step, the thermal
     // field, the spin and the torque *before* the update so that the LLG step
     // can be re-derived offline and the noise amplitude checked.
     if (getenv("SPIN_NOISE_DEBUG") != nullptr) {
@@ -1005,12 +983,10 @@ void Spin::propagate(
   ++sllg_steps;
 }
 
-// ---------------------------------------------------------------------------
 // S05A: implicit-midpoint solver.  Runs on the calling stream's ordering: the
 // caller's stream is drained once (the solver needs a host-visible residual
 // every iteration, so some synchronisation is unavoidable), after which all
 // work is issued on the default stream.
-// ---------------------------------------------------------------------------
 void Spin::propagate_conservative(
   const double time_step,
   float* g_spin,
@@ -1127,15 +1103,12 @@ void Spin::propagate_conservative(
   if (residual > midpoint_max_residual) midpoint_max_residual = residual;
 }
 
-// ---------------------------------------------------------------------------
 // S08A: stochastic implicit midpoint (finite T, alpha > 0).
-//
 // One noise draw per step, held fixed for every iteration.  The deterministic
 // field is recomputed at the midpoint iterate on every pass, exactly like the
 // S05A conservative solver, because that is the whole point of the scheme: the
 // field frozen at the beginning of the step is a first-order approximation that
 // the midpoint rule is supposed to remove.
-//
 // Failure policy: the iteration is not allowed to fall back to the frozen
 // field.  If it does not reach `midpoint_tolerance` within
 // `midpoint_max_iterations` the last iterate is kept (it is still a midpoint
@@ -1143,7 +1116,6 @@ void Spin::propagate_conservative(
 // sllg_nonconverged_steps and the worst residual is kept in sllg_max_residual.
 // A stochastic run must not be killed by one stiff step; a *systematic* failure
 // shows up as a non-zero counter, which is what the acceptance test reads.
-// ---------------------------------------------------------------------------
 void Spin::propagate_stochastic_midpoint(
   const double time_step,
   float* g_spin,
@@ -1283,10 +1255,8 @@ double Spin::sllg_pre_projection_norm_error(gpuStream_t stream)
 }
 
 // ---- S08B: restart state for the magnetic subsystem -----------------------
-//
 // restart.xyz is an xyz file: it can carry (R, v, S) and nothing else.  Two
 // pieces of state that decide the next step are not in it:
-//
 //   * the per-atom curand state.  The thermal field is a stateful stream: after
 //     k steps the stream is at a position that is *not* recoverable from
 //     `seed` (re-seeding starts at step 0).  A restart that only re-seeds
@@ -1294,7 +1264,6 @@ double Spin::sllg_pre_projection_norm_error(gpuStream_t stream)
 //     which is exactly the failure mode an "average magnetisation looks close"
 //     test would miss;
 //   * the per-atom |S| anchor used by the constraint projection.
-//
 // The file also stores identity fields so that a stale or mismatched file is
 // refused instead of silently accepted: natoms, a hash of nep.txt, gamma,
 // alpha, T, dt, scheme and the step counters.  Writing is atomic (tmp + rename)
@@ -1629,7 +1598,6 @@ void Spin::report(const float* g_spin, const float* g_torque, const int number_o
   // CrN, in contradiction with the literature (Zhou et al., PRB 101, 224303
   // (2020) find a sizeable magnon conductivity in bcc Fe).  Two mechanisms
   // can suppress it, and both are pure numbers that can be printed here:
-  //
   //  (a) the precession period T_prec = 2 pi / (gamma |B|) grows like 1/gamma.
   //      With gamma = 0.01 (300x below the physical 3.04) the spin subsystem
   //      evolves 300x more slowly than reality, so a ns trajectory samples

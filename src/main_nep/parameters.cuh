@@ -19,9 +19,7 @@
 #include <vector>
 
 // Spin Route B: descriptor layout written to nep.txt.
-//
 //   spin_layout <version> <block> <block> ...
-//
 // enumerates the spin descriptor blocks in the order in which they are
 // concatenated into the ANN input.  Version 1 is implicit (the line is absent
 // and the order is understood to be the one below); version 2 and later spell
@@ -53,7 +51,6 @@ inline const std::vector<std::string>& spin_layout_blocks_legacy()
 #define SPIN_MAG_SCALE_DEFAULT 0.25f
 
 // Default random seed used when nep.in has no `seed` keyword (para.seed < 0).
-//
 // Reproducibility fix (r16).  The device side has always been deterministic:
 // SNES::initialize_curand_states() is called with `para.seed >= 0 ? para.seed
 // : 1234567`.  The host side, however, seeded std::mt19937 from the system
@@ -62,7 +59,6 @@ inline const std::vector<std::string>& spin_layout_blocks_legacy()
 // different parameters, losses and nep.txt.  That made NEP training
 // irreproducible by default and made value-level regression testing
 // impossible (all 22 training cases in tests_regression omit `seed`).
-//
 // The host RNG now falls back to the same constant the device already used,
 // so a training run is bit-reproducible with or without an explicit `seed`.
 // Users who want different restarts still have the `seed` keyword.
@@ -244,7 +240,7 @@ public:
   std::vector<float> type_weight_cpu; // relative force weight for different atom types (CPU)
   std::vector<float> q_scaler_cpu;    // used to scale some descriptor components (CPU)
   std::vector<std::string> elements;  // atom symbols
-  std::vector<int> atomic_numbers;    // atomic numbers
+  std::vector<int> atomic_numbers;
   std::vector<float> zbl_para;        // parameters of zbl potential
   std::vector<float> rc_radial;       // radial cutoff distance
   std::vector<float> rc_angular;      // angular cutoff distance

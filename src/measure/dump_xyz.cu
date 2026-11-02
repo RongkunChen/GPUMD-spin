@@ -101,7 +101,6 @@ void Dump_XYZ::parse(
     printf("    every %d steps.\n", dump_interval_);
   }
 
-  // filename
   std::string filename_temp = tokens[2];
   printf("    into file %s.\n", filename_temp.c_str());
   if (filename_temp.back() == '*') {
@@ -214,7 +213,6 @@ void Dump_XYZ::output_line2(
   GPU_Vector<double>& virial_per_atom,
   GPU_Vector<double>& gpu_thermo)
 {
-  // time
   fprintf(fid_, "Time=%.8f", time * TIME_UNIT_CONVERSION); // output time is in units of fs
 
   // PBC
@@ -268,7 +266,6 @@ void Dump_XYZ::output_line2(
     cpu_thermo[4]};
   print_tensor("stress", stress);
 
-  // Properties
   fprintf(fid_, " Properties=species:S:1:pos:R:3");
 
   if (quantities.has_mass_) {
@@ -378,7 +375,6 @@ void Dump_XYZ::end_of_step(
   // line 1
   fprintf(fid_, "%d\n", number_of_atoms_to_dump);
 
-  // line 2
   output_line2(global_time, box, groups, atom.cpu_atom_symbol, atom.virial_per_atom, thermo);
 
   // other lines

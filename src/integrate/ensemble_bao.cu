@@ -240,7 +240,6 @@ void Ensemble_BAO::integrate_heat_lan(
   energy_transferred[1] -= ek2[sink] * 0.5;
 }
 
-// the A operator.
 static __global__ void gpu_operator_A(
   const int number_of_particles,
   const int fixed_group,
@@ -348,7 +347,6 @@ void Ensemble_BAO::operator_A(
   }
 }
 
-// the B operator.
 static __global__ void gpu_operator_B(
   const int number_of_particles,
   const int fixed_group,

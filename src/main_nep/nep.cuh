@@ -23,7 +23,7 @@ class Parameters;
 class Dataset;
 
 struct NEP_Data {
-  GPU_Vector<float> descriptors; // descriptors
+  GPU_Vector<float> descriptors;
   GPU_Vector<float> Fp;          // gradient of descriptors
   GPU_Vector<float> sum_fxyz;
   GPU_Vector<float> parameters; // parameters to be optimized
@@ -99,7 +99,6 @@ public:
     int deviceCount);
 
   // Read-only diagnostic accessor (Stage03A verification only).
-  //
   // Returns the descriptor array that the last find_force() produced on
   // `device`.  It exists so that a verification driver can compare the generic
   // trainer path against the specialized kernels on identical weights without
@@ -115,7 +114,6 @@ public:
   }
 
   // Read-only diagnostic accessor (Stage03A verification only).
-  //
   // Exposes the neighbour data (NL, r12) that the last find_force() built on
   // `device`, so that a verification driver can feed *exactly* the same lists
   // to the specialized kernels.  Without this the two backends would each build

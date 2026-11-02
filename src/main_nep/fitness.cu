@@ -50,7 +50,6 @@ static int get_batch_size(const int batch_id, const int n_total, const int num_b
 }
 
 // P19: data-driven |S| scaling for the on-site Smag block.
-//
 // The block feeds u^(n+1) with u = |S| * scale into the ANN, n = 0..n_max_angular.
 // The scale therefore only fixes the interval on which the monomials live; it
 // carries no physics.  Choosing scale = 1 / max|S| maps the whole training set
@@ -396,7 +395,7 @@ void Fitness::write_nep_txt(FILE* fid_nep, Parameters& para, float* elite)
             fprintf(fid_nep, "nep4 %d ", para.num_types);
           }
         }
-      } 
+      }
     } else {
       if (para.charge_vdw) {
         if (para.enable_zbl) {

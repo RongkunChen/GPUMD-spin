@@ -124,11 +124,9 @@ void HNEMD::end_of_step(
   const int N = atom.number_of_atoms;
 
   // Round 9 (task 48): the FULL heat current J = J_p + J_m.
-  //
   //   J_p = sum_i W_i . v_i + sum_i e_i^spin v_i   (phonon, magnetically
   //         renormalised)
   //   J_m = sum_j A_j : dS_j/dt                     (magnon, conductive)
-  //
   // HNEMD drives the LATTICE virial, so <J> here is the response of both
   // channels to a lattice force, i.e. kappa_pp + kappa_mp (and kappa_pm =
   // kappa_mp by Onsager reciprocity -- both currents are odd under time

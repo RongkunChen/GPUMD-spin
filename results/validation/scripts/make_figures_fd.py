@@ -66,7 +66,6 @@ def fig_phonon():
     fig.savefig(os.path.join(FIG, "phonon_dispersion_fd.png"), dpi=160)
     plt.close(fig)
 
-    # DOS
     d = np.loadtxt(os.path.join(OUT, "phonon_dos.dat"))
     fig, ax = plt.subplots(figsize=(4.4, 3.4))
     ax.plot(d[:, 0], d[:, 1], "-", color="C3")

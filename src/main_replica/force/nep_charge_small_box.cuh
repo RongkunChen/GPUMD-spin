@@ -491,7 +491,6 @@ static __global__ void find_force_radial_small_box(
       atomicAdd(&g_fx[n2], double(-f12[0]));
       atomicAdd(&g_fy[n2], double(-f12[1]));
       atomicAdd(&g_fz[n2], double(-f12[2]));
-      // save virial
       // xx xy xz    0 3 4
       // yx yy yz    6 1 5
       // zx zy zz    7 8 2
@@ -610,7 +609,6 @@ static __global__ void find_force_angular_small_box(
       atomicAdd(&g_fx[n2], double(-f12[0]));
       atomicAdd(&g_fy[n2], double(-f12[1]));
       atomicAdd(&g_fz[n2], double(-f12[2]));
-      // save virial
       // xx xy xz    0 3 4
       // yx yy yz    6 1 5
       // zx zy zz    7 8 2

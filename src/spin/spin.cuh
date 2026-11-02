@@ -119,15 +119,12 @@
   #include <curand_kernel.h>
 #endif
 
-// ---------------------------------------------------------------------------
 // Field provider for the conservative (alpha = 0, T = 0) spin update.
-//
 // The implicit midpoint rule needs the deterministic effective field
 // w = -dE/dS evaluated at the *midpoint* spin configuration, i.e. after every
 // iteration has updated every spin.  Re-using the torque handed to propagate()
 // (which is the field at the beginning of the step) is exactly the defect this
 // interface removes.
-//
 // This class deliberately knows nothing about Atom or Force: spin.cu is a
 // single translation unit linked into both gpumd and gpumd_replica, whose Atom
 // layouts differ (see the note at the top of this file).  The concrete
@@ -236,7 +233,6 @@ public:
   // ---- S05A: conservative implicit midpoint (fixed lattice, alpha = T = 0) --
   // The iteration stops when max_i |S_new^(k+1) - S_new^(k)| <= midpoint_tolerance
   // (mu_B, per component); more than midpoint_max_iterations is a hard failure.
-  //
   // 1e-6 is ~8 float32 ulp at |S| = 1.  That is the floor that matters: the
   // iterate itself is stored as float32, so a residual below ~1.2e-7 (2^-23)
   // can never be reached no matter how many iterations are allowed.  Measured
@@ -253,7 +249,6 @@ public:
 
   // ---- S08A: stochastic integrator and its diagnostics ------------------
   // Two schemes are implemented for the finite-temperature branch:
-  //
   //   sllg_scheme = 0  "geometric": the pre-S08A map.  Precession as an exact
   //                    Rodrigues rotation about the total field, Gilbert
   //                    relaxation as the analytic tan(theta/2) rescaling,
@@ -261,7 +256,6 @@ public:
   //                    the beginning of the step.  Exact for a constant field,
   //                    so its only discretisation error is the piecewise
   //                    constant noise (Wong-Zakai -> Stratonovich).
-  //
   //   sllg_scheme = 1  "midpoint": stochastic implicit midpoint.  The same
   //                    noise draw is held fixed for the whole step, the
   //                    deterministic field is re-evaluated at the midpoint
@@ -270,7 +264,6 @@ public:
   //                    with m = (S_old + S_new)/2 is norm preserving in exact
   //                    arithmetic, because (S_new - S_old) is perpendicular to
   //                    m and (S_new + S_old) = 2m.
-  //
   // Set with `scheme=geometric|midpoint` on the spin_llg line.  The default is
   // the scheme that passed the Stage08A battery (see that stage's summary);
   // both were measured with the same driver and the same criteria.
@@ -295,7 +288,6 @@ public:
   // energy by dU = -B_det.dS with B_det = w = -dU/dS (the deterministic
   // torque).  The LLG kernel rotates about the *total* field, so the same
   // quantity is split exactly into three bookkeeping terms:
-  //
   //     dU = W_rot + W_noise + W_ext
   //     W_rot   = -b_total.dS   (Rodrigues rotation gives b_total.dS = 0, so
   //                              this is entirely the Gilbert relaxation;
@@ -304,7 +296,6 @@ public:
   //                              term that makes the thermal field a net
   //                              energy SOURCE)
   //     W_ext   = +b_ext.dS     (work of `add_bfield`)
-  //
   // All three are accumulated on the device (one block-reduced atomicAdd per
   // block per step, so the cost is negligible) and can be read at any time.
   // Before F16, "the thermal field injects energy" could only be inferred by

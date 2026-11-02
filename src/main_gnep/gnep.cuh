@@ -34,7 +34,7 @@ struct GNEP_Data {
   GPU_Vector<float> x12_angular;
   GPU_Vector<float> y12_angular;
   GPU_Vector<float> z12_angular;
-  GPU_Vector<float> descriptors; // descriptors
+  GPU_Vector<float> descriptors;
   GPU_Vector<float> Fp;          // gradient of descriptors
   GPU_Vector<float> Fp2;         // second gradient of descriptors
   GPU_Vector<float> sum_fxyz;  // Snlm

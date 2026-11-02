@@ -45,13 +45,11 @@ void eig_hermitian_QR(size_t N, double* AR, double* AI, double* W_cpu)
   // define W
   GPU_Vector<double> W(N);
 
-  // get handle
   gpusolverDnHandle_t handle = NULL;
   gpusolverDnCreate(&handle);
   gpusolverEigMode_t jobz = GPUSOLVER_EIG_MODE_NOVECTOR;
   gpusolverFillMode_t uplo = GPUSOLVER_FILL_MODE_LOWER;
 
-  // get work
   int lwork = 0;
   gpusolverDnZheevd_bufferSize(handle, jobz, uplo, N, A.data(), N, W.data(), &lwork);
   GPU_Vector<gpuDoubleComplex> work(lwork);
@@ -80,7 +78,6 @@ void eig_hermitian_Jacobi(size_t N, double* AR, double* AI, double* W_cpu)
   // define W
   GPU_Vector<double> W(N);
 
-  // get handle
   gpusolverDnHandle_t handle = NULL;
   gpusolverDnCreate(&handle);
   gpusolverEigMode_t jobz = GPUSOLVER_EIG_MODE_NOVECTOR;
@@ -90,7 +87,6 @@ void eig_hermitian_Jacobi(size_t N, double* AR, double* AI, double* W_cpu)
   gpusolverSyevjInfo_t para = NULL;
   gpusolverDnCreateSyevjInfo(&para);
 
-  // get work
   int lwork = 0;
   gpusolverDnZheevj_bufferSize(handle, jobz, uplo, N, A.data(), N, W.data(), &lwork, para);
   GPU_Vector<gpuDoubleComplex> work(lwork);
@@ -116,7 +112,6 @@ void eigenvectors_symmetric_Jacobi(size_t N, double* A_cpu, double* W_cpu, doubl
   // define W
   GPU_Vector<double> W(N);
 
-  // get handle
   gpusolverDnHandle_t handle = NULL;
   gpusolverDnCreate(&handle);
   gpusolverEigMode_t jobz = GPUSOLVER_EIG_MODE_VECTOR;
@@ -126,7 +121,6 @@ void eigenvectors_symmetric_Jacobi(size_t N, double* A_cpu, double* W_cpu, doubl
   gpusolverSyevjInfo_t para = NULL;
   gpusolverDnCreateSyevjInfo(&para);
 
-  // get work
   int lwork = 0;
   gpusolverDnDsyevj_bufferSize(handle, jobz, uplo, N, A.data(), N, W.data(), &lwork, para);
   GPU_Vector<double> work(lwork);
@@ -158,7 +152,6 @@ void eig_hermitian_Jacobi_batch(size_t N, size_t batch_size, double* AR, double*
   // define W
   GPU_Vector<double> W(N * batch_size);
 
-  // get handle
   gpusolverDnHandle_t handle = NULL;
   gpusolverDnCreate(&handle);
   gpusolverEigMode_t jobz = GPUSOLVER_EIG_MODE_NOVECTOR;
@@ -168,7 +161,6 @@ void eig_hermitian_Jacobi_batch(size_t N, size_t batch_size, double* AR, double*
   gpusolverSyevjInfo_t para = NULL;
   gpusolverDnCreateSyevjInfo(&para);
 
-  // get work
   int lwork = 0;
   gpusolverDnZheevjBatched_bufferSize(
     handle, jobz, uplo, N, A.data(), N, W.data(), &lwork, para, batch_size);

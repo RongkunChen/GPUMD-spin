@@ -49,7 +49,7 @@ public:
 
   // Spin Route B: hand the MD spin array and the torque output buffer to a
   // spin-aware potential. The default is a no-op for every other potential.
-  virtual void set_spin(const float* /* spin */, float* /* torque */) {}
+  virtual void set_spin(const float* , float* /* torque */) {}
 
   // Round 9 (task 48): optional 9N output buffer for the magnetic heat-current
   // tensor A_j. Only the spin-aware NEP implements it.
@@ -63,7 +63,7 @@ public:
     GPU_Vector<double>& /* potential */,
     GPU_Vector<double>& /* force */,
     GPU_Vector<double>& /* virial */,
-    const std::vector<Group>& /* group */){}
+    const std::vector<Group>& ){}
 
   virtual const GPU_Vector<int>& get_NN_radial_ptr()
   {

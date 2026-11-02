@@ -306,7 +306,6 @@ void Dump_Shock_NEMD::end_of_step(
     gpu_density.data(),
     gpu_number.data());
   GPU_CHECK_KERNEL
-  // copy from gpu to cpu
   gpu_temp.copy_to_host(cpu_temp.data());
   gpu_pxx.copy_to_host(cpu_pxx.data());
   gpu_pyy.copy_to_host(cpu_pyy.data());

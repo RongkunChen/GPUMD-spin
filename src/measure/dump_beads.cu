@@ -102,7 +102,6 @@ void Dump_Beads::pre_run(
 
 void Dump_Beads::output_line2(FILE* fid, const double time, const Box& box)
 {
-  // time
   fprintf(fid, "Time=%.8f", time * TIME_UNIT_CONVERSION); // output time is in units of fs
 
   // PBC
@@ -123,7 +122,6 @@ void Dump_Beads::output_line2(FILE* fid, const double time, const Box& box)
     box.cpu_h[5],
     box.cpu_h[8]);
 
-  // Properties
   fprintf(fid, " Properties=species:S:1:pos:R:3");
 
   if (has_velocity_) {
@@ -171,7 +169,6 @@ void Dump_Beads::end_of_step(
     // line 1
     fprintf(fid_[k], "%d\n", num_atoms_total);
 
-    // line 2
     output_line2(fid_[k], global_time, box);
 
     // other lines

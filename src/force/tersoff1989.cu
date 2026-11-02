@@ -499,7 +499,6 @@ static __global__ void find_force_tersoff_step2(
       g_f12y[index] = f12y;
       g_f12z[index] = f12z;
     }
-    // save potential
     g_potential[n1] += potential_energy;
   }
 }
@@ -521,7 +520,7 @@ void Tersoff1989::compute(
 
   neighbor_manager.find_local_neighbor(
     rc,
-    box, 
+    box,
     position_per_atom,
     tersoff_data.NN,
     tersoff_data.NL);

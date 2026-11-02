@@ -72,7 +72,6 @@ void find_neighbor(
   GPU_Exclusive_Scan& scan_workspace,
   const gpuStream_t stream);
 
-// For ILP
 void find_neighbor_ilp(
   const int N1,
   const int N2,

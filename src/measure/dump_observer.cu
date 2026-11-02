@@ -254,7 +254,6 @@ void Dump_Observer::output_line2(
   GPU_Vector<double>& gpu_thermo,
   FILE* fid_)
 {
-  // time
   fprintf(fid_, "Time=%.8f", time * TIME_UNIT_CONVERSION); // output time is in units of fs
 
   // PBC
@@ -308,7 +307,6 @@ void Dump_Observer::output_line2(
     cpu_thermo[7],
     cpu_thermo[4]);
 
-  // Properties
   fprintf(fid_, " Properties=species:S:1:pos:R:3");
 
   if (has_velocity_) {
@@ -355,7 +353,6 @@ void Dump_Observer::write_exyz(
   // line 1
   fprintf(fid_, "%d\n", num_atoms_total);
 
-  // line 2
   output_line2(global_time, box, cpu_atom_symbol, virial_per_atom, gpu_thermo, fid_);
 
   // other lines

@@ -33,7 +33,6 @@ https://doi.org/10.1103/PhysRevB.92.094301
 namespace
 {
 // Round 9 (task 48): the spin-resolved heat current.
-//
 // Layout of both `virial_per_atom` and `spin_flux_A` (9N doubles):
 //   0=xx 1=yy 2=zz 3=xy 4=xz 5=yz 6=yx 7=zx 8=zy
 // Layout of the 5N output (unchanged GPUMD convention):
@@ -272,14 +271,11 @@ static __global__ void gpu_compute_heat(
   const int n = threadIdx.x + blockIdx.x * blockDim.x;
   if (n < N) {
     // R17 / round-8: the CONVECTIVE part of the spin-energy flux.
-    //
     //   e_i^spin = -1/2 S_i . B_i,      B_i = torque = -dE/dS_i
-    //
     // For a quadratic (Heisenberg) spin Hamiltonian this per-atom decomposition
     // sums exactly to the total exchange energy; for the NEP it is the local
     // generalisation of it.  Like the (e_k + e_p) term of the convective
     // overload below, it enters the flux on the diagonal of the virial tensor.
-    //
     // NOTE: this is only the part of the magnon heat current that is reachable
     // from the quantities a NEP provides.  The CONDUCTIVE part -- the energy
     // handed from spin i to spin j -- needs dE_i/dS_j, which the NEP does not

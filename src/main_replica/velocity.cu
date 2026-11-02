@@ -176,7 +176,7 @@ static void get_inertia(
 
 static double get_angular_velocity(const double I[3][3], const double L[3], double w[3])
 {
-  double inverse[3][3]; // inverse of I
+  double inverse[3][3];
   inverse[0][0] = I[1][1] * I[2][2] - I[1][2] * I[2][1];
   inverse[0][1] = -(I[0][1] * I[2][2] - I[0][2] * I[2][1]);
   inverse[0][2] = I[0][1] * I[1][2] - I[0][2] * I[1][1];

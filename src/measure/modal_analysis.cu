@@ -513,7 +513,7 @@ void MODAL_ANALYSIS::pre_run(
 
   // skips modes up to first_mode
   eigfile.seekg((3 * num_participating * first_mode) * sizeof(float));
-  for (int j = 0; j < num_modes; j++) // modes
+  for (int j = 0; j < num_modes; j++)
   {
     set_eigmode(j, eigfile, eigx);
     set_eigmode(j, eigfile, eigy);

@@ -496,7 +496,6 @@ static __global__ void find_force_radial_small_box(
       atomicAdd(&g_fx[n2], double(-f12[0]));
       atomicAdd(&g_fy[n2], double(-f12[1]));
       atomicAdd(&g_fz[n2], double(-f12[2]));
-      // save virial
       // xx xy xz    0 3 4
       // yx yy yz    6 1 5
       // zx zy zz    7 8 2
@@ -540,13 +539,13 @@ static __global__ void find_force_angular_small_box(
     float Fp[MAX_DIM_ANGULAR] = {0.0f};
     float sum_fxyz[NUM_OF_ABC * MAX_NUM_N];
     for (int d = 0; d < paramb.dim_angular; ++d) {
-      float tmp = g_Fp[(paramb.n_max_radial + 1 + d) * N + n1] 
+      float tmp = g_Fp[(paramb.n_max_radial + 1 + d) * N + n1]
         + g_charge_derivative[(paramb.n_max_radial + 1 + d) * N + n1] * g_D_real[n1];
       Fp[d] = tmp;
     }
     for (int n = 0; n < paramb.n_max_angular + 1; ++n) {
       for (int abc = 0; abc < (paramb.L_max + 1) * (paramb.L_max + 1) - 1; ++abc) {
-        sum_fxyz[n * NUM_OF_ABC + abc] = 
+        sum_fxyz[n * NUM_OF_ABC + abc] =
           g_sum_fxyz[(n * ((paramb.L_max + 1) * (paramb.L_max + 1) - 1) + abc) * N + n1];
       }
     }
@@ -620,7 +619,6 @@ static __global__ void find_force_angular_small_box(
       atomicAdd(&g_fx[n2], double(-f12[0]));
       atomicAdd(&g_fy[n2], double(-f12[1]));
       atomicAdd(&g_fz[n2], double(-f12[2]));
-      // save virial
       // xx xy xz    0 3 4
       // yx yy yz    6 1 5
       // zx zy zz    7 8 2

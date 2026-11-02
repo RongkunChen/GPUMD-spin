@@ -206,7 +206,6 @@ void Ensemble_NPT_QTB::init_mttk(
 {
   // Call parent init for barostat setup
   Ensemble_MTTK::init_mttk(group, box, atom, thermo);
-  // Then initialize QTB
   init_qtb(atom);
 }
 
@@ -361,7 +360,6 @@ void Ensemble_NPT_QTB::compute1(
   // 4. Velocity Verlet half-step (velocity)
   velocity_verlet_v(dt, group, atom);
 
-  // 5. Propagate box
   propagate_box(box, atom);
 
   // 6. Velocity Verlet (position)
@@ -398,6 +396,5 @@ void Ensemble_NPT_QTB::compute2(
   // 5. Compute thermodynamic quantities
   find_thermo(group, box, atom, thermo);
 
-  // 6. Update QTB counter
   qtb_counter_mu = (qtb_counter_mu + 1) % qtb_alpha;
 }

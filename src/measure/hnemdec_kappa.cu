@@ -142,7 +142,6 @@ static __global__ void gpu_find_per_atom_tensor(
     double vy = g_vy[i];
     double vz = g_vz[i];
     double energy = mass * (vx * vx + vy * vy + vz * vz) * 0.5 + potential;
-    // the tensor:
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2
@@ -212,7 +211,6 @@ static __global__ void gpu_add_heat_flow_driving_force(
     int type2 = g_type[i] * 2;
     double coefficient1 = g_coefficient[type2];
     double coefficient2 = g_coefficient[type2 + 1];
-    // the tensor:
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2
@@ -409,10 +407,10 @@ void HNEMDEC::end_of_step(
   const int N = atom.number_of_atoms;
 
   compute_heat(
-    atom.mass, 
-    atom.potential_per_atom, 
-    atom.virial_per_atom, 
-    atom.velocity_per_atom, 
+    atom.mass,
+    atom.potential_per_atom,
+    atom.virial_per_atom,
+    atom.velocity_per_atom,
     atom.heat_per_atom);
 
   gpu_sum_heat_and_diffusion<<<NUM_OF_HEAT_COMPONENTS + NUM_OF_DIFFUSION_COMPONENTS, 1024>>>(

@@ -106,9 +106,9 @@ public:
 
   virtual void initialize_run(
     const double /* time_step */,
-    Atom& /* atom */,
+    Atom& ,
     Box& /* box */,
-    const std::vector<Group>& /* group */)
+    const std::vector<Group>& )
   {
   }
 
@@ -118,14 +118,14 @@ public:
   virtual void initialize_before_first_step(
     const double /* time_step */,
     const int /* number_of_steps */,
-    const std::vector<Group>& /* group */,
+    const std::vector<Group>& ,
     Box& /* box */,
-    Atom& /* atom */,
+    Atom& ,
     GPU_Vector<double>& /* thermo */)
   {
   }
 
-  virtual void finalize_run(const Atom& /* atom */, const Box& /* box */) {}
+  virtual void finalize_run(const Atom& , const Box& /* box */) {}
 
   void find_thermo(
     const double volume,

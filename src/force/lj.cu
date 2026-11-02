@@ -55,7 +55,7 @@ LJ::LJ(FILE* fid, int num_types, int num_atoms)
     }
   }
 
-  neighbor_manager.initialize(rc, num_atoms, 700); // TODO
+  neighbor_manager.initialize(rc, num_atoms, 700);
 }
 
 LJ::~LJ(void)
@@ -161,7 +161,6 @@ static __global__ void gpu_find_force(
     g_fy[n1] += s_fy;
     g_fz[n1] += s_fz;
 
-    // save virial
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2
@@ -175,7 +174,6 @@ static __global__ void gpu_find_force(
     g_virial[n1 + 7 * number_of_particles] += s_szx;
     g_virial[n1 + 8 * number_of_particles] += s_szy;
 
-    // save potential
     g_potential[n1] += s_pe;
   }
 }

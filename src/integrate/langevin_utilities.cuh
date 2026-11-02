@@ -23,7 +23,6 @@ Some CUDA kernels for Langevin thermostats.
 
 #define CURAND_NORMAL(a) gpurand_normal_double(a)
 
-// initialize curand states
 static __global__ void initialize_curand_states(gpurandState* state, int N, int seed)
 {
   int n = blockIdx.x * blockDim.x + threadIdx.x;
@@ -112,7 +111,6 @@ static __global__ void gpu_find_momentum(
   }
 }
 
-// correct the momentum
 static __global__ void gpu_correct_momentum(const int N, double* g_vx, double* g_vy, double* g_vz)
 {
   int i = blockIdx.x * blockDim.x + threadIdx.x;

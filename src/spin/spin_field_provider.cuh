@@ -39,10 +39,8 @@
 
 #include <vector>
 
-// ---------------------------------------------------------------------------
 // gpumd: the field is passed straight to Force::compute, which does
 // potentials[i]->set_spin(spin, torque) internally.
-// ---------------------------------------------------------------------------
 template <class ATOM, class FORCE>
 class NepSpinFieldProvider : public SpinFieldProvider
 {
@@ -106,10 +104,8 @@ private:
   long long calls_ = 0;
 };
 
-// ---------------------------------------------------------------------------
 // gpumd_replica: Force::compute takes no spin arguments there; the pointers are
 // published with set_spin() first, exactly as the replica MD loop does.
-// ---------------------------------------------------------------------------
 template <class ATOM, class FORCE>
 class NepSpinFieldProviderSetSpin : public SpinFieldProvider
 {

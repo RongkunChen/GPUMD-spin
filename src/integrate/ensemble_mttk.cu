@@ -84,7 +84,6 @@ Ensemble_MTTK::Ensemble_MTTK(void)
           p_target[i][j] = p_hydro[i][j] = p_freq[i][j] = omega_dot[i][j] = omega_mass[i][j] =
             p_flag[i][j] = h_ref_inv[i][j] = 0;
       p_period[i][j] = 1000;
-      // TODO: if non-periodic...?
       need_scale[i][j] = true;
     }
   }
@@ -116,7 +115,7 @@ Ensemble_MTTK::Ensemble_MTTK(const std::vector<std::string>& tokens) : Ensemble_
       if (!is_valid_real(tokens[i + 1], &p_period[0][0]))
         PRINT_INPUT_ERROR("Wrong inputs for pperiod keyword.");
       if (p_period[0][0] < 200) {
-        PRINT_INPUT_ERROR("pperiod should >= 200 timestep."); 
+        PRINT_INPUT_ERROR("pperiod should >= 200 timestep.");
       }
       i += 2;
       for (int i = 0; i < 3; i++) {
@@ -549,17 +548,11 @@ void Ensemble_MTTK::propagate_box(Box& box, Atom& atom)
 }
 
 // void Ensemble_MTTK::propagate_box_off_diagonal()
-//{
 // // compute delta_h
 // matrix_scale(omega_dot, dt4, tmp1);
 // matrix_multiply(tmp1, h, tmp2);
-// for (int i = 0; i < 3; i++) {
-// for (int j = 0; j < 3; j++) {
 // if (i != j && p_flag[i][j])
 // h[i][j] += tmp2[i][j];
-// }
-// }
-//}
 
 void Ensemble_MTTK::propagate_box_off_diagonal()
 {
@@ -624,7 +617,6 @@ void Ensemble_MTTK::propagate_box_off_diagonal()
 
 void Ensemble_MTTK::propagate_box_diagonal()
 {
-  // TODO: fix point ?
   double expfac;
   expfac = exp(dt4 * omega_dot[0][0]);
   h[0][0] *= expfac;
@@ -725,7 +717,7 @@ void Ensemble_MTTK::nhc_temp_integrate(
 void Ensemble_MTTK::nhc_press_integrate(const Atom& atom)
 {
 
-  int cell_dof; // DOF of cell
+  int cell_dof;
   double expfac = 0;
   double kT;
   double ke_omega_current, ke_omega_target;

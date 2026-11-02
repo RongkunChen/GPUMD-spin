@@ -1,19 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-u"""阶段08A：有限温度 SLLG 积分器与 MC 交叉验证。
-
-所有轨迹都由生产 Spin::propagate() 产生（driver: spin_sllg_stage08a.cu）。
-本脚本只做三件事：
-
-  1. 驱动：按固定参数表跑用例（单自旋 Langevin、二聚体、S05A 回归），
-     记录命令、返回码、日志与摘要；
-  2. 统计：噪声的均值/方差/协方差、平衡磁化与分布、|S| 全程最大漂移；
-     误差用分块标准误（20 块）与积分自相关时间两条路给出，不把相关帧当独立样本；
-  3. 参考：单自旋用解析 Langevin，二聚体用 (a) 独立的 Metropolis MC 与
-     (b) 四维 Gauss-Legendre 精确求积，三者互不依赖。
-
-判据（CRITERIA）直接沿用阶段04 已声明的数值，不新增也不放宽。
-"""
 
 from __future__ import print_function
 
@@ -31,12 +17,8 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 V3 = os.path.dirname(os.path.dirname(HERE))
 KB = 8.617333262e-5
-# 原版 S08A 证据（FAIL 记录），R1 只在旁边新增目录，不改它。
 ORIGINAL_S08A = os.path.join(V3, "evidence", "stage08a", "20261031_112328")
 
-# ---------------------------------------------------------------------------
-# 阶段04 冻结的判据：原样复用（见 check_fdt_stage04.py）
-# ---------------------------------------------------------------------------
 CRITERIA = {
     "noise": {"steps": 20000, "seed": 2024, "var_rel_tol": 0.04,
               "mean_z_max": 4.0, "cov_z_max": 4.0,
@@ -46,7 +28,6 @@ CRITERIA = {
               "mean_abs_frac_at_dt050": 0.05, "ref_dt": 0.5,
               "bin_z_max": 6.0, "n_bins": 20,
               "exact_u": 1.0 / math.tanh(1.0) - 1.0},
-    # S08A 新增（写在运行之前，之后不改）：
     "mc": {"steps": 400000, "burn": 40000, "block": 40,
            "z_max": 4.0},
     "dimer_sllg": {"seeds": 8, "z_max": 4.0},
@@ -56,27 +37,17 @@ GAMMA = 3.04
 SCHEME_DEFAULT = "geometric"
 T_ROOM = 300.0
 
-# 二聚体初态：driver 里 DIMER_S1 / DIMER_S2 的镜像。SLLG、MC、精确求积三边都从
-# 这里取（driver 是编译期常量，检查器再从轨迹第 0 行回读一遍），S08A 的
-# |S1|=1.16619、|S2|=0.8 就是这份契约没被核对造成的。
 DIMER_S1 = (1.0, 0.0, 0.0)
 DIMER_S2 = (0.0, 0.6, 0.8)
 INPUT_NORM_TOL = 1.0e-6
 
 
 def soa_norms(vec):
-    u"""把 6 个分量的 SoA 缓冲 [Sx0 Sx1][Sy0 Sy1][Sz0 Sz1] 拆成两个模长。"""
     return [math.sqrt(sum(vec[c * 2 + n] ** 2 for c in range(3)))
             for n in (0, 1)]
 
 
 def layout_selfcheck():
-    u"""S08A 的初态字面量按 SoA 读会得到什么 —— 纯算术，不需要 GPU。
-
-    旧字面量 {1,0, 0,0, 0.6,0.8} 是 AoS 写法（S1x S1y S1z S2x S2y S2z），
-    但 d_spin 是 SoA：Sx=(1,0)、Sy=(0,0)、Sz=(0.6,0.8) -> |S1|=1.16619、|S2|=0.8。
-    这正是原二聚体测试量到的两个数。
-    """
     old = [1.0, 0.0, 0.0, 0.0, 0.6, 0.8]
     new = [DIMER_S1[0], DIMER_S2[0], DIMER_S1[1], DIMER_S2[1],
            DIMER_S1[2], DIMER_S2[2]]
@@ -96,7 +67,6 @@ def sha256(p):
 
 
 def _py(o):
-    u"""numpy 标量/布尔转成 python 原生类型，json 才写得出去。"""
     if isinstance(o, (np.bool_,)):
         return bool(o)
     if isinstance(o, (np.integer,)):
@@ -113,9 +83,6 @@ def jdump(path, obj):
         f.write(json.dumps(obj, indent=1, ensure_ascii=False, default=_py) + "\n")
 
 
-# ---------------------------------------------------------------------------
-# 轨迹解析
-# ---------------------------------------------------------------------------
 def parse_traj(path):
     hdr, rows, tail = {}, [], {}
     with open(path, encoding="utf-8", errors="replace") as f:
@@ -123,7 +90,6 @@ def parse_traj(path):
             if line.startswith("#"):
                 k = line[1:].strip()
                 if k.startswith("stage08a case"):
-                    # "# stage08a case <mode> N .. gamma .." -> 键值从第 4 个词开始
                     parts = k.split()
                     it = iter(parts[3:])
                     for a in it:
@@ -160,19 +126,10 @@ def parse_traj(path):
 
 
 def split_spins(S, N):
-    u"""轨迹的列是 3N 个分量，按 dump_state 的顺序：S1x S1y S1z S2x ..."""
     return [S[:, 3 * i:3 * i + 3] for i in range(N)]
 
 
-# ---------------------------------------------------------------------------
-# 噪声统计（阶段04 B 组口径）
-# ---------------------------------------------------------------------------
 def parse_noise_file(path, N):
-    u"""生产钩子 SPIN_NOISE_DEBUG 写出的 spin_noise.out。
-
-    每个 step 一个头行，然后 3 行 b（x 块、y 块、z 块）、3 行 S、3 行 torque。
-    返回 (nsteps, 3N) 的数组，列顺序是 [bx_1..bx_N][by_1..by_N][bz_1..bz_N]。
-    """
     out = []
     with open(path, encoding="utf-8", errors="replace") as f:
         lines = f.read().splitlines()
@@ -190,7 +147,6 @@ def parse_noise_file(path, N):
 
 
 def noise_stats(path, alpha, temp, dt, s_norm, N=1):
-    u"""返回逐分量方差/均值/协方差，以及和 FDT 预测的比值。"""
     raw = parse_noise_file(path, N)
     # raw[:, 0..N-1] = bx, [N..2N-1] = by, [2N..3N-1] = bz
     bx = raw[:, 0:N].ravel()
@@ -209,9 +165,6 @@ def noise_stats(path, alpha, temp, dt, s_norm, N=1):
             "var_z": float(np.mean(bz ** 2))}
 
 
-# ---------------------------------------------------------------------------
-# 平衡统计
-# ---------------------------------------------------------------------------
 def block_se(x, nblocks=20):
     x = np.asarray(x, dtype=np.float64)
     n = len(x)
@@ -223,11 +176,6 @@ def block_se(x, nblocks=20):
 
 
 def integrated_tau(x, max_lag=4000):
-    u"""积分自相关时间（初始正序列截断），用 FFT 算自相关。
-
-    直接对每个 lag 求 mean(x[:-lag]*x[lag:]) 是 O(n*lag) —— 20000 个样本要跑
-    几十分钟；FFT 的 Wiener-Khinchin 是 O(n log n)，数值上等价。
-    """
     x = np.asarray(x, dtype=np.float64)
     x = x - x.mean()
     n = len(x)
@@ -246,7 +194,6 @@ def integrated_tau(x, max_lag=4000):
 
 
 def equil_stats(case_dirs, exact_u, n_bins, dump_stride, tau_fs, dt):
-    u"""把多个 replica 的 u(t) 合起来：<u>、分块 SE、分箱分布。"""
     us, eus, taus = [], [], []
     warm_steps = int(round(CRITERIA["equil"]["warm_tau"] * tau_fs / dt))
     warm_frames = warm_steps // max(dump_stride, 1)
@@ -258,7 +205,6 @@ def equil_stats(case_dirs, exact_u, n_bins, dump_stride, tau_fs, dt):
         u = S[:, 2] / n
         if len(u) <= warm_frames:
             raise SystemExit("轨迹太短：%s (%d <= %d)" % (d, len(u), warm_frames))
-        # 采样间隔已经由 driver 的 dump stride 决定，这里只丢掉预热段
         uu = u[warm_frames:][:CRITERIA["equil"]["n_samples"]]
         per_replica.append(uu)
         us.append(uu)
@@ -266,14 +212,12 @@ def equil_stats(case_dirs, exact_u, n_bins, dump_stride, tau_fs, dt):
         taus.append(integrated_tau(uu))
     allu = np.concatenate(us)
     mean_u = float(allu.mean())
-    # 每个 replica 一块的 SE（replica 之间相互独立，这是最保守的算法）
     rep_means = np.array([x.mean() for x in us])
     se = float(rep_means.std(ddof=1) / math.sqrt(len(rep_means)))
     se_blocks = block_se(allu)
     tau = float(np.mean(taus))
     n_eff = len(allu) / (2.0 * tau)
     se_tau = float(allu.std(ddof=1) / math.sqrt(max(n_eff, 1.0)))
-    # 分箱 + 解析分布
     beta_b = 1.0                      # beta*B*|S| = 1 by construction
     bins = np.linspace(-1.0, 1.0, n_bins + 1)
     cnt, _ = np.histogram(allu, bins=bins)
@@ -293,15 +237,7 @@ def equil_stats(case_dirs, exact_u, n_bins, dump_stride, tau_fs, dt):
             "max_norm_dev": float(max(eus))}
 
 
-# ---------------------------------------------------------------------------
-# 二聚体：精确求积 + Metropolis MC
-# ---------------------------------------------------------------------------
 def dimer_exact(J, B, T, n=24):
-    u"""H = -J S1.S2 - B(S1z+S2z)，|S1|=|S2|=1。四维 Gauss-Legendre 求积。
-
-    用两套立体角网格（theta 的 cos 均匀采样 + phi 均匀），节点数 n^4。
-    模长固定为 1：与 DIMER_S1/DIMER_S2 一致，也是 SLLG 必须在初态里复现的东西。
-    """
     for v in (DIMER_S1, DIMER_S2):
         assert abs(sum(x * x for x in v) - 1.0) < 1e-12, v
     x, w = np.polynomial.legendre.leggauss(n)
@@ -323,10 +259,6 @@ def dimer_exact(J, B, T, n=24):
            + S1[:, :, None, None, 1] * S2[None, None, :, :, 1]
            + S1[:, :, None, None, 2] * S2[None, None, :, :, 2])
     E = -J * dot - B * (S1[:, :, None, None, 2] + S2[None, None, :, :, 2])
-    # 每个角度 (cos_theta, phi) 的权重是 w_i * 2pi/n；先把一个自旋的 (n,n)
-    # 权重块建出来，再做外积。直接对 wt[:,None] 加切片会得到 5 维数组，numpy
-    # 会把 e 当成多一个前导维来广播，结果在不知不觉中错位（J=0 时的单自旋
-    # 极限 2L(beta B) 就是靠这个才发现的）。
     wblk = (wt[:, None] * wp) * np.ones((1, n))
     W = wblk[:, :, None, None] * wblk[None, None, :, :]
     assert W.shape == E.shape, (W.shape, E.shape)
@@ -342,10 +274,6 @@ def dimer_exact(J, B, T, n=24):
 
 
 def mc_dimer(J, B, T, seed, steps, burn, block):
-    u"""独立 Metropolis MC：随机挑一个自旋，在其切平面附近做随机旋转。
-
-    初态与 SLLG 相同（DIMER_S1/DIMER_S2），J、B、T 也由调用方给同一组值。
-    """
     rng = np.random.default_rng(seed)
     S = np.array([DIMER_S1, DIMER_S2], dtype=np.float64)
     S /= np.linalg.norm(S, axis=1)[:, None]
@@ -394,9 +322,6 @@ def mc_dimer(J, B, T, seed, steps, burn, block):
 
 
 
-# ---------------------------------------------------------------------------
-# S08A-R1：dt 减半的配对比较（复用 S08A 已跑的轨迹，不新增参数）
-# ---------------------------------------------------------------------------
 def traj_protocol(path):
     h = parse_traj(path)["header"]
     return {"dt": h["dt"], "steps": int(h["steps"]), "stride": int(h["stride"]),
@@ -411,15 +336,6 @@ def single_u(path, warm_frames, n_samples):
 
 
 def dt_paired(D, cases, exe, args, run):
-    u"""同一批种子在 dt=0.5 与 0.25 fs 下的配对比较。
-
-    S08A 的 dt=0.25 对照只跑了 32 个 replica（种子 9000..9031），并且把同名的
-    dt=0.5 目录覆盖掉了；r032..r063 的 dt=0.5 轨迹还在。所以：
-      * 种子 9000..9031 的 dt=0.25 直接复用；dt=0.5 按 S08A 的同一协议重放；
-      * 种子 9032..9063 的 dt=0.5 直接复用；dt=0.25 需要时才补跑（--extend）。
-    协议（步数、dump stride）从 S08A 的轨迹头里读，不新增参数。
-    重放的可信度用一次逐位对比来证明（reproduction_check）。
-    """
     alpha = 1.0
     tau = 1.0 / (GAMMA * alpha * KB * T_ROOM)          # tau_G, fs
     src = os.path.abspath(args.source)
@@ -439,7 +355,6 @@ def dt_paired(D, cases, exe, args, run):
         proto[dt]["warm_frames"] = int(round(CRITERIA["equil"]["warm_tau"] * tau / dt)) \
             // proto[dt]["stride"]
 
-    # ---- 每个 (dt, seed) 找一个轨迹；找不到就按同一协议跑 ----------------
     series, records = {}, []
     for dt in (0.5, 0.25):
         tag = "dt%03d" % int(round(dt * 1000))
@@ -475,7 +390,6 @@ def dt_paired(D, cases, exe, args, run):
                             "reused": reused, "mean_u": float(uu.mean()),
                             "n_samples": int(len(uu))})
 
-    # ---- 统计：每个 dt 的均值/SE，配对差及其 SE --------------------------
     tol25 = CRITERIA["equil"]["mean_abs_frac_at_dt050"] * (0.25 / 0.5)
 
     def _per_dt(sel):
@@ -499,7 +413,6 @@ def dt_paired(D, cases, exe, args, run):
         return out
 
     per_dt = _per_dt(seeds)
-    # 前 32 个种子正是 S08A 当时用的那批，单独算一份以便对照原 FAIL。
     sub32 = _per_dt(seeds[:32])
     a05 = np.array([series[0.5][s] for s in seeds])
     a25 = np.array([series[0.25][s] for s in seeds])
@@ -509,15 +422,12 @@ def dt_paired(D, cases, exe, args, run):
     corr = float(np.corrcoef(a05, a25)[0, 1])
     se_unpaired = float(math.sqrt(per_dt["0.5"]["se_replica"] ** 2
                                   + per_dt["0.25"]["se_replica"] ** 2))
-    # O(dt) 假设：偏差随 dt 线性 -> 减半应把偏差减半
     delta_pred = -0.5 * per_dt["0.5"]["offset"]
     z_pred = (mean_d - delta_pred) / se_d
-    # 前 32 个种子的配对差（与 S08A 的 32-replica 对照同一样本）
     dd32 = a25[:32] - a05[:32]
     mean_d32 = float(dd32.mean())
     se_d32 = float(dd32.std(ddof=1) / math.sqrt(32))
 
-    # ---- 重放可信度：一次逐位对比（同一二进制、同一参数） ----------------
     repro = []
     for dt, seed, ref in ((0.5, 9040, "equil_a1_geometric_r040"),
                           (0.25, 9000, "equil_a1_geometric_r000")):
@@ -595,9 +505,6 @@ def dt_paired(D, cases, exe, args, run):
     return 0
 
 
-# ---------------------------------------------------------------------------
-# 汇总
-# ---------------------------------------------------------------------------
 def _load(path):
     if not os.path.exists(path):
         return None
@@ -628,8 +535,6 @@ def write_report(D, exe, args):
     if cons:
         gates["s05a_regression"] = bool(cons["pass"])
     if paired:
-        # dt=0.25 的预注册带宽（0.05 * dt/0.5 = 2.5%）在补齐到 64 个 replica
-        # 之后判定；S08A 那次 32 replica 的 FAIL 作为历史记录单独保留，不改写。
         gates["dt_halving"] = bool(paired["full_sample"]["pass"])
     records = {}
     if halved:
@@ -1001,7 +906,6 @@ def crit_sample_tau(equil):
     return equil["criteria"]["sample_tau"]
 
 
-# ---------------------------------------------------------------------------
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", required=True, help="evidence/stage08a/<ts>")
@@ -1136,9 +1040,6 @@ def main(argv=None):
 
     if args.part == "dimer":
         J, B = 0.02, 0.01
-        # ---- 三边共用同一组 (J, B, T) 与同一个初态 -----------------------
-        # 只有这一处定义；exact / MC 直接吃这些值，SLLG 的初态由 driver 的
-        # DIMER_S1/DIMER_S2 给出，事后从轨迹第 0 行回读核对。
         exact = dimer_exact(J, B, T_ROOM)
         quad = {"n16": dimer_exact(J, B, T_ROOM, n=16),
                 "n24": dimer_exact(J, B, T_ROOM, n=24)}
@@ -1157,8 +1058,6 @@ def main(argv=None):
                 cmd = [exe, "dimer", "%.10g" % GAMMA, "0.5", "%.10g" % T_ROOM,
                        "%.10g" % J, "%.10g" % B, "0.5", "200000",
                        str(4000 + r), scheme, "20", "traj.txt"]
-                # 复用：轨迹头里记着完整的参数，只要与本次要跑的一致就直接读，
-                # 免得为了一行分析代码重跑 200000 步（midpoint 每次 ~23 次迭代）。
                 traj_path = os.path.join(d, "traj.txt")
                 reused = False
                 if args.reuse and os.path.exists(traj_path):
@@ -1185,8 +1084,6 @@ def main(argv=None):
                 obs["E"].append(E[skip:])
                 obs["S1_dot_S2"].append(np.einsum("ij,ij->i", S1, S2)[skip:])
                 obs["Mz"].append((S1[:, 2] + S2[:, 2])[skip:])
-                # 输入契约：从轨迹第 0 行（就是交给 GPU 的那个缓冲）回读，
-                # 不看 driver 的字面量，也不看这里的常量。
                 s1_0 = [float(x) for x in S1[0]]
                 s2_0 = [float(x) for x in S2[0]]
                 runs.append({
@@ -1222,7 +1119,6 @@ def main(argv=None):
                          "tau": integrated_tau(allv[:20000])}
             st["max_norm_dev"] = float(np.max(norms))
             sllg[scheme] = st
-        # ---- 输入一致性：J、B、T、|S1|、|S2| -----------------------------
         dot0_ref = float(np.dot(DIMER_S1, DIMER_S2))
         audit_runs = []
         consistent = True
@@ -1253,7 +1149,6 @@ def main(argv=None):
             "runs": audit_runs,
             "pass": consistent,
         }
-        # ---- 隐式中点：实际收敛记录 --------------------------------------
         conv = {}
         for scheme in sllg:
             rs = [rr for rr in runs if rr["scheme"] == scheme]
@@ -1280,7 +1175,6 @@ def main(argv=None):
             else:
                 entry["pass"] = None
             conv[scheme] = entry
-        # ---- 比较：每个 scheme 都要和 MC、精确求积各比一次 ----------------
         comp = {}
         for scheme in sllg:
             comp[scheme] = {}
@@ -1313,7 +1207,6 @@ def main(argv=None):
                "per_scheme_pass": per_scheme_pass,
                "layout_selfcheck": layout_selfcheck(),
                "criteria": CRITERIA["mc"], "log": log}
-        # 不收敛的中点步不能算作「已收敛的解」，所以收敛记录是硬门禁的一部分。
         midpoint_ok = conv["midpoint"]["pass"] if "midpoint" in conv else None
         res["pass"] = bool(inputs["pass"] and all(per_scheme_pass.values())
                            and (midpoint_ok is not False))
@@ -1351,9 +1244,6 @@ def main(argv=None):
         n = np.linalg.norm(S, axis=1)
         phi = np.unwrap(np.arctan2(S[:, 1], S[:, 0]))
         rate = GAMMA * B * 0.5
-        # 中点法的相位是一步 2 atan(rate/2)，比 rate 小 (rate^2)/12，这是格式
-        # 本身的二阶误差，不是缺陷；所以判据看单步相位，而不是旋转 121 rad
-        # 之后的绝对分量（那会把 1e-4 的相位差放大成 1e-2 的分量差）。
         phi1 = float(phi[1])
         rel = phi1 / rate - 1.0
         theory = -(rate * rate) / 12.0
@@ -1368,9 +1258,6 @@ def main(argv=None):
                "pre_projection_norm_error": tr["diag"].get("midpoint_steps"),
                "midpoint_steps": tr["diag"].get("midpoint_steps"),
                "log": log}
-        # 保守分支（alpha = T = 0）不在本阶段的修复范围内，仍然没有模长投影，
-        # 所以它的 |S| 漂移就是 float32 累积；这里用与别处相同的 1e-5 上界，
-        # 只是跑得短（4000 步）。相位判据则是严格的格式检验。
         res["norm_tol"] = 1e-5
         res["projection_applied"] = False
         res["pass"] = (abs(rel) <= 1e-4 and res["max_norm_dev"] <= 1e-5)

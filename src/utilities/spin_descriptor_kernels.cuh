@@ -44,11 +44,9 @@ typedef double nep_acc_t;
 
 
 
-// ---------------------------------------------------------------------------
 // Spin (Route B): Sex, San, Sdm, Senv and their analytic derivatives.
 // The spin part of the descriptor is evaluated in a separate kernel so that
 // both the small-box and the large-box code paths can use it unchanged.
-// ---------------------------------------------------------------------------
 // Smag channel: |S_i| enters the descriptor through the monomials of
 // u = |S_i| * spin_mag_scale.  The cDFT magnetic-force label carries a large
 // longitudinal (constraint) part that is almost a pure function of |S_i|
@@ -520,17 +518,12 @@ __global__ void find_force_spin(
     atomicAdd(&g_tz[n2], -t_nb[2]);
 
     // ---- per-atom virial, Route B (round 9: ownership + components fixed) --
-    //
     // The force this kernel produces for the pair is f12 = dU_{n1}/dr_{n2}:
     // it is added to atom n1 and subtracted from atom n2.  The GPUMD per-atom
     // virial convention (force/potential.cu, find_properties_many_body) is
-    //
     //     W_i = sum_{j != i} (r_j - r_i) (x) dU_j/dr_i ,
-    //
     // so the pair term generated here,
-    //
     //     (r_{n1} - r_{n2}) (x) dU_{n1}/dr_{n2} = -r12 (x) f12 ,
-    //
     // belongs to W_{n2}, NOT to W_{n1}.  It used to be written into
     // g_virial[n1] with a wrong component map (syz -> slot 4 = xz,
     // szx -> slot 5 = yz) and with three of the nine components missing
@@ -553,10 +546,8 @@ __global__ void find_force_spin(
     }
 
     // ---- magnetic (magnon) conductive heat-current tensor, round 9 ---------
-    //
     //     A_j = sum_{i != j} (r_i - r_j) (x) dU_i/dS_j ,
     //     J_m = sum_j A_j : dS_j/dt .
-    //
     // t_nb is exactly dU_{n1}/dS_{n2}: the kernel adds -t_nb to the torque of
     // atom n2 and the torque is -dU/dS.  So this pair contributes
     // -r12 (x) t_nb to A_{n2}.  This is the term REPORT_validation8 declared
@@ -795,17 +786,12 @@ __global__ void find_force_spin_small_box(
     atomicAdd(&g_tz[n2], -t_nb[2]);
 
     // ---- per-atom virial, Route B (round 9: ownership + components fixed) --
-    //
     // The force this kernel produces for the pair is f12 = dU_{n1}/dr_{n2}:
     // it is added to atom n1 and subtracted from atom n2.  The GPUMD per-atom
     // virial convention (force/potential.cu, find_properties_many_body) is
-    //
     //     W_i = sum_{j != i} (r_j - r_i) (x) dU_j/dr_i ,
-    //
     // so the pair term generated here,
-    //
     //     (r_{n1} - r_{n2}) (x) dU_{n1}/dr_{n2} = -r12 (x) f12 ,
-    //
     // belongs to W_{n2}, NOT to W_{n1}.  It used to be written into
     // g_virial[n1] with a wrong component map (syz -> slot 4 = xz,
     // szx -> slot 5 = yz) and with three of the nine components missing
@@ -828,10 +814,8 @@ __global__ void find_force_spin_small_box(
     }
 
     // ---- magnetic (magnon) conductive heat-current tensor, round 9 ---------
-    //
     //     A_j = sum_{i != j} (r_i - r_j) (x) dU_i/dS_j ,
     //     J_m = sum_j A_j : dS_j/dt .
-    //
     // t_nb is exactly dU_{n1}/dS_{n2}: the kernel adds -t_nb to the torque of
     // atom n2 and the torque is -dU/dS.  So this pair contributes
     // -r12 (x) t_nb to A_{n2}.  This is the term REPORT_validation8 declared

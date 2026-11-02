@@ -315,7 +315,6 @@ void SDC::parse(const std::vector<std::string>& tokens, const std::vector<Group>
     PRINT_INPUT_ERROR("compute_sdc has too many parameters.\n");
   }
 
-  // sample interval
   if (!is_valid_int(tokens[1], &sample_interval_)) {
     PRINT_INPUT_ERROR("sample interval should be an integer.\n");
   }

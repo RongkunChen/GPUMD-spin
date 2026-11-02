@@ -33,24 +33,19 @@ void compute_heat(
   GPU_Vector<double>& heat_per_atom);
 
 // Round 9 (task 48) -- the full spin-resolved heat current.
-//
 //   J   = J_p + J_m
 //   J_p = sum_i W_i . v_i + sum_i e_i^spin v_i        (phonon / lattice)
 //   J_m = sum_j A_j : dS_j/dt                          (magnon, conductive)
 //   A_j = sum_{i != j} (r_i - r_j) (x) dU_i/dS_j       (9N, virial layout)
-//
 // dS_j/dt is the DETERMINISTIC Landau-Lifshitz-Gilbert rate
-//
 //   dS/dt = -gamma S x B - gamma alpha /|S| S x (S x B),
 //   B     = torque (-dE/dS) + b_ext   (the external `add_bfield`, if any)
-//
 // evaluated from the spin and the torque of the current step.  The stochastic
 // SLLG field is deliberately excluded: it is white noise, and its
 // autocorrelation would add a delta(t) spike to the Green-Kubo integrand.
 // The external field IS included, because it is a physical drive (FMR /
 // spin pumping) and does real work on the spins; `b_ext` is the value that was
 // actually applied on the current step, so a time-modulated field is handled.
-//
 // UNITS -- both channels are returned in the SAME time unit (GPUMD natural
 // time), so that the caller can add them and apply a single conversion:
 //   J_p : eV * A / natural-time   (W_i [eV] * v_i [A/natural-time])
@@ -62,11 +57,9 @@ void compute_heat(
 // (multiply, not divide -- a rate per longer unit is a LARGER number).
 // Without that factor J_m is TIME_UNIT_CONVERSION (~10.18) times too small;
 // that was the bug fixed in this revision.
-//
 // The Gilbert term  -sum_j r_j (B_j . dS_j/dt)  is a LOCAL source (spin ->
 // lattice energy transfer), not a flux, and is therefore NOT included here; it
 // is reported separately by the F16 spin-work accounting in spin_work.out.
-//
 // `spin_flux_A` may be empty (size 0), in which case J_m is zero.
 // `heat_phonon` / `heat_magnon`, when non-null, receive the two channels
 // separately (same 5N layout) so that Green-Kubo can build

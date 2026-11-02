@@ -83,7 +83,7 @@ struct ILP_Data {
 #define TCAF            2     // typewise_cutoff_angular_factor
 #define VERSION         3     // nep version
 #define RCR             4     // rc_radial
-#define RCA             5     // rc_angular     
+#define RCA             5     // rc_angular
 #define RCIR            6     // rcinv_radial
 #define RCIA            7     // rcinv_angular
 #define MNR             8     // MN_radial
@@ -100,13 +100,13 @@ struct ILP_Data {
 #define NT              19    // num_types
 #define PTRQS           20    // pointer of q_scaler
 #define PTRAN           (PTRQS + PTR_OFFSET)  // pointer of atomic number
-#define H_PAR_OFFSET    (PTRAN + PTR_OFFSET)  // ptr offset of head of paramb            
+#define H_PAR_OFFSET    (PTRAN + PTR_OFFSET)  // ptr offset of head of paramb
 
 // define annmb memory location
 #define SIZEOF_POINTER  (UINTPTR_MAX / 255 % 255)  // size of pointer
 #define SIZEOF_INT      4     // size of int
 #define PTR_OFFSET      (SIZEOF_POINTER / SIZEOF_INT) // ptr offset by int ptr
-#define ANNDIM          0     // ann dim
+#define ANNDIM          0
 #define NNEUR           1     // num_neurous1
 #define OUTB1           2     // bias for output layer
 #define EPT             3     // empty
@@ -168,7 +168,7 @@ public:
     GPU_Vector<double>& potential,
     GPU_Vector<double>& force,
     GPU_Vector<double>& virial);
-  
+
   virtual void compute_ilp(
     Box& box,
     const GPU_Vector<int>& type,
@@ -177,7 +177,7 @@ public:
     GPU_Vector<double>& force,
     GPU_Vector<double>& virial,
     const std::vector<Group>& group) override;
-  
+
 
 protected:
   ILP_Para ilp_para;

@@ -63,7 +63,7 @@ public:
   };
 
   struct NEP_Charge_VDW_Data {
-    GPU_Vector<float> descriptors;       // descriptors
+    GPU_Vector<float> descriptors;
     GPU_Vector<float> charge_derivative; // derivative of charge with respect to descriptor
     GPU_Vector<float> C6;
     GPU_Vector<float> C6_derivative;
@@ -86,7 +86,7 @@ public:
 
   struct Charge_Para {
     float alpha = 0.5f; // 1 / (2 Angstrom)
-    float alpha_factor = 1.0f; // 1 / (4 * alpha * alpha)
+    float alpha_factor = 1.0f;
   };
 
   struct ZBL {

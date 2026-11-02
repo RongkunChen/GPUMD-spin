@@ -128,7 +128,7 @@ void PLUMED::init(const double ts, const double T)
   step = 0;
   time_step = ts;
 
-  const char* engine_name = "GPUMD";                    // my name
+  const char* engine_name = "GPUMD";
   const double KbT = K_B * T;                           // eV
   const double time_unit = TIME_UNIT_CONVERSION / 1000; // natural -> ps
   const double mass_unit = 1.0;                         // amu. -> amu.

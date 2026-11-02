@@ -75,7 +75,6 @@ void NEP::initialize_dftd3(const RunInput& run_input)
 }
 
 // Stage03B: strict integer parsing for the ANN line of nep.txt.
-//
 // get_int_from_token() wraps std::stoi(), which happily accepts trailing
 // garbage ("30abc" -> 30), leading spaces and a leading "0x".  Used on the
 // architecture line that means a malformed nep.txt can be read as a *different*
@@ -226,7 +225,6 @@ NEP::NEP(const char* file_potential, const int num_atoms, const RunInput& run_in
     // Optional `spin_layout` / `spin_mag_scale` / `spin_blocks` lines.  They are
     // absent in a legacy model, in which case the implicit block order of
     // version 1 applies.
-    //
     // Stage03A.1: this used to peek with tellg()/seekg().  On MSVC that round
     // trip is not exact for an LF-only file -- the stream resumes a few bytes
     // past the mark and the next header line comes back truncated -- so a
@@ -466,7 +464,6 @@ NEP::NEP(const char* file_potential, const int num_atoms, const RunInput& run_in
   paramb.dim_angular = (paramb.n_max_angular + 1) * paramb.num_L;
 
   // ANN
-  //
   // Stage03B: this used to accept any three-token line (the keyword itself was
   // never checked) and read only the first neuron count, silently ignoring the
   // second.  A nep.txt written for a two-hidden-layer model therefore produced
@@ -824,7 +821,7 @@ static __global__ void find_descriptor(
     }
 
 #ifdef S3A2_DIAG
-    // raw descriptor of the target atom, taken in place (before the scaler) 
+    // raw descriptor of the target atom, taken in place (before the scaler)
     if (s3a2_is_target(n1)) {
       for (int d = 0; d < annmb.dim; ++d) {
         g_s3a2_q_raw[d] = q[d];
@@ -958,7 +955,6 @@ static __global__ void find_force_radial(
     g_fx[n1] += s_fx;
     g_fy[n1] += s_fy;
     g_fz[n1] += s_fz;
-    // save virial
     // xx xy xz    0 3 4
     // yx yy yz    6 1 5
     // zx zy zz    7 8 2
@@ -1194,8 +1190,8 @@ void NEP::compute_large_box(
   const int grid_size = (N2 - N1 - 1) / BLOCK_SIZE + 1;
 
   neighbor_manager.update(
-    box, 
-    type, 
+    box,
+    type,
     position_per_atom);
 
   find_neighbor_list_large_box<<<grid_size, BLOCK_SIZE>>>(
@@ -1923,8 +1919,8 @@ void NEP::compute_large_box(
   const int grid_size = (N2 - N1 - 1) / BLOCK_SIZE + 1;
 
   neighbor_manager.update(
-    box, 
-    type, 
+    box,
+    type,
     position_per_atom);
 
   find_neighbor_list_large_box<<<grid_size, BLOCK_SIZE>>>(
