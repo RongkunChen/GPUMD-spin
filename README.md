@@ -160,11 +160,11 @@ which gives the five blocks of layout 3:
 
 | Block | Definition | Physical order |
 |---|---|---|
-| `Sex` | $q^{\mathrm{Sex}}_{i,n}=\sum_j g_n f_c\ (\mathbf S_i\cdot\mathbf S_j)$ | exchange |
-| `San` | $q^{\mathrm{San}}_{i,n}=\sum_j g_n f_c\ a\ b$ | anisotropic exchange |
+| `Sex` | $q^{\mathrm{Sex}}_ {i,n}=\sum_j g_n f_c\ (\mathbf S_i\cdot\mathbf S_j)$ | exchange |
+| `San` | $q^{\mathrm{San}}_ {i,n}=\sum_j g_n f_c\ a\ b$ | anisotropic exchange |
 | `Sdm` | $q^{\mathrm{Sdm}}_ {i,n}=\sum_j g_n f_c\ \mathbf e_{ij}\cdot(\mathbf S_i\times\mathbf S_j)$ | Dzyaloshinskii–Moriya |
-| `Sia` | $q^{\mathrm{Sia}}_{i,n}=\sum_j g_n f_c\ (\tfrac32 a^2-\tfrac12 s^2)$ | single-ion anisotropy |
-| `Smag` | $q^{\mathrm{Smag}}_{i,n}=u^{\ n+1}$ | on-site moment magnitude |
+| `Sia` | $q^{\mathrm{Sia}}_ {i,n}=\sum_j g_n f_c\ (\tfrac32 a^2-\tfrac12 s^2)$ | single-ion anisotropy |
+| `Smag` | $q^{\mathrm{Smag}}_ {i,n}=u^{\ n+1}$ | on-site moment magnitude |
 
 `Smag` is a purely on-site term (no neighbour sum), built from $u=s\ m$ where
 $m$ is the scaling factor given by `spin_mag_scale`. The current model layout is
@@ -200,7 +200,7 @@ thermostat is a heat bath and the energy is not conserved.
   polymer MD, MSST shock, wall pistons, two-temperature model, and several
   thermodynamic-integration variants.
 * **Transport**: the heat flux is decomposed into a phonon channel and a magnon
-  channel $J_m=\sum_j A_j:\dot{\mathbf S}_j$ with
+  channel $J_m=\sum_j A_j:\dot{\mathbf S}_ j$ with
   $A_j=\sum_{i\neq j}(\mathbf r_i-\mathbf r_j)\otimes\partial U_i/\partial\mathbf S_j$
   (`src/measure/dump_heat_flux.cu`, `src/measure/compute_heat.cuh`).
 * **Magnon spectra**: `compute_sed ... spin` uses the spin velocities; LSWT and
