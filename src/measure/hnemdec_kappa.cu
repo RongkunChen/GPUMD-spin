@@ -407,10 +407,10 @@ void HNEMDEC::end_of_step(
   const int N = atom.number_of_atoms;
 
   compute_heat(
-    atom.mass,
-    atom.potential_per_atom,
-    atom.virial_per_atom,
-    atom.velocity_per_atom,
+    atom.mass, 
+    atom.potential_per_atom, 
+    atom.virial_per_atom, 
+    atom.velocity_per_atom, 
     atom.heat_per_atom);
 
   gpu_sum_heat_and_diffusion<<<NUM_OF_HEAT_COMPONENTS + NUM_OF_DIFFUSION_COMPONENTS, 1024>>>(

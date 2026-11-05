@@ -60,7 +60,7 @@ $$
 | 把 $\mathbf g$ 当 $\boldsymbol\tau$ 用 | 磁矩出现纵向增长 | $\mathbf S\cdot\mathbf g\neq0$ 但 $\mathbf S\cdot\boldsymbol\tau=0$ |
 | virial 分量顺序按 6 分量截断 | $xy\ne yx$ 的体系应力不对称 | 逐分量按名映射后比较 |
 | 有限差分步长过小 | $h=10^{-6}$ 时 $\Delta E$ 落入 float32 噪声 | 做 $h$ 扫描看收敛平台 |
-| 单位混用 | 力矩大 $10^{3}$ | $\gamma$ 用 $\mu_B/(\mathrm{eV\ fs})$， $\mathbf g$ 用 $\mathrm{eV}/\mu_B$ |
+| 单位混用 | 力矩大 $10^{3}$ | $\gamma$ 用 $\mu_B/(\mathrm{eV\ fs})$， $\mathbf g$ 用 eV/ $\mu_B$ |
 
 ## 6. 本版本状态
 

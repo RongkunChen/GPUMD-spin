@@ -821,7 +821,7 @@ static __global__ void find_descriptor(
     }
 
 #ifdef S3A2_DIAG
-    // raw descriptor of the target atom, taken in place (before the scaler)
+    // raw descriptor of the target atom, taken in place (before the scaler) 
     if (s3a2_is_target(n1)) {
       for (int d = 0; d < annmb.dim; ++d) {
         g_s3a2_q_raw[d] = q[d];
@@ -1190,8 +1190,8 @@ void NEP::compute_large_box(
   const int grid_size = (N2 - N1 - 1) / BLOCK_SIZE + 1;
 
   neighbor_manager.update(
-    box,
-    type,
+    box, 
+    type, 
     position_per_atom);
 
   find_neighbor_list_large_box<<<grid_size, BLOCK_SIZE>>>(
@@ -1919,8 +1919,8 @@ void NEP::compute_large_box(
   const int grid_size = (N2 - N1 - 1) / BLOCK_SIZE + 1;
 
   neighbor_manager.update(
-    box,
-    type,
+    box, 
+    type, 
     position_per_atom);
 
   find_neighbor_list_large_box<<<grid_size, BLOCK_SIZE>>>(

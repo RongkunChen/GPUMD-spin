@@ -12,7 +12,7 @@ $$
 
 - $\gamma$：代码里的 `gamma`，单位 $\mu_B/(\mathrm{eV\ fs})$，物理值 $g\mu_B/\hbar\approx3.0385$（ $g=2$）。
 - $\alpha$：无量纲 Gilbert 阻尼。
-- $\mathbf B_i=-\partial E/\partial\mathbf S_i=\mathbf g_i$（ $\mathrm{eV}/\mu_B$）。
+- $\mathbf B_i=-\partial E/\partial\mathbf S_i=\mathbf g_i$（eV/ $\mu_B$）。
 - 与 Gilbert 形式的换算：LL 的 $\gamma_{\rm LL}=\gamma_G/(1+\alpha^2)$。**代码里 `gamma` 是 LL 的 $\gamma_{\rm LL}$**，因此噪声振幅必须带 $1/(1+\alpha^2)$，否则双重修正（阶段04 冻结结论）。
 
 ## 2. 涨落–耗散（FDT）
@@ -106,4 +106,4 @@ dt 减半后 $+3.4$% → **偏差不随 $\Delta t$ 减小**，属采样/离散�
 | 单自旋平衡在 5% 预注册带宽内 | PASS（+2.9%） |
 | 4 SE 判据 | **FAIL**（ $z=4.5$）——已记录，未放宽 |
 | 二聚体 vs MC/精确求积 | PASS（R1） |
-| $\vert \mathbf S\vert$ 漂移 < 1e-5（20000 步） | PASS（ $2.0\times10^{-8}$ / $1.4\times10^{-7}$） |
+| $\lVert \mathbf S\rVert$ 漂移 < 1e-5（20000 步） | PASS（ $2.0\times10^{-8}$ / $1.4\times10^{-7}$） |

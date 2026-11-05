@@ -184,6 +184,27 @@ void Dump_Heat_Flux::pre_run(
   }
 
   if (use_bins) {
+    // F-10 (r21): gpu_bin_heat() bins a RAW Cartesian coordinate with
+    // fmod(r, a[axis]) and normalises by V/nbin.  Both are only valid for an
+    // orthogonal cell that is periodic along the binning axis.  For a tilted
+    // box the bin coordinate must be the fractional coordinate
+    // s = h^{-1} r (not r_axis), and for a non-periodic axis the bin volume is
+    // not V/nbin.  Rather than emit silently wrong numbers, reject the
+    // combination here with an explicit message.
+    box.set_is_orthogonal();
+    if (!box.is_orthogonal) {
+      PRINT_INPUT_ERROR(
+        "dump_heat_flux bin=: tilted (non-orthogonal) cells are not supported.\n"
+        "        Binning uses a Cartesian coordinate; a triclinic cell needs\n"
+        "        fractional coordinates and a Jacobian-corrected bin volume.\n"
+        "        Use the global (unbinned) heat flux instead.\n");
+    }
+    const int pbc[3] = {box.pbc_x, box.pbc_y, box.pbc_z};
+    if (!pbc[axis]) {
+      PRINT_INPUT_ERROR(
+        "dump_heat_flux bin=: the binning axis must be periodic.\n"
+        "        The bin volume V/nbin assumes periodic slabs.\n");
+    }
     const double a[3] = {
       sqrt(box.cpu_h[0] * box.cpu_h[0] + box.cpu_h[3] * box.cpu_h[3] +
            box.cpu_h[6] * box.cpu_h[6]),
@@ -195,6 +216,22 @@ void Dump_Heat_Flux::pre_run(
       PRINT_INPUT_ERROR("dump_heat_flux: the box length along the axis is zero.");
     }
     bin_length = a[axis] / nbin;
+  }
+
+  // F-11 (r21): STATUS DECLARATION.  The spin-resolved heat current in
+  // compute_heat.cu is NOT a validated quantitative total energy flux for a
+  // general NEP (see PHYSICS_DERIVATION.md, section 4).  Its output is usable
+  // only as a diagnostic time series; any Green-Kubo integral from it must be
+  // reported as BLOCKED, not as a thermal conductivity.
+  if (atom.has_spin) {
+    printf(
+      "WARNING [BLOCKED]: spin-resolved heat flux is NOT a validated total\n"
+      "  energy current for a general NEP.  e_i^spin = -1/2 S_i.B_i requires\n"
+      "  a homogeneous quadratic (Heisenberg) Hamiltonian; the magnon channel\n"
+      "  uses a deterministic dS/dt with no thermostat/source terms and omits\n"
+      "  the external ME/Zeeman contribution to the local energy derivative.\n"
+      "  heat_flux.out / hac.out / kappa.out from this run are DIAGNOSTIC ONLY;\n"
+      "  do not quote them as a quantitative thermal conductivity.\n");
   }
 
   const int N = atom.number_of_atoms;

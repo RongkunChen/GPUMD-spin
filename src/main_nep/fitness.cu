@@ -395,7 +395,7 @@ void Fitness::write_nep_txt(FILE* fid_nep, Parameters& para, float* elite)
             fprintf(fid_nep, "nep4 %d ", para.num_types);
           }
         }
-      }
+      } 
     } else {
       if (para.charge_vdw) {
         if (para.enable_zbl) {

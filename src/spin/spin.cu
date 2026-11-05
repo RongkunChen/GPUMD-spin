@@ -1,14 +1,68 @@
 #include "spin.cuh"
+#include "utilities/common.cuh"
 #include "utilities/error.cuh"
+#include "utilities/read_file.cuh"
+#include <cerrno>
+#include <climits>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 
 #define SPIN_BLOCK_SIZE 128
 
 // Boltzmann constant in eV/K
 #define SPIN_KB_EV_PER_K 8.617333262e-5
+
+// F-01 (r21): an |S| or iterate difference beyond this value cannot be a
+// physical spin (moments are O(1-10) mu_B).  float32 can still represent such
+// a number as *finite* (up to 3.4e38), so an explicit bound is needed: without
+// it a diverging fixed-point iteration would only show up as a very large but
+// finite residual that the tolerance comparison rejects at best, and at worst
+// as an inf that a max-reduction silently drops.
+#define SPIN_OVERFLOW_LIMIT 1.0e20
+
+// F-04 (r21): strict token parsers.  atof()/atoi() accept a valid prefix and
+// silently discard the rest ("3.04junk" -> 3.04), accept "nan"/"inf", and do
+// not report overflow.  These helpers require the WHOLE token, a finite value,
+// no errno, and (for ints) a value representable by int.  They are local to
+// this translation unit, which is linked into both gpumd and gpumd_replica.
+namespace {
+bool spin_parse_real(const std::string& text, double* out)
+{
+  if (text.empty()) return false;
+  errno = 0;
+  char* end = nullptr;
+  const double value = std::strtod(text.c_str(), &end);
+  if (errno != 0 || end == text.c_str() || *end != '\0') return false;
+  if (!std::isfinite(value)) return false;
+  *out = value;
+  return true;
+}
+
+bool spin_parse_int(const std::string& text, int* out)
+{
+  if (text.empty()) return false;
+  errno = 0;
+  char* end = nullptr;
+  const long value = std::strtol(text.c_str(), &end, 10);
+  if (errno != 0 || end == text.c_str() || *end != '\0') return false;
+  if (value < INT_MIN || value > INT_MAX) return false;
+  *out = static_cast<int>(value);
+  return true;
+}
+
+void spin_bad_value(const char* key, const std::string& text)
+{
+  fprintf(stderr,
+          "Spin Error:\n    spin_llg: %s = '%s' is not a valid finite number.\n"
+          "    The whole token must parse (no trailing characters, no nan/inf,\n"
+          "    no overflow).\n",
+          key, text.c_str());
+  std::exit(4);
+}
+} // namespace
 
 // F13: geometric LLG integrator.
 // The previous update was explicit Euler followed by a renormalisation of |S|:
@@ -399,49 +453,83 @@ static __global__ void gpu_midpoint_llg_update(
   o_z[n] = (float)((double)s_oz[n] - gamma_dt * pz - k * dz);
 }
 
-// S08A: project each spin onto its magnitude anchor, and report the largest
-// relative |S| error seen *before* the projection.  That number is the honest
-// measure of whether the integrator preserves the norm; the projected value is
-// the stored trajectory.  An atom with |S| = 0 keeps its zero (the thermal
-// field is exactly zero there, so the update is exactly zero as well).
+// F-03 (r21): EXPLICIT anchor construction.  This kernel is the only place a
+// |S| anchor may be written from a spin configuration, and it is called only
+// by initialize_anchor() -- i.e. at initialisation, on a restart (where the
+// anchor is restored from the checkpoint instead), or on a legitimate state
+// rebuild (atom count changed after `replicate`).  Normal integration never
+// touches the anchor.
+static __global__ void gpu_init_norm_anchor(
+  const int N,
+  const float* g_sx, const float* g_sy, const float* g_sz,
+  float* anchor, int* g_bad)
+{
+  const int n = blockIdx.x * blockDim.x + threadIdx.x;
+  if (n >= N) return;
+  const double sx = (double)g_sx[n], sy = (double)g_sy[n], sz = (double)g_sz[n];
+  const double sn = sqrt(sx * sx + sy * sy + sz * sz);
+  if (!isfinite(sn) || sn > SPIN_OVERFLOW_LIMIT) {
+    atomicAdd(g_bad, 1);
+    anchor[n] = 0.0f;
+  } else {
+    anchor[n] = (float)sn;
+  }
+}
+
+// F-03 (r21): project each spin onto its FIXED magnitude anchor.  The relative
+// pre-projection error | |S| - anchor | / anchor is recorded BEFORE anything is
+// written; it is the honest measure of whether the integrator conserves |S|.
+// The old code refreshed the anchor whenever |S| had moved by more than 1e-4
+// and then computed `err` against the NEW anchor -- making err identically zero
+// for exactly the steps that were wrong, then silently adopting the wrong
+// modulus.  An error above `tolerance` (or a missing/non-finite anchor) is now
+// counted in `g_bad` so the host can fail the run instead of hiding it.
 static __global__ void gpu_project_anchor(
   const int N,
   float* g_sx, float* g_sy, float* g_sz,
-  float* anchor,
-  double* g_max_err)
+  const float* anchor,
+  const double tolerance,
+  double* g_max_err,
+  int* g_bad)
 {
   __shared__ double sh[SPIN_BLOCK_SIZE];
+  __shared__ int sh_bad[SPIN_BLOCK_SIZE];
   const int tid = threadIdx.x;
   const int n = blockIdx.x * blockDim.x + tid;
   double err = 0.0;
+  int bad = 0;
   if (n < N) {
-    double sx = (double)g_sx[n], sy = (double)g_sy[n], sz = (double)g_sz[n];
+    const double sx = (double)g_sx[n], sy = (double)g_sy[n], sz = (double)g_sz[n];
     const double sn = sqrt(sx * sx + sy * sy + sz * sz);
-    double an = (double)anchor[n];
-    // Refresh only on a real change of the moment (restart / replicate), never
-    // on round-off: the tolerance is 1e-4, i.e. 3 orders of magnitude above the
-    // float32 jitter this projection is meant to remove.
-    if (an <= 0.0 || fabs(sn - an) > 1.0e-4 * fmax(an, 1.0e-30)) {
-      an = sn;
-      anchor[n] = (float)an;
-    }
-    if (an > 0.0) {
-      err = fabs(sn - an) / an;
+    const double an = (double)anchor[n];
+    if (!isfinite(sn) || !isfinite(an) || an <= 0.0 ||
+        sn > SPIN_OVERFLOW_LIMIT || an > SPIN_OVERFLOW_LIMIT) {
+      bad = 1;
+    } else {
+      err = fabs(sn - an) / an;              // PRE-projection error
+      if (!isfinite(err) || err > tolerance) bad = 1;
       const double scale = (sn > 0.0) ? an / sn : 1.0;
       g_sx[n] = (float)(sx * scale);
       g_sy[n] = (float)(sy * scale);
       g_sz[n] = (float)(sz * scale);
     }
   }
-  sh[tid] = err;
+  sh[tid] = (isfinite(err) && err > 0.0) ? err : 0.0;
+  sh_bad[tid] = bad;
   __syncthreads();
   for (int off = blockDim.x >> 1; off > 0; off >>= 1) {
-    if (tid < off && sh[tid + off] > sh[tid]) sh[tid] = sh[tid + off];
+    if (tid < off) {
+      if (sh[tid + off] > sh[tid]) sh[tid] = sh[tid + off];
+      sh_bad[tid] += sh_bad[tid + off];
+    }
     __syncthreads();
   }
-  if (tid == 0 && sh[0] > 0.0) {
-    atomicMax(reinterpret_cast<unsigned long long*>(g_max_err),
-              static_cast<unsigned long long>(__double_as_longlong(sh[0])));
+  if (tid == 0) {
+    if (sh_bad[0] > 0) atomicAdd(g_bad, sh_bad[0]);
+    if (sh[0] > 0.0) {
+      atomicMax(reinterpret_cast<unsigned long long*>(g_max_err),
+                static_cast<unsigned long long>(__double_as_longlong(sh[0])));
+    }
   }
 }
 
@@ -498,33 +586,92 @@ static __global__ void gpu_midpoint_work_stoch(
 
 static __global__ void gpu_zero_one(double* p) { *p = 0.0; }
 
+static __global__ void gpu_zero_int_one(int* p) { *p = 0; }
+
 static __global__ void gpu_zero_float(const int N, float* p)
 {
   const int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < N) p[i] = 0.0f;
 }
 
-// max |a - b| into a single double.  The values are non-negative, so their IEEE
-// bit patterns order like the numbers and an integer atomicMax is exact.
-static __global__ void gpu_max_abs_diff(
-  const int n, const float* a, const float* b, double* out)
+// Zero the whole residual state: [0] max |dS|, [1] max |S| scale, bad counter.
+static __global__ void gpu_zero_midpoint_state(double* res, int* bad)
 {
-  __shared__ double sh[SPIN_BLOCK_SIZE];
-  const int tid = threadIdx.x;
-  const int i = blockIdx.x * blockDim.x + tid;
-  double v = 0.0;
-  if (i < n) {
-    v = fabs((double)a[i] - (double)b[i]);
+  if (threadIdx.x == 0) {
+    res[0] = 0.0;
+    res[1] = 0.0;
+    *bad = 0;
   }
-  sh[tid] = v;
+}
+
+// F-01 (r21): COMPLETE fixed-point residual for a component-major 3N spin
+// array.  The previous gpu_max_abs_diff() was launched with a grid sized for
+// N threads but passed n = 3N, so indices [N, 3N) -- the y and z components --
+// were never read.  A state whose x component is stationary while y/z keep
+// moving was therefore reported as converged.  Here each of the N threads
+// checks all three components of its own atom, so the launch grid stays
+// ceil(N / block) and every element is covered.
+// Residual definition (r21, documented so it can be reproduced offline):
+//   d_{i,c}   = S_new[c*N + i] - S_prev[c*N + i]          (mu_B)
+//   r_abs     = max_{i,c} |d_{i,c}|                       (absolute, mu_B)
+//   scale     = max_{i,c} max(|S_new|, |S_prev|)           (mu_B)
+//   r_rel     = r_abs / max(scale, 1e-30)                 (dimensionless)
+// Converged iff r_abs <= atol AND r_rel <= rtol, AND bad == 0.
+// Both tolerances default to 1e-6; atol is in mu_B, rtol is dimensionless.
+// NaN / Inf / overflow are counted in `bad` instead of being fed into the
+// max-reduction: comparisons with NaN are false, so a NaN residual used to be
+// silently discarded by `if (x > sh[tid])` and could yield a *zero* residual
+// (false convergence).  Overflow is a finite but unphysical value (see
+// SPIN_OVERFLOW_LIMIT); it is treated with the same severity.
+static __global__ void gpu_midpoint_residual(
+  const int N, const float* a, const float* b,
+  double* out_res, int* out_bad)
+{
+  __shared__ double sh_abs[SPIN_BLOCK_SIZE];
+  __shared__ double sh_scale[SPIN_BLOCK_SIZE];
+  __shared__ int sh_bad[SPIN_BLOCK_SIZE];
+  const int tid = threadIdx.x;
+  const int n = blockIdx.x * blockDim.x + tid; // grid sized for N, not 3N
+  double v = 0.0, scale = 0.0;
+  int bad = 0;
+  if (n < N) {
+    for (int c = 0; c < 3; ++c) {
+      const double av = (double)a[n + c * N];
+      const double bv = (double)b[n + c * N];
+      const double d = fabs(av - bv);
+      if (!isfinite(av) || !isfinite(bv) || !isfinite(d) ||
+          fabs(av) > SPIN_OVERFLOW_LIMIT || fabs(bv) > SPIN_OVERFLOW_LIMIT ||
+          d > SPIN_OVERFLOW_LIMIT) {
+        bad = 1;
+        continue;
+      }
+      if (d > v) v = d;
+      const double m = fmax(fabs(av), fabs(bv));
+      if (m > scale) scale = m;
+    }
+  }
+  sh_abs[tid] = v;
+  sh_scale[tid] = scale;
+  sh_bad[tid] = bad;
   __syncthreads();
   for (int off = blockDim.x >> 1; off > 0; off >>= 1) {
-    if (tid < off && sh[tid + off] > sh[tid]) sh[tid] = sh[tid + off];
+    if (tid < off) {
+      if (sh_abs[tid + off] > sh_abs[tid]) sh_abs[tid] = sh_abs[tid + off];
+      if (sh_scale[tid + off] > sh_scale[tid]) sh_scale[tid] = sh_scale[tid + off];
+      sh_bad[tid] += sh_bad[tid + off];
+    }
     __syncthreads();
   }
-  if (tid == 0 && sh[0] > 0.0) {
-    atomicMax(reinterpret_cast<unsigned long long*>(out),
-              static_cast<unsigned long long>(__double_as_longlong(sh[0])));
+  if (tid == 0) {
+    if (sh_bad[0] > 0) atomicAdd(out_bad, sh_bad[0]);
+    // All three values are finite and non-negative here, so their IEEE-754
+    // bit patterns order like the numbers and integer atomicMax is exact.
+    if (sh_abs[0] > 0.0)
+      atomicMax(reinterpret_cast<unsigned long long*>(out_res),
+                static_cast<unsigned long long>(__double_as_longlong(sh_abs[0])));
+    if (sh_scale[0] > 0.0)
+      atomicMax(reinterpret_cast<unsigned long long*>(out_res + 1),
+                static_cast<unsigned long long>(__double_as_longlong(sh_scale[0])));
   }
 }
 
@@ -538,14 +685,18 @@ void Spin::parse(const std::vector<std::string>& tokens)
   // thing, so old inputs keep working:
   //     spin_llg 3.04 0.5 300 4242
   //     spin_llg gamma=3.04 alpha=0.5 T=300 seed=4242
+  // F-04 (r21): every numeric token is parsed STRICTLY (whole string, finite,
+  // no overflow) and every key is checked for duplicates.  The old atof/atoi
+  // accepted "3.04junk", "nan", "inf" and out-of-range integers silently.
   bool named = false;
   for (size_t i = 1; i < tokens.size(); ++i) {
-    if (tokens[i].find('=') != std::string::npos) {
-      named = true;
-    }
+    if (tokens[i].find('=') != std::string::npos) named = true;
   }
   if (named) {
-    int n_gamma = 0, n_alpha = 0;
+    // Every key is counted.  A repeated gamma=, alpha=, T=, seed=, scheme= or
+    // restart= used to be silently accepted with the last value winning; that
+    // hides copy/paste errors in a driving-file template.
+    int n_gamma = 0, n_alpha = 0, n_T = 0, n_seed = 0, n_scheme = 0, n_restart = 0;
     for (size_t i = 1; i < tokens.size(); ++i) {
       const std::string& t = tokens[i];
       const size_t eq = t.find('=');
@@ -559,15 +710,17 @@ void Spin::parse(const std::vector<std::string>& tokens)
         PRINT_INPUT_ERROR("spin_llg: a key=value argument has an empty value.\n");
       }
       if (key == "gamma") {
-        gamma = atof(val.c_str());
+        if (!spin_parse_real(val, &gamma)) spin_bad_value("gamma", val);
         ++n_gamma;
       } else if (key == "alpha") {
-        alpha = atof(val.c_str());
+        if (!spin_parse_real(val, &alpha)) spin_bad_value("alpha", val);
         ++n_alpha;
       } else if (key == "T" || key == "temperature") {
-        temperature = atof(val.c_str());
+        if (!spin_parse_real(val, &temperature)) spin_bad_value(key.c_str(), val);
+        ++n_T;
       } else if (key == "seed") {
-        seed = atoi(val.c_str());
+        if (!spin_parse_int(val, &seed)) spin_bad_value("seed", val);
+        ++n_seed;
       } else if (key == "scheme") {
         // S08A: choose the finite-temperature integrator explicitly.  Both
         // schemes are measured by the same acceptance battery; this switch
@@ -582,12 +735,14 @@ void Spin::parse(const std::vector<std::string>& tokens)
             "spin_llg: scheme= must be 'geometric' or 'midpoint'.\n");
         }
         sllg_scheme_set = true;
+        ++n_scheme;
       } else if (key == "restart") {
         // S08B: opt in to loading the magnetic part of a checkpoint.  It is an
         // explicit keyword, not an automatic pick-up of a file that happens to
         // be in the working directory: a stale spin_restart.bin from an earlier
         // run must never be applied silently.
         restart_file_ = val;
+        ++n_restart;
       } else {
         PRINT_INPUT_ERROR(
           "spin_llg: unknown key.  Use gamma=, alpha=, T= (or temperature=), "
@@ -598,29 +753,62 @@ void Spin::parse(const std::vector<std::string>& tokens)
       PRINT_INPUT_ERROR(
         "spin_llg: gamma= and alpha= are both required exactly once.\n");
     }
+    if (n_T > 1 || n_seed > 1 || n_scheme > 1 || n_restart > 1) {
+      PRINT_INPUT_ERROR(
+        "spin_llg: a key= parameter was given more than once.\n");
+    }
   } else {
     if (tokens.size() != 3 && tokens.size() != 4 && tokens.size() != 5) {
       PRINT_INPUT_ERROR(
         "spin_llg should have 2 to 4 parameters: "
         "<gamma> <alpha> [<temperature> [<seed>]].\n");
     }
-    gamma = atof(tokens[1].c_str());
-    alpha = atof(tokens[2].c_str());
+    if (!spin_parse_real(tokens[1], &gamma)) spin_bad_value("gamma", tokens[1]);
+    if (!spin_parse_real(tokens[2], &alpha)) spin_bad_value("alpha", tokens[2]);
     if (tokens.size() >= 4) {
-      temperature = atof(tokens[3].c_str());
+      if (!spin_parse_real(tokens[3], &temperature))
+        spin_bad_value("temperature", tokens[3]);
     }
     if (tokens.size() >= 5) {
-      seed = atoi(tokens[4].c_str());
+      if (!spin_parse_int(tokens[4], &seed)) spin_bad_value("seed", tokens[4]);
     }
   }
   enabled = true;
+
+  // F-04 (r21): explicit gamma convention.  `gamma` in this file is the
+  // Landau-Lifshitz (LL) coefficient gamma_LL = g mu_B/hbar/(1 + alpha^2)
+  // expressed in mu_B/(eV fs); the Gilbert coefficient is
+  // gamma_G = gamma_LL (1 + alpha^2).  The deterministic equation is
+  //   dS/dt = -gamma_LL S x B - gamma_LL alpha/|S| S x (S x B),
+  // and the FDT amplitude in gpu_fill_thermal_field uses
+  //   2 alpha kB T / (gamma_G |S|) = 2 alpha kB T / (gamma_LL (1+a^2) |S|).
+  // The 1/(1+alpha^2) is therefore REQUIRED and is kept; removing it would
+  // thermostat the system at T(1+alpha^2).  See PHYSICS_DERIVATION.md.
+  if (!(gamma > 0.0)) {
+    PRINT_INPUT_ERROR(
+      "spin_llg: gamma must be > 0 (LL convention, mu_B/(eV fs)).\n");
+  }
+  if (!(alpha >= 0.0)) {
+    PRINT_INPUT_ERROR("The Gilbert damping in spin_llg must be >= 0.\n");
+  }
+  if (!(temperature >= 0.0)) {
+    PRINT_INPUT_ERROR("The temperature in spin_llg must be >= 0.\n");
+  }
+  if (seed < 0) {
+    PRINT_INPUT_ERROR("spin_llg: seed must be a non-negative integer.\n");
+  }
+  if (temperature > 0.0 && alpha <= 0.0) {
+    PRINT_INPUT_ERROR(
+      "A finite spin_llg temperature requires alpha > 0 "
+      "(the noise amplitude is proportional to alpha).\n");
+  }
   // F21: warn when gamma is not the physical value, because then the noise
   // field dominates the exchange field and every dynamical quantity (magnon
   // lifetime, kappa_mm, magnetisation relaxation) is wrong by orders of
   // magnitude, even though the equilibrium distribution is still correct.
   {
     const double gamma_phys = 3.0385;   // g*mu_B/hbar in mu_B/(eV fs), g = 2
-    if (gamma > 0.0 && gamma < 0.5 * gamma_phys) {
+    if (gamma < 0.5 * gamma_phys) {
       printf(
         "NOTE spin_llg: gamma = %g is %.0fx below the physical %.4f "
         "mu_B/(eV fs).\n"
@@ -634,22 +822,13 @@ void Spin::parse(const std::vector<std::string>& tokens)
         gamma, gamma_phys / gamma, gamma_phys, gamma_phys);
     }
   }
-  if (alpha < 0.0) {
-    PRINT_INPUT_ERROR("The Gilbert damping in spin_llg must be >= 0.\n");
-  }
-  if (temperature < 0.0) {
-    PRINT_INPUT_ERROR("The temperature in spin_llg must be >= 0.\n");
-  }
-  if (temperature > 0.0 && alpha <= 0.0) {
-    PRINT_INPUT_ERROR(
-      "A finite spin_llg temperature requires alpha > 0 "
-      "(the noise amplitude is proportional to alpha).\n");
-  }
-  printf("Spin dynamics (LLG): gamma = %g, alpha = %g", gamma, alpha);
+  printf("Spin dynamics (LLG): gamma = %g (LL, gamma_G = %.6g), alpha = %g",
+         gamma, gamma * (1.0 + alpha * alpha), alpha);
   if (temperature > 0.0) {
     printf(", temperature = %g K (stochastic LLG, seed %d)", temperature, seed);
   }
   printf(".\n");
+  fflush(stdout);
 }
 
 void Spin::check_discretisation(double time_step_fs_in)
@@ -665,6 +844,23 @@ void Spin::check_discretisation(double time_step_fs_in)
       "thermal-field amplitude).\n");
   }
   time_step_fs = time_step_fs_in;
+  // F-04 (r21): validate the implicit-midpoint controls.  They are ordinary
+  // public numbers (set by `spin_midpoint`), so a malformed value must not be
+  // able to turn the convergence test into `residual <= nan` (always false ->
+  // infinite loop) or `max_iterations = 0` (no update at all).
+  if (!std::isfinite(midpoint_tolerance) || midpoint_tolerance <= 0.0 ||
+      !std::isfinite(midpoint_relative_tolerance) ||
+      midpoint_relative_tolerance <= 0.0) {
+    PRINT_INPUT_ERROR(
+      "spin_midpoint: atol and rtol must be finite and > 0.\n");
+  }
+  if (midpoint_max_iterations < 1 || midpoint_max_iterations > 100000) {
+    PRINT_INPUT_ERROR(
+      "spin_midpoint: max_iterations must be in [1, 100000].\n");
+  }
+  if (!std::isfinite(norm_tolerance_) || norm_tolerance_ <= 0.0) {
+    PRINT_INPUT_ERROR("spin_llg: the |S| anchor tolerance must be finite and > 0.\n");
+  }
   if (!enabled) {
     return;
   }
@@ -891,12 +1087,24 @@ void Spin::propagate(
   // B(t) = B sin(2 pi omega t) with omega in THz (1/ps) and t in fs.  It is
   // evaluated on the host once per step and broadcast as three scalars, so
   // there is no extra memory traffic per atom.
+  // F-09 (r21): the IMPLICIT MIDPOINT branches claim second-order accuracy, so
+  // the time-dependent field must be sampled at the midpoint of the step,
+  // t + dt/2, not at its beginning.  Sampling at t (the old behaviour) adds an
+  // O(dt) envelope error that no amount of fixed-point iteration removes.  The
+  // geometric (frozen-field) branch keeps the beginning-of-step value because
+  // that is where its field is frozen by construction.  For a static field
+  // (omega = 0) both are identical, so this changes no static results.
+  const bool midpoint_branch =
+    (alpha == 0.0 && temperature == 0.0) ||
+    (temperature > 0.0 && sllg_scheme == 1);
   float bex = 0.0f, bey = 0.0f, bez = 0.0f;
   if (has_external_field()) {
     double amp = 1.0;
     if (b_ext_omega != 0.0) {
       const double TWO_PI = 6.28318530717958647692;
-      amp = sin(TWO_PI * b_ext_omega * (elapsed_time_fs * 1.0e-3));
+      const double t_eval = elapsed_time_fs +
+                            (midpoint_branch ? 0.5 * time_step : 0.0);
+      amp = sin(TWO_PI * b_ext_omega * (t_eval * 1.0e-3));
     }
     bex = (float)(b_ext_x * amp);
     bey = (float)(b_ext_y * amp);
@@ -983,6 +1191,49 @@ void Spin::propagate(
   ++sllg_steps;
 }
 
+// F-01 (r21): host-side interpretation of the device residual state.  It is
+// shared by the conservative and the stochastic midpoint solver so the two
+// branches can never drift apart on what "converged" means.
+namespace {
+struct MidpointResidualState {
+  double abs;   // max_{i,c} |S_new - S_prev|  [mu_B]
+  double rel;   // abs / max_{i,c} |S|         [dimensionless]
+  double scale; // max_{i,c} |S|               [mu_B]
+  int bad;      // count of NaN / Inf / overflow lanes
+};
+
+MidpointResidualState spin_read_midpoint_residual(
+  GPU_Vector<double>& res, GPU_Vector<int>& bad, gpuStream_t stream)
+{
+  CHECK(gpuStreamSynchronize(stream));
+  double r[2] = {0.0, 0.0};
+  int nb = 0;
+  res.copy_to_host(r);
+  bad.copy_to_host(&nb);
+  MidpointResidualState out;
+  out.abs = r[0];
+  out.scale = r[1];
+  out.rel = r[0] / fmax(r[1], 1.0e-30);
+  out.bad = nb;
+  if (!std::isfinite(r[0]) || !std::isfinite(r[1])) {
+    out.bad += 1; // defensive: the device kernel never emits a non-finite max
+  }
+  return out;
+}
+
+void spin_fail_nonfinite(const char* which, const MidpointResidualState& st)
+{
+  fprintf(stderr,
+          "Spin Error:\n"
+          "    %s fixed-point iteration produced %d non-finite or overflowing\n"
+          "    spin components (NaN, Inf or |value| > %.1e mu_B).\n"
+          "    Refusing to judge convergence from a max-reduction that would\n"
+          "    silently discard them.  Reduce dt or check the model/potential.\n",
+          which, st.bad, SPIN_OVERFLOW_LIMIT);
+  std::exit(4);
+}
+} // namespace
+
 // S05A: implicit-midpoint solver.  Runs on the calling stream's ordering: the
 // caller's stream is drained once (the solver needs a host-visible residual
 // every iteration, so some synchronisation is unavoidable), after which all
@@ -1019,7 +1270,8 @@ void Spin::propagate_conservative(
   if (spin_prev_.size() != n3) spin_prev_.resize(n3);
   if (spin_mid_.size() != n3) spin_mid_.resize(n3);
   if (field_mid_.size() != n3) field_mid_.resize(n3);
-  if (mid_residual_.size() != 1) mid_residual_.resize(1);
+  if (mid_residual_.size() != 2) mid_residual_.resize(2);
+  if (mid_bad_.size() != 1) mid_bad_.resize(1);
 
   float* s_new = spin_new_.data();
   float* s_prev = spin_prev_.data();
@@ -1057,13 +1309,17 @@ void Spin::propagate_conservative(
       s_new, s_new + N, s_new + 2 * N);
     GPU_CHECK_KERNEL
 
-    gpu_zero_one<<<1, 1>>>(mid_residual_.data());
-    gpu_max_abs_diff<<<grid, SPIN_BLOCK_SIZE>>>(static_cast<int>(n3), s_new, s_prev,
-                                                mid_residual_.data());
+    gpu_zero_midpoint_state<<<1, 1>>>(mid_residual_.data(), mid_bad_.data());
+    // F-01: grid is sized for N atoms; the kernel reads all 3 components of
+    // each atom (component-major layout), so y and z are included.
+    gpu_midpoint_residual<<<grid, SPIN_BLOCK_SIZE>>>(
+      N, s_new, s_prev, mid_residual_.data(), mid_bad_.data());
     GPU_CHECK_KERNEL
-    CHECK(gpuStreamSynchronize(0));
-    mid_residual_.copy_to_host(&residual);
-    if (residual <= midpoint_tolerance) {
+    const MidpointResidualState st =
+      spin_read_midpoint_residual(mid_residual_, mid_bad_, 0);
+    if (st.bad != 0) spin_fail_nonfinite("conservative", st);
+    residual = st.abs;
+    if (st.abs <= midpoint_tolerance && st.rel <= midpoint_relative_tolerance) {
       converged = true;
       break;
     }
@@ -1072,13 +1328,15 @@ void Spin::propagate_conservative(
   if (!converged) {
     fprintf(stderr,
             "Spin Error://n"
-            "    implicit-midpoint spin update did not converge: residual %.3e\n"
-            "    after %d iterations (tolerance %.3e).  Refusing to fall back to\n"
-            "    the frozen field -- that would silently drop the whole point of\n"
-            "    the scheme.  Either the fixed point is contracting too slowly\n"
-            "    (smaller time step / more iterations) or the tolerance is below\n"
-            "    the float32 floor of the iterate itself (~1.2e-7 at |S| = 1).\n",
-            residual, midpoint_max_iterations, midpoint_tolerance);
+            "    implicit-midpoint spin update did not converge: residual %.3e "
+            "(absolute, mu_B) after %d iterations (atol %.3e, rtol %.3e).\n"
+            "    Refusing to fall back to the frozen field -- that would silently "
+            "drop the whole point of the scheme.  Either the fixed point is "
+            "contracting too slowly (smaller time step / more iterations) or the "
+            "tolerance is below the float32 floor of the iterate itself "
+            "(~1.2e-7 at |S| = 1).\n",
+            residual, midpoint_max_iterations, midpoint_tolerance,
+            midpoint_relative_tolerance);
     std::exit(4);
   }
 
@@ -1109,13 +1367,20 @@ void Spin::propagate_conservative(
 // S05A conservative solver, because that is the whole point of the scheme: the
 // field frozen at the beginning of the step is a first-order approximation that
 // the midpoint rule is supposed to remove.
-// Failure policy: the iteration is not allowed to fall back to the frozen
-// field.  If it does not reach `midpoint_tolerance` within
-// `midpoint_max_iterations` the last iterate is kept (it is still a midpoint
-// consistent update, not the old field), the event is counted in
-// sllg_nonconverged_steps and the worst residual is kept in sllg_max_residual.
-// A stochastic run must not be killed by one stiff step; a *systematic* failure
-// shows up as a non-zero counter, which is what the acceptance test reads.
+// F-02 (r21) failure policy: the iteration is NOT allowed to fall back to the
+// frozen field, and it is NOT allowed to keep the last unconverged iterate.
+// A midpoint iterate that has not reached the tolerance is not a solution of
+// the implicit scheme; using it (and then projecting |S| onto the anchor) hides
+// the failure behind a constraint that says nothing about the residual.  The
+// default is therefore a hard failure with a non-zero exit code.
+// No automatic sub-stepping or retry is implemented.  Doing that correctly for
+// a stochastic step would require splitting ONE Wiener increment into
+// statistically consistent sub-increments (the noise field b_noise ~ 1/sqrt(dt)
+// would have to be rescaled by sqrt(M) per sub-step, with the same underlying
+// Gaussian draw), not drawing fresh noise.  That is a research change and is
+// deliberately left out; the honest behaviour is to stop and ask for a smaller
+// dt or more iterations.  sllg_nonconverged_steps is kept for diagnostics but
+// is always 0 on a successful run.
 void Spin::propagate_stochastic_midpoint(
   const double time_step,
   float* g_spin,
@@ -1146,7 +1411,8 @@ void Spin::propagate_stochastic_midpoint(
   if (spin_prev_.size() != n3) spin_prev_.resize(n3);
   if (spin_mid_.size() != n3) spin_mid_.resize(n3);
   if (field_mid_.size() != n3) field_mid_.resize(n3);
-  if (mid_residual_.size() != 1) mid_residual_.resize(1);
+  if (mid_residual_.size() != 2) mid_residual_.resize(2);
+  if (mid_bad_.size() != 1) mid_bad_.resize(1);
 
   float* s_new = spin_new_.data();
   float* s_prev = spin_prev_.data();
@@ -1181,13 +1447,17 @@ void Spin::propagate_stochastic_midpoint(
       s_new, s_new + N, s_new + 2 * N);
     GPU_CHECK_KERNEL
 
-    gpu_zero_one<<<1, 1, 0, stream>>>(mid_residual_.data());
-    gpu_max_abs_diff<<<grid, SPIN_BLOCK_SIZE, 0, stream>>>(
-      static_cast<int>(n3), s_new, s_prev, mid_residual_.data());
+    gpu_zero_midpoint_state<<<1, 1, 0, stream>>>(
+      mid_residual_.data(), mid_bad_.data());
+    // F-01: all three components per atom, grid sized for N.
+    gpu_midpoint_residual<<<grid, SPIN_BLOCK_SIZE, 0, stream>>>(
+      N, s_new, s_prev, mid_residual_.data(), mid_bad_.data());
     GPU_CHECK_KERNEL
-    CHECK(gpuStreamSynchronize(stream));
-    mid_residual_.copy_to_host(&residual);
-    if (residual <= midpoint_tolerance) {
+    const MidpointResidualState st =
+      spin_read_midpoint_residual(mid_residual_, mid_bad_, stream);
+    if (st.bad != 0) spin_fail_nonfinite("stochastic", st);
+    residual = st.abs;
+    if (st.abs <= midpoint_tolerance && st.rel <= midpoint_relative_tolerance) {
       converged = true;
       break;
     }
@@ -1196,15 +1466,24 @@ void Spin::propagate_stochastic_midpoint(
   ++sllg_steps;
   if (iterations > sllg_max_iterations_used) sllg_max_iterations_used = iterations;
   if (residual > sllg_max_residual) sllg_max_residual = residual;
+
+  // F-02 (r21): HARD FAILURE.  Nothing below this point may use the last
+  // unconverged iterate, and no norm projection may be applied to it.
   if (!converged) {
     ++sllg_nonconverged_steps;
-    if (sllg_nonconverged_steps == 1) {
-      printf("NOTE: the stochastic midpoint iteration reached its iteration cap "
-             "(residual %.3e > tolerance %.3e) at step %lld.  The last iterate "
-             "is kept -- the frozen-field map is NOT used as a fallback.  "
-             "Further occurrences are only counted.\n",
-             residual, midpoint_tolerance, sllg_steps);
-    }
+    fprintf(stderr,
+            "Spin Error://n"
+            "    stochastic implicit-midpoint spin update did not converge at\n"
+            "    step %lld: residual %.3e (absolute, mu_B) after %d iterations\n"
+            "    (atol %.3e, rtol %.3e, max_iterations %d).\n"
+            "    The last iterate is NOT used and the |S| projection is NOT\n"
+            "    applied: neither can repair an unsolved fixed-point equation.\n"
+            "    Reduce time_step, raise spin_midpoint max_iterations, or pick a\n"
+            "    less stiff state.  Exiting with a non-zero status.\n",
+            sllg_steps, residual, iterations, midpoint_tolerance,
+            midpoint_relative_tolerance, midpoint_max_iterations);
+    fflush(stderr);
+    std::exit(4);
   }
 
   if (work_.size() >= 3) {
@@ -1222,17 +1501,27 @@ void Spin::propagate_stochastic_midpoint(
   project_onto_norm_anchor(g_spin, N, stream);
 }
 
-// S08A: constraint projection plus the diagnostic that says whether the map
-// itself conserves |S|.  Runs on the caller's stream and never synchronises, so
-// the production hot loop pays one kernel and no host round trip; the
-// accumulated maximum is read on demand by sllg_pre_projection_norm_error().
+// F-03 (r21): constraint projection with a FIXED anchor.  The anchor is built
+// exactly once from an explicitly identified state (first call after
+// initialisation / after a `replicate` changed N / from a v2 checkpoint).  It
+// is never recomputed from the running trajectory.  The kernel records the
+// pre-projection error first, then projects; a violation increments a device
+// counter that the host turns into a hard failure (check_norm_violation()).
 void Spin::project_onto_norm_anchor(float* g_spin, const int N, gpuStream_t stream)
 {
   const int grid = (N - 1) / SPIN_BLOCK_SIZE + 1;
-  if (norm_anchor_.size() != static_cast<size_t>(N)) {
+  // Allocate/zero the violation counter BEFORE issuing work on `stream`, so
+  // the default-stream memset cannot race with the stream-ordered kernels.
+  int* bad_ptr = norm_bad_alloc();
+  const bool rebuild = norm_anchor_.size() != static_cast<size_t>(N) ||
+                       !norm_anchor_valid_;
+  if (rebuild) {
     norm_anchor_.resize(static_cast<size_t>(N));
-    gpu_zero_float<<<grid, SPIN_BLOCK_SIZE, 0, stream>>>(N, norm_anchor_.data());
+    gpu_init_norm_anchor<<<grid, SPIN_BLOCK_SIZE, 0, stream>>>(
+      N, g_spin, g_spin + N, g_spin + 2 * N,
+      norm_anchor_.data(), bad_ptr);
     GPU_CHECK_KERNEL
+    norm_anchor_valid_ = true;
   }
   if (sllg_scalar_.size() != 1) {
     sllg_scalar_.resize(1);
@@ -1241,8 +1530,52 @@ void Spin::project_onto_norm_anchor(float* g_spin, const int N, gpuStream_t stre
   }
   gpu_project_anchor<<<grid, SPIN_BLOCK_SIZE, 0, stream>>>(
     N, g_spin, g_spin + N, g_spin + 2 * N, norm_anchor_.data(),
-    sllg_scalar_.data());
+    norm_tolerance_, sllg_scalar_.data(), norm_bad_.data());
   GPU_CHECK_KERNEL
+  // Bounded-latency failure: the production hot loop stays asynchronous, but
+  // a violation cannot persist for more than 64 steps before it is seen.
+  if ((++projection_checks_ & 63) == 0) {
+    const int bad = check_norm_violation(stream, false);
+    if (bad > 0) spin_norm_failure(bad);
+  }
+}
+
+int* Spin::norm_bad_alloc()
+{
+  if (norm_bad_.size() != 1) {
+    norm_bad_.resize(1);
+    gpu_zero_int_one<<<1, 1>>>(norm_bad_.data());
+    GPU_CHECK_KERNEL
+  }
+  return norm_bad_.data();
+}
+
+// Returns the number of |S| violations accumulated since the last reset.
+// Called by Run::perform_a_run at the end of every run block so a violation is
+// always reported, even when the 64-step periodic check happens not to land on
+// the last step.
+int Spin::check_norm_violation(gpuStream_t stream, bool fail_here)
+{
+  if (norm_bad_.size() != 1) return 0;
+  CHECK(gpuStreamSynchronize(stream));
+  int bad = 0;
+  norm_bad_.copy_to_host(&bad);
+  if (bad > 0 && fail_here) spin_norm_failure(bad);
+  return bad;
+}
+
+void Spin::spin_norm_failure(const int bad)
+{
+  fprintf(stderr,
+          "Spin Error://n"
+          "    %d |S| constraint violations: the raw spin update moved a spin\n"
+          "    away from its FIXED magnitude anchor by more than rtol = %.3e.\n"
+          "    The anchor was NOT moved to the wrong modulus.  Reduce time_step,\n"
+          "    check the field provider, or (only for a genuine state rebuild)\n"
+          "    re-initialise explicitly.  Exiting with a non-zero status.\n",
+          bad, norm_tolerance_);
+  fflush(stderr);
+  std::exit(4);
 }
 
 double Spin::sllg_pre_projection_norm_error(gpuStream_t stream)
@@ -1271,7 +1604,11 @@ double Spin::sllg_pre_projection_norm_error(gpuStream_t stream)
 namespace {
 const char SPIN_RESTART_MAGIC[16] = {'G', 'P', 'U', 'M', 'D', 'S', 'P', 'I',
                                      'N', 'R', 'S', 'T', '0', '1', 0, 0};
-const uint32_t SPIN_RESTART_VERSION = 1u;
+// F-09 (r21): v2 adds the external-field drivers (add_bfield + magfield) and
+// their clocks, without changing the v1 field order.  v1 files remain
+// loadable; their missing field state is reported explicitly.
+const uint32_t SPIN_RESTART_VERSION = 2u;
+const uint32_t SPIN_RESTART_VERSION_V1 = 1u;
 
 uint64_t fnv1a_64(const void* data, size_t n, uint64_t h)
 {
@@ -1351,6 +1688,24 @@ bool Spin::save_restart_state(const char* path, const long long physics_step,
   append_bytes(buf, static_cast<int64_t>(sllg_steps));
   append_bytes(buf, static_cast<int64_t>(physics_step));
   append_bytes(buf, global_time);
+  // ---- F-09 (r21): v2 external-field driver state ------------------------
+  // add_bfield owns its clock (elapsed_time_fs); magfield's envelope clock is
+  // reconstructed on load as global_time * TIME_UNIT_CONVERSION, so only its
+  // configuration needs storing (and is used to reject a mismatched run).
+  append_bytes(buf, static_cast<int32_t>(1)); // has_ext_state
+  append_bytes(buf, b_ext_x);
+  append_bytes(buf, b_ext_y);
+  append_bytes(buf, b_ext_z);
+  append_bytes(buf, b_ext_omega);
+  append_bytes(buf, elapsed_time_fs);
+  append_bytes(buf, ext_b_peak[0]);
+  append_bytes(buf, ext_b_peak[1]);
+  append_bytes(buf, ext_b_peak[2]);
+  append_bytes(buf, static_cast<int32_t>(ext_zeeman_wave));
+  append_bytes(buf, ext_zeeman_freq_thz);
+  append_bytes(buf, ext_zeeman_phase_rad);
+  append_bytes(buf, static_cast<int32_t>(ext_has_magfield ? 1 : 0));
+  restart_schema_version = SPIN_RESTART_VERSION;
   buf.insert(buf.end(), reinterpret_cast<const unsigned char*>(anchor.data()),
              reinterpret_cast<const unsigned char*>(anchor.data()) +
                anchor.size() * sizeof(float));
@@ -1402,6 +1757,11 @@ bool Spin::load_restart_state(const char* path)
   while ((n = fread(chunk, 1, sizeof chunk, f)) > 0) in.insert(in.end(), chunk, chunk + n);
   fclose(f);
 
+  auto fail = [&](const char* what) {
+    printf("Spin Error:\n    spin restart file '%s' rejected: %s\n", path, what);
+    std::exit(4);
+  };
+
   size_t off = 0;
   char magic[16];
   uint32_t version = 0, natoms = 0;
@@ -1427,6 +1787,32 @@ bool Spin::load_restart_state(const char* path)
     printf("Spin Error:\n    '%s' is too short to be a spin restart file.\n", path);
     std::exit(4);
   }
+  if (std::memcmp(magic, SPIN_RESTART_MAGIC, 16) != 0) fail("bad magic");
+
+  // ---- F-09 (r21): v2 external-field state; v1 has none -----------------
+  double x_bex = 0, x_bey = 0, x_bez = 0, x_omega = 0, x_elapsed = 0;
+  double x_peak[3] = {0, 0, 0}, x_freq = 0, x_phase = 0;
+  int32_t x_has_ext = 0, x_wave = 0, x_has_magfield = 0;
+  const bool is_v2 = (version == SPIN_RESTART_VERSION);
+  if (is_v2) {
+    const bool ok2 =
+      read_bytes(in, off, &x_has_ext, sizeof x_has_ext) &&
+      read_bytes(in, off, &x_bex, sizeof x_bex) &&
+      read_bytes(in, off, &x_bey, sizeof x_bey) &&
+      read_bytes(in, off, &x_bez, sizeof x_bez) &&
+      read_bytes(in, off, &x_omega, sizeof x_omega) &&
+      read_bytes(in, off, &x_elapsed, sizeof x_elapsed) &&
+      read_bytes(in, off, &x_peak[0], sizeof x_peak[0]) &&
+      read_bytes(in, off, &x_peak[1], sizeof x_peak[1]) &&
+      read_bytes(in, off, &x_peak[2], sizeof x_peak[2]) &&
+      read_bytes(in, off, &x_wave, sizeof x_wave) &&
+      read_bytes(in, off, &x_freq, sizeof x_freq) &&
+      read_bytes(in, off, &x_phase, sizeof x_phase) &&
+      read_bytes(in, off, &x_has_magfield, sizeof x_has_magfield);
+    if (!ok2 || x_has_ext != 1) fail("v2 external-field block truncated");
+  } else if (version != SPIN_RESTART_VERSION_V1) {
+    fail("unsupported schema version (only 1 and 2 are readable)");
+  }
   const size_t expect_payload = off;
   const size_t need = expect_payload + sizeof(float) * natoms +
                       (has_rng ? sizeof(gpurandState) * natoms : 0);
@@ -1438,13 +1824,6 @@ bool Spin::load_restart_state(const char* path)
   const uint64_t stored =
     *reinterpret_cast<const uint64_t*>(in.data() + need);
   const uint64_t recomputed = fnv1a_64(in.data(), need, 1469598103934665603ULL);
-
-  auto fail = [&](const char* what) {
-    printf("Spin Error:\n    spin restart file '%s' rejected: %s\n", path, what);
-    std::exit(4);
-  };
-  if (std::memcmp(magic, SPIN_RESTART_MAGIC, 16) != 0) fail("bad magic");
-  if (version != SPIN_RESTART_VERSION) fail("unsupported schema version");
   if (stored != recomputed) fail("payload checksum mismatch (file corrupted)");
   if (static_cast<int>(natoms) != number_of_atoms) fail("different atom count");
   const double tol = 1e-12;
@@ -1461,6 +1840,38 @@ bool Spin::load_restart_state(const char* path)
   if (model_hash != 0 && model_now != 0 && model_hash != model_now)
     fail("nep.txt differs from the one that wrote the checkpoint");
 
+  // F-09: store the checkpoint's field configuration.  It is COMPARED to the
+  // current run in validate_restart_external(), which Run calls only after all
+  // of run.in has been parsed (magfield/add_bfield may appear after spin_llg).
+  if (is_v2) {
+    restart_b_ext_[0] = x_bex;
+    restart_b_ext_[1] = x_bey;
+    restart_b_ext_[2] = x_bez;
+    restart_b_ext_[3] = x_omega;
+    for (int k = 0; k < 3; ++k) restart_ext_b_peak_[k] = x_peak[k];
+    restart_ext_wave_ = x_wave;
+    restart_ext_freq_ = x_freq;
+    restart_ext_phase_ = x_phase;
+    restart_ext_has_magfield_ = (x_has_magfield != 0);
+    // Restore the two clocks.  elapsed_time_fs is owned by Spin; the magfield
+    // clock is reconstructed from global_time (natural units -> fs).
+    elapsed_time_fs = x_elapsed;
+    restart_global_time_ = s_time;
+    restart_ext_time_fs_ = s_time * TIME_UNIT_CONVERSION;
+    restart_has_ext_state = true;
+  } else {
+    // v1 compatibility: identity fields, RNG and anchor are still restored,
+    // but there is NO field state.  The refusal for a time-dependent drive is
+    // issued by validate_restart_external() once run.in is fully parsed.
+    restart_global_time_ = s_time;
+    restart_ext_time_fs_ = s_time * TIME_UNIT_CONVERSION;
+    restart_has_ext_state = false;
+    printf("NOTE: '%s' is a v1 spin checkpoint (no external-field state).\n"
+           "      Static-field state is reconstructed from global_time = %.9g.\n",
+           path, s_time);
+  }
+  restart_schema_version = version;
+
   // ---- apply -----------------------------------------------------------
   if (has_anchor) {
     std::vector<float> anchor(static_cast<size_t>(natoms));
@@ -1468,6 +1879,9 @@ bool Spin::load_restart_state(const char* path)
     read_bytes(in, o, anchor.data(), anchor.size() * sizeof(float));
     norm_anchor_.resize(static_cast<size_t>(natoms));
     norm_anchor_.copy_from_host(anchor.data());
+    // F-03: a restored anchor is authoritative.  Do not rebuild it from the
+    // running trajectory on the next projection call.
+    norm_anchor_valid_ = true;
   }
   if (has_rng) {
     std::vector<gpurandState> rng(static_cast<size_t>(natoms));
@@ -1482,13 +1896,68 @@ bool Spin::load_restart_state(const char* path)
   snprintf(hex, sizeof hex, "%016llx",
            static_cast<unsigned long long>(recomputed));
   restart_digest_ = hex;
-  printf("S08B: spin restart state loaded from %s\n", path);
+  printf("S08B: spin restart state loaded from %s (schema v%u)\n", path, version);
   printf("      physics step %lld, %lld SLLG steps, RNG %s, anchor %s, "
          "digest %016llx\n", static_cast<long long>(s_physics_step),
          static_cast<long long>(s_steps), has_rng ? "restored" : "n/a",
          has_anchor ? "restored" : "n/a",
          static_cast<unsigned long long>(recomputed));
+  printf("      global_time = %.9g (natural units), add_bfield clock = %.9g fs, "
+         "magfield clock = %.9g fs\n",
+         restart_global_time_, elapsed_time_fs, restart_ext_time_fs_);
   return true;
+}
+
+// F-09 (r21): called by Run::perform_a_run AFTER the whole of run.in has been
+// parsed, so both field drivers have their final configuration.  A mismatch is
+// a hard error: continuing would change the Hamiltonian or re-phase the drive.
+void Spin::validate_restart_external() const
+{
+  if (!has_restart_digest()) return;
+  const bool time_dependent =
+    (b_ext_omega != 0.0) || (ext_has_magfield && ext_zeeman_wave != 0);
+  if (!restart_has_ext_state) {
+    if (time_dependent) {
+      fprintf(stderr,
+              "Spin Error:\n    the spin checkpoint is schema v1 (no external-field\n"
+              "    clock) but this run uses a time-dependent field.  The phase\n"
+              "    cannot be reconstructed; re-run the first segment with a\n"
+              "    v4.3.1-r21 binary to produce a v2 checkpoint.\n");
+      std::exit(4);
+    }
+    return;
+  }
+  const double ftol = 1e-10;
+  auto mismatch = [](const char* what) {
+    fprintf(stderr,
+            "Spin Error:\n    spin restart: %s differs from the current run.\n"
+            "    A checkpoint may only be continued with the same Hamiltonian\n"
+            "    and the same time-dependent drive.\n",
+            what);
+    std::exit(4);
+  };
+  if (std::fabs(restart_b_ext_[0] - b_ext_x) >
+        ftol * std::fmax(1.0, std::fabs(b_ext_x)) ||
+      std::fabs(restart_b_ext_[1] - b_ext_y) >
+        ftol * std::fmax(1.0, std::fabs(b_ext_y)) ||
+      std::fabs(restart_b_ext_[2] - b_ext_z) >
+        ftol * std::fmax(1.0, std::fabs(b_ext_z)) ||
+      std::fabs(restart_b_ext_[3] - b_ext_omega) > ftol) {
+    mismatch("add_bfield (Bx, By, Bz, omega)");
+  }
+  if (restart_ext_has_magfield_ != ext_has_magfield)
+    mismatch("magfield presence");
+  if (restart_ext_wave_ != ext_zeeman_wave ||
+      std::fabs(restart_ext_freq_ - ext_zeeman_freq_thz) > ftol ||
+      std::fabs(restart_ext_phase_ - ext_zeeman_phase_rad) > ftol) {
+    mismatch("magfield wave / frequency / phase");
+  }
+  for (int k = 0; k < 3; ++k) {
+    if (std::fabs(restart_ext_b_peak_[k] - ext_b_peak[k]) >
+        ftol * std::fmax(1.0, std::fabs(ext_b_peak[k]))) {
+      mismatch("magfield amplitude");
+    }
+  }
 }
 
 // ---- F16: spin work / energy accounting -----------------------------------
@@ -1671,6 +2140,26 @@ void Spin::report(const float* g_spin, const float* g_torque, const int number_o
              x_disc <= 2.0 ? "[OK]" : "[TOO COARSE -- reduce dt or raise alpha]");
     }
   }
+
+  // F-01/F-02/F-03 (r21): expose the FULL fixed-point residual diagnostics.
+  // Validation must report iteration counts, absolute residuals and |S|
+  // violations -- a zero exit status alone does not show that the implicit
+  // equation was actually solved.  These lines are machine-parseable and are
+  // consumed by tests/r21_validation.py (GPU.DT.CONVERGENCE_TABLE).
+  printf(
+    "    spin midpoint diagnostics: conservative steps=%lld max_iterations=%d "
+    "max_residual=%.9e mu_B field_evaluations=%lld (atol=%.3e rtol=%.3e)\n",
+    midpoint_steps, midpoint_max_iterations_used, midpoint_max_residual,
+    midpoint_field_evaluations, midpoint_tolerance, midpoint_relative_tolerance);
+  printf(
+    "    spin midpoint diagnostics: stochastic steps=%lld max_iterations=%d "
+    "max_residual=%.9e mu_B nonconverged=%lld\n",
+    sllg_steps, sllg_max_iterations_used, sllg_max_residual,
+    sllg_nonconverged_steps);
+  printf(
+    "    spin midpoint diagnostics: |S| anchor checks=%lld violations=%d "
+    "tolerance=%.3e\n",
+    projection_checks_, check_norm_violation(0, false), norm_tolerance_);
 }
 
 void Spin::magnetization(const float* g_spin, const int number_of_atoms_in, double m[3]) const

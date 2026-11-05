@@ -43,7 +43,7 @@ Tersoff_mini::Tersoff_mini(FILE* fid, int num_of_types, const int num_atoms)
   }
   printf("\n");
 
-  int n_entries = 2 * num_types - 1;
+  int n_entries = 2 * num_types - 1; 
 
   const char err[] = "Reading error for Tersoff-mini potential.\n";
   rc = 0.0;
@@ -336,7 +336,7 @@ void Tersoff_mini::compute(
 
   neighbor_manager.find_local_neighbor(
     rc,
-    box,
+    box, 
     position_per_atom,
     tersoff_mini_data.NN,
     tersoff_mini_data.NL);

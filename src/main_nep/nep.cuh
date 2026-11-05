@@ -23,7 +23,7 @@ class Parameters;
 class Dataset;
 
 struct NEP_Data {
-  GPU_Vector<float> descriptors;
+  GPU_Vector<float> descriptors; 
   GPU_Vector<float> Fp;          // gradient of descriptors
   GPU_Vector<float> sum_fxyz;
   GPU_Vector<float> parameters; // parameters to be optimized

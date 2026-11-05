@@ -87,6 +87,29 @@ static __global__ void gpu_compute_heat_spin(
 
   // e_i^spin = -1/2 S_i . B_i  (B_i = torque = -dE/dS_i).  For a Heisenberg
   // Hamiltonian this per-atom split sums to the exchange energy exactly.
+  // F-11 (r21) STATUS: BLOCKED for quantitative use on a GENERAL NEP.
+  //   * The identity sum_i (-1/2 S_i.B_i) = U requires U(R,S) to be
+  //     homogeneous of degree 2 in S (Euler's theorem).  A neural-network
+  //     NEP with a bias term, a |S|-dependent radial part, or any nonlinear
+  //     descriptor breaks it: tests/r21_physics.py demonstrates the failure
+  //     on U = -J S_i.S_j + lambda (S_i.S_j)^2 and confirms it holds for the
+  //     quadratic case.
+  //   * The magnon channel below uses the DETERMINISTIC LLG rate only.  With
+  //     damping, a stochastic thermal field or a time-dependent drive there
+  //     are source/sink terms (W_rot, W_noise, W_ext) that a continuity
+  //     equation must include; this deterministic dS/dt is then not the
+  //     actual total energy flux.
+  //   * spin_flux_A is produced only from the NEP descriptor derivatives.
+  //     The external Zeeman and magneto-electric terms enter the energy and
+  //     the equations of motion but contribute NO local derivative to A, so
+  //     their energy-transfer contribution is missing.
+  //   * The total convective term sum_i (e_k + e_p) v_i is dropped by
+  //     dump_heat_flux because the raw DFT energy zero point amplifies the
+  //     round-off of sum_i v_i; that is a numerical workaround, not a proof
+  //     that the term vanishes (it does not in general).
+  // Therefore heat_flux.out / hac.out from a spin run are DIAGNOSTIC time
+  // series, NOT a verified energy current, and any Green-Kubo integral from
+  // them must be reported as BLOCKED.  See PHYSICS_DERIVATION.md section 4.
   double espin = 0.0;
   double sx = 0.0, sy = 0.0, sz = 0.0;
   double bx = 0.0, by = 0.0, bz = 0.0;

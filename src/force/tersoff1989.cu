@@ -520,7 +520,7 @@ void Tersoff1989::compute(
 
   neighbor_manager.find_local_neighbor(
     rc,
-    box,
+    box, 
     position_per_atom,
     tersoff_data.NN,
     tersoff_data.NL);

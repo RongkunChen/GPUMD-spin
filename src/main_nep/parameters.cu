@@ -159,14 +159,14 @@ void Parameters::set_default_parameters()
   enable_zbl = false;   // default is not to include ZBL
   flexible_zbl = false; // default Universal ZBL
 
-  int deviceCount;
-  CHECK(gpuGetDeviceCount(&deviceCount));
+  int deviceCount;  
+  CHECK(gpuGetDeviceCount(&deviceCount));  
   int population_remainder = population_size % deviceCount;
   if (population_remainder != 0) {
     int population_increase = deviceCount - population_remainder;
     population_size += population_increase;
-    printf("Default population size adjusted from 50 to %d for GPU compatibility.\n", population_size);
-  }
+    printf("Default population size adjusted from 50 to %d for GPU compatibility.\n", population_size);  
+  }  
 }
 
 void Parameters::read_nep_in()
@@ -336,7 +336,7 @@ void Parameters::calculate_parameters()
 
 
 #ifdef USE_CJ
-  number_of_variables_descriptor =
+  number_of_variables_descriptor = 
     num_types *
     (dim_radial * (basis_size_radial + 1) + (n_max_angular + 1) * (basis_size_angular + 1));
 #else
@@ -1455,7 +1455,7 @@ void Parameters::report_inputs()
   }
 
   if (fine_tune) {
-    printf("    (input)   will fine-tune based on %s and %s.\n",
+    printf("    (input)   will fine-tune based on %s and %s.\n", 
       fine_tune_nep_txt.c_str(), fine_tune_nep_restart.c_str());
   }
 
@@ -1931,7 +1931,7 @@ void Parameters::parse_neuron(const char** param, int num_param)
   if (!is_valid_int(param[1], &num_neurons1)) {
     PRINT_INPUT_ERROR("number of neurons1 should be an integer.\n");
   }
-
+  
   if (num_neurons1 < 1) {
     PRINT_INPUT_ERROR("number of neurons1 should >= 1.");
   } else if (num_neurons1 > 120) {
@@ -2512,7 +2512,7 @@ void Parameters::parse_save_potential(const char** param, int num_param)
   }
   if (save_potential_format != 0 && save_potential_format != 1) {
     PRINT_INPUT_ERROR("save_potential format should be 0 or 1.");
-  }
+  }  
   if (!is_valid_int(param[3], &save_potential_restart)) {
     PRINT_INPUT_ERROR("save_potential save restart should be an integer.\n");
   }

@@ -205,10 +205,10 @@ NEP_Charge::NEP_Charge(
   }
 
   if (paramb.num_types == 1) {
-    printf("Use the NEP4-Charge%d potential with %d atom type.\n",
+    printf("Use the NEP4-Charge%d potential with %d atom type.\n", 
       paramb.charge_mode, paramb.num_types);
   } else {
-    printf("Use the NEP4-Charge%d potential with %d atom types.\n",
+    printf("Use the NEP4-Charge%d potential with %d atom types.\n", 
       paramb.charge_mode, paramb.num_types);
   }
 
@@ -1079,7 +1079,7 @@ static __global__ void find_partial_force_angular(
     float Fp[MAX_DIM_ANGULAR] = {0.0f};
     float sum_fxyz[NUM_OF_ABC * MAX_NUM_N];
     for (int d = 0; d < paramb.dim_angular; ++d) {
-      float tmp = g_Fp[(paramb.n_max_radial + 1 + d) * N + n1]
+      float tmp = g_Fp[(paramb.n_max_radial + 1 + d) * N + n1] 
         + g_charge_derivative[(paramb.n_max_radial + 1 + d) * N + n1] * g_D_real[n1];
       Fp[d] = tmp;
     }
@@ -1366,8 +1366,8 @@ void NEP_Charge::compute_large_box(
   const int grid_size = (N2 - N1 - 1) / BLOCK_SIZE + 1;
 
   neighbor_manager.update(
-    box,
-    type,
+    box, 
+    type, 
     position_per_atom);
 
   find_neighbor_list_large_box<<<grid_size, BLOCK_SIZE>>>(

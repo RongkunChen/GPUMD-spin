@@ -14,12 +14,12 @@
 */
 
 /*----------------------------------------------------------------------------80
-The class dealing with the interlayer potential(ILP) and neuroevolution
+The class dealing with the interlayer potential(ILP) and neuroevolution 
 potential(NEP).
 
-Ref: Hekai Bu, Wenwu Jiang, Penghua Ying, Ting Liang, Zheyong Fan, and
-Wengen Ouyang, Modular hybrid machine learning and physics-based potentials
-for scalable modeling of Van der Waals heterostructures,
+Ref: Hekai Bu, Wenwu Jiang, Penghua Ying, Ting Liang, Zheyong Fan, and 
+Wengen Ouyang, Modular hybrid machine learning and physics-based potentials 
+for scalable modeling of Van der Waals heterostructures, 
 J. Mech. Phys. Solids 210, 106540 (2026).
 
 Implemented by: Hekai Bu (Wuhan University), hekai_bu@whu.edu.cn
@@ -79,10 +79,10 @@ ILP_NEP::ILP_NEP(FILE* fid_ilp, FILE* fid_nep_map, int num_types, int num_atoms)
   sublayer_flag_gpu.copy_from_host(sublayer_flag_cpu);
 
   // read ILP group method
-  PRINT_SCANF_ERROR(fscanf(fid_ilp, "%d", &ilp_group_method), 1,
+  PRINT_SCANF_ERROR(fscanf(fid_ilp, "%d", &ilp_group_method), 1, 
   "Reading error for ILP group method.");
   printf("Use group method %d to identify molecule for ILP.\n", ilp_group_method);
-  PRINT_SCANF_ERROR(fscanf(fid_ilp, "%d", &ilp_sub_group_method), 1,
+  PRINT_SCANF_ERROR(fscanf(fid_ilp, "%d", &ilp_sub_group_method), 1, 
   "Reading error for ILP group method.");
   printf("Use group method %d to identify molecule(sublayer) for ILP.\n", ilp_sub_group_method);
 
@@ -119,12 +119,12 @@ ILP_NEP::ILP_NEP(FILE* fid_ilp, FILE* fid_nep_map, int num_types, int num_atoms)
   }
 
   // read NEP group method from nep map file
-  PRINT_SCANF_ERROR(fscanf(fid_nep_map, "%d", &nep_group_method), 1,
+  PRINT_SCANF_ERROR(fscanf(fid_nep_map, "%d", &nep_group_method), 1, 
   "Reading error for NEP group method.");
   printf("Use group method %d to identify molecule for NEP.\n", nep_group_method);
 
   // read the number of NEP file
-  PRINT_SCANF_ERROR(fscanf(fid_nep_map, "%d", &num_nep), 1,
+  PRINT_SCANF_ERROR(fscanf(fid_nep_map, "%d", &num_nep), 1, 
   "Reading error for the number of NEP file.");
   printf("NEP file number: %d\n", num_nep);
 
@@ -134,7 +134,7 @@ ILP_NEP::ILP_NEP(FILE* fid_ilp, FILE* fid_nep_map, int num_types, int num_atoms)
   max_nep_rc = 0.0;
 
   type_map_cpu.resize(num_types * num_nep, -1);
-
+  
   // read NEP parameter from each NEP file
   std::vector<std::vector<float>> all_ann_para({});     // save paras
   for (int i = 0; i < num_nep; ++i) {
@@ -346,7 +346,7 @@ ILP_NEP::ILP_NEP(FILE* fid_ilp, FILE* fid_nep_map, int num_types, int num_atoms)
 
   // read nep map to identify the nep for each group
   int num_nep_group = 0;
-  PRINT_SCANF_ERROR(fscanf(fid_nep_map, "%d", &num_nep_group), 1,
+  PRINT_SCANF_ERROR(fscanf(fid_nep_map, "%d", &num_nep_group), 1, 
   "Reading error for the number of nep group.");
   nep_map_cpu.resize(num_nep_group);
   for (int i = 0; i < num_nep_group; ++i) {
@@ -475,7 +475,7 @@ ILP_NEP::ILP_NEP(FILE* fid_ilp, FILE* fid_nep_map, int num_types, int num_atoms)
     memcpy(para_buf_w + OUTB1  , &(all_ann_para[i][b1_pos]), SIZEOF_INT);
     para_buf_w += H_ANN_OFFSET;  // skip 4 pointers: PTRC PTRW0 PTRB0 PTRW1 and an empty
   }
-
+  
   // move gpu buffer pointer
   para_buffer_gpu += num_nep * (H_PAR_OFFSET + H_ANN_OFFSET) * SIZEOF_INT;
 
@@ -598,7 +598,7 @@ static __device__ __forceinline__ float calc_Tap(const float r_ij, const float R
 static __device__ __forceinline__ float calc_dTap(const float r_ij, const float Rcutinv)
 {
   float dTap, r;
-
+  
   r = r_ij * Rcutinv;
   if (r >= 1.0f) {
     dTap = 0.0f;
@@ -847,7 +847,7 @@ static __global__ void ILP_neighbor(
       double rcutsq = ilp_para.rcutsq_ilp[type1][type2];
 
       // if material has sublayer, calc normal in sublayer (same type)
-      if (group_label[n1] == group_label[n2] && d12sq < rcutsq &&
+      if (group_label[n1] == group_label[n2] && d12sq < rcutsq && 
           (type1 == type2 || !sublayer_flag[type1]) && d12sq != 0) {
         // ilp_neighbor_list[count++ * number_of_particles + n1] = n2;
         neighptr[count++] = n2;
@@ -1036,7 +1036,7 @@ static __device__ void calc_normal_cbn(
     n1[2] = pv12[2];
     // the magnitude of the normal vector
     nninv = rnorm3df(n1[0], n1[1], n1[2]);
-
+    
     // the unit normal vector
     normal[0] = n1[0] * nninv;
     normal[1] = n1[1] * nninv;
@@ -1298,7 +1298,7 @@ static __device__ void calc_normal_tmd(
       Nave[ip] /= (cont - 1);
     }
     nninv = rnorm3df(Nave[0], Nave[1], Nave[2]);
-
+    
     // the unit normal vector
     normal[0] = Nave[0] * nninv;
     normal[1] = Nave[1] * nninv;
@@ -1588,7 +1588,7 @@ static __global__ void gpu_find_force(
       delkiy_half[i1] = float(y12d) * 0.5f;
       delkiz_half[i1] = float(z12d) * 0.5f;
     }
-
+    
     if (sublayer_flag[type1]) {
       calc_normal_tmd(vet, cont, normal, dnormdri, dnormal);
     } else {
@@ -1640,7 +1640,7 @@ static __global__ void gpu_find_force(
         dTap,
         p2_vdW,
         f2_vdW);
-
+      
       float f12x = -f2_vdW * x12f * 0.5f;
       float f12y = -f2_vdW * y12f * 0.5f;
       float f12z = -f2_vdW * z12f * 0.5f;
@@ -1653,9 +1653,9 @@ static __global__ void gpu_find_force(
       s_fz += f12z - f21z;
 
       s_pe += p2_vdW * 0.5f;
-
+      
       // if (n1 == 0)
-      // printf("n2[%d] dx[%.16f] dy[%.16f] dz[%.16f] r[%.16f] rsq[%.16f] rinv[%.16f] tap[%.16f] att[%.16f]\n",
+      // printf("n2[%d] dx[%.16f] dy[%.16f] dz[%.16f] r[%.16f] rsq[%.16f] rinv[%.16f] tap[%.16f] att[%.16f]\n", 
       // n2, x12d, y12d, z12d, r, rsq, rinv, Tap, p2_vdW);
       s_sxx += x12f * f21x;
       s_sxy += x12f * f21y;
@@ -1667,7 +1667,7 @@ static __global__ void gpu_find_force(
       s_szy += z12f * f21y;
       s_szz += z12f * f21z;
 
-
+      
       // calc rep
       float C = ilp_para.C[type1][type2];
       float lambda_ = ilp_para.lambda[type1][type2];
@@ -1712,11 +1712,11 @@ static __global__ void gpu_find_force(
       float Vilp_m_dTap_m_rinv = Vilp * dTap * rinv;
 
       // derivatives of the product of rij and ni, the result is a vector
-      dprodnorm1[0] =
+      dprodnorm1[0] = 
         dnormdri[0][0] * delx + dnormdri[1][0] * dely + dnormdri[2][0] * delz;
-      dprodnorm1[1] =
+      dprodnorm1[1] = 
         dnormdri[0][1] * delx + dnormdri[1][1] * dely + dnormdri[2][1] * delz;
-      dprodnorm1[2] =
+      dprodnorm1[2] = 
         dnormdri[0][2] * delx + dnormdri[1][2] * dely + dnormdri[2][2] * delz;
       fp1[0] = prodnorm1_m_fpair1 * normal[0];
       fp1[1] = prodnorm1_m_fpair1 * normal[1];
@@ -2522,7 +2522,7 @@ static __global__ void init_f12(
   float *g_f12x_ilp_neigh,
   float *g_f12y_ilp_neigh,
   float *g_f12z_ilp_neigh,
-  const int *NN)
+  const int *NN) 
 {
   int n1 = blockIdx.x * blockDim.x + threadIdx.x;
   if (n1 < N) {
@@ -2612,7 +2612,7 @@ void ILP_NEP::compute_ilp(
       nep_data.NL_radial,
       nep_data.NN_angular,
       nep_data.NL_angular);
-
+    
   gpu_sort_neighbor_list<<<number_of_atoms, min(1024, max_MN_radial), max_MN_radial * sizeof(int)>>>(
     number_of_atoms, nep_data.NN_radial.data(), nep_data.NL_radial.data());
   GPU_CHECK_KERNEL
@@ -2666,7 +2666,7 @@ void ILP_NEP::compute_ilp(
   // initialize partial force
   init_f12<<<grid_size, BLOCK_SIZE_ILP>>>(
     number_of_atoms,
-    g_f12x, g_f12y, g_f12z,
+    g_f12x, g_f12y, g_f12z, 
     g_f12x_ilp_neigh, g_f12y_ilp_neigh, g_f12z_ilp_neigh, NN);
   GPU_CHECK_KERNEL
 

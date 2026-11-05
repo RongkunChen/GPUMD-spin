@@ -48,14 +48,14 @@ $$
 $$
 
 在切平面基下写成 $\dot{\boldsymbol\eta}=i\ \mathcal H\ {\boldsymbol\eta}$，本征值给 $\omega(\mathbf q)$。
-单位： $\gamma$ 用 $\mu_B/(\mathrm{eV\ fs})$； $K$ 用 $\mathrm{eV}/\mu_B^2$； $\omega$ 得到 rad/fs，乘 $658.2$ 得 THz。
+单位： $\gamma$ 用 $\mu_B/(\mathrm{eV\ fs})$； $K$ 用 eV/ $\mu_B^2$； $\omega$ 得到 rad/fs，乘 $658.2$ 得 THz。
 
 无 SOC 的 mask17 有**整体自旋旋转 Goldstone 模**（ $\omega=0$）；有 SOC-like 项时才有 gap。
 实测（本版本）：mask17 在整体旋转下 $E$ 差 $0.0$ eV → Goldstone 约束成立。
 
 ## 4. 磁声混合
 
-联立分块矩阵（对角块 $\Phi$、 $K^{\perp}$，耦合块 $C$ 与 $C^{T}$）求本征模；判断“耦合强度”必须看
+联立 $\begin{pmatrix}\Phi & C\\\\ C^{T} & K^\perp\end{pmatrix}$ 求本征模；判断“耦合强度”必须看
 **反交叉分裂**或模投影权重，**不能**把 $\lVert C\rVert _F$ 直接叫耦合常数（它与单位、超胞大小、规范都有关）。
 
 ## 5. 谱学与寿命
@@ -69,7 +69,7 @@ $$
 
 | 反例 | 期望 |
 |---|---|
-| 一维单原子链解析色散 $\omega=2\sqrt{k/m}\vert \sin(qa/2)\vert$ | 数值误差 < 1% |
+| 一维单原子链解析色散 $\omega=2\sqrt{k/m}\lVert \sin(qa/2)\rVert$ | 数值误差 < 1% |
 | 二聚体磁子（两自旋反铁磁） | 两个模，一个 Goldstone |
 | 无 SOC 却报出各向异性 gap | 一定是数值假象 |
 

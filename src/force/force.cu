@@ -37,6 +37,7 @@ The driver class calculating force and related quantities.
 #include "nep_multigpu.cuh"
 #include "nep_charge.cuh"
 #include "potential.cuh"
+#include "spin/spin_external.cuh"
 #include "tersoff1988.cuh"
 #include "tersoff1989.cuh"
 #include "tersoff_mini.cuh"
@@ -535,6 +536,21 @@ void Force::compute(
   GPU_Vector<double>& virial_per_atom)
 {
   const int number_of_atoms = type.size();
+
+  // F-10: this short overload has no spin/torque arguments.  Without the
+  // buffers bound by Run, NEP::spin_ stayed nullptr here and a nep4_spin
+  // potential silently evaluated its NON-MAGNETIC Hamiltonian in
+  // compute_phonon and compute_cohesive / compute_elastic.  Passing an
+  // explicit nullptr when no binding is active also clears any state left over
+  // from an earlier long (MD) call.  A_j is only produced by the long
+  // overload, so the short one must not write into it.
+  const bool with_spin = has_static_spin();
+  for (size_t i = 0; i < potentials.size(); ++i) {
+    potentials[i]->set_spin(
+      with_spin ? static_spin_ : nullptr, with_spin ? static_torque_ : nullptr);
+    potentials[i]->set_spin_flux_output(nullptr);
+  }
+
   prepare_compute(
     number_of_atoms,
     box,
@@ -553,6 +569,31 @@ void Force::compute(
     force_per_atom,
     virial_per_atom);
 
+  // F-10: the external Zeeman / magneto-electric terms used to be added only
+  // by the long overload, so magfield / magelec were silently inert in the
+  // three compute_* drivers.  Apply them at the same point as in MD.  The moments are
+  // NOT propagated here: these drivers evaluate a clamped-spin (frozen
+  // magnetic order) Hessian / elastic tensor, not a magnon-phonon one.
+  if (spin_external_ != nullptr && with_spin) {
+    spin_external_->apply(
+      box,
+      number_of_atoms,
+      type.data(),
+      position_per_atom.data(),
+      position_per_atom.data() + number_of_atoms,
+      position_per_atom.data() + 2 * number_of_atoms,
+      static_spin_,
+      static_spin_ + number_of_atoms,
+      static_spin_ + 2 * number_of_atoms,
+      static_torque_,
+      static_torque_ + number_of_atoms,
+      static_torque_ + 2 * number_of_atoms,
+      potential_per_atom.data(),
+      force_per_atom.data(),
+      force_per_atom.data() + number_of_atoms,
+      force_per_atom.data() + 2 * number_of_atoms,
+      virial_per_atom.data());
+  }
 }
 
 void Force::compute(
@@ -605,4 +646,28 @@ void Force::compute(
     force_per_atom,
     virial_per_atom);
 
+  // V4: external Zeeman field and magneto-electric coupling.  Added here, at
+  // the same place the potential is evaluated, so that a minimizer -- which
+  // never calls the integrator -- sees the same total energy, force and torque
+  // as an MD step.
+  if (spin_external_ != nullptr && spin != nullptr && torque != nullptr) {
+    spin_external_->apply(
+      box,
+      number_of_atoms,
+      type.data(),
+      position_per_atom.data(),
+      position_per_atom.data() + number_of_atoms,
+      position_per_atom.data() + 2 * number_of_atoms,
+      spin,
+      spin + number_of_atoms,
+      spin + 2 * number_of_atoms,
+      torque,
+      torque + number_of_atoms,
+      torque + 2 * number_of_atoms,
+      potential_per_atom.data(),
+      force_per_atom.data(),
+      force_per_atom.data() + number_of_atoms,
+      force_per_atom.data() + 2 * number_of_atoms,
+      virial_per_atom.data());
+  }
 }

@@ -37,7 +37,7 @@ private:
     int num_kpoints_max = 1;
     int num_kpoints = 1;
     float alpha = 0.5f; // 1 / (2 Angstrom)
-    float alpha_factor = 1.0f;
+    float alpha_factor = 1.0f; 
     GPU_Vector<float> kx;
     GPU_Vector<float> ky;
     GPU_Vector<float> kz;

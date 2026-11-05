@@ -34,7 +34,7 @@
   {                                                                                                \
     cusolverStatus_t status = call;                                                                \
     if (status != CUSOLVER_STATUS_SUCCESS) {                                                       \
-      fprintf(stderr, "cuSOLVER error: %d in file %s at line %d\n", status, __FILE__, __LINE__);           \
+      fprintf(stderr, "cuSOLVER error: %d in file %s at line %d\n", status, __FILE__, __LINE__);   \
       exit(EXIT_FAILURE);                                                                          \
     }                                                                                              \
   }
@@ -65,7 +65,7 @@ __global__ void kernelComputePseudoInverse1xN(const int* A_d, const float* b_d, 
 __global__ void kernelComputePseudoInverseReg1xN(
   const int* A_d,
   const float* b_d,
-  const float* lambda_d,
+  const float* lambda_d, 
   float* x_d,
   int n)
 {

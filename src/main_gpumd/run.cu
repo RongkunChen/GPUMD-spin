@@ -40,11 +40,41 @@ Run simulation according to the inputs in the run.in file.
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstring>
 
 // F21: process exit status.  A run cut short by the R19 spin guard used to exit
 // with 0, so every wrapper script read a truncated trajectory as a success.
 // 0 = ok, 2 = stalled by the spin guard, 3 = non-finite potential energy.
 int g_run_status = 0;
+
+// F-10: make the magnetic state of the non-MD drivers visible in the log.
+// Printed only for a run carrying spins, so non-spin stdout stays unchanged.
+static void r22_report_clamped_spin(const char* keyword, const bool enabled)
+{
+  if (!enabled)
+    return;
+  printf(
+    "%s: clamped-spin force evaluation (NEP spin descriptors + magfield/magelec\n"
+    "  active, magnetic moments frozen; no magnon-phonon coupling).\n",
+    keyword);
+}
+
+// F-10: bind the device spin/torque buffers for ONE non-MD driver command.
+// The short Force::compute overload cannot carry them as arguments, so it
+// reads this binding instead.  The scope is deliberately narrow:
+// `minimize ... spin=off` keeps its documented lattice-only behaviour (R22
+// warns about it), and a binding left behind would silently change a later
+// command.  The device pointers are final by this point (Replicate() and
+// allocate_memory_gpu() have already run).
+struct ScopedStaticSpinBinding
+{
+  Force& force;
+  ScopedStaticSpinBinding(Force& f, const float* spin, float* torque) : force(f)
+  {
+    f.set_static_spin(spin, torque);
+  }
+  ~ScopedStaticSpinBinding() { force.set_static_spin(nullptr, nullptr); }
+};
 
 // How the spin update interleaves with the lattice step.
 //   0 = staggered (historical, now opt-in): one spin step of dt after the force
@@ -56,6 +86,125 @@ int g_run_status = 0;
 //       and a final force/energy evaluation at (r_{n+1}, S_{n+1}).
 // Keyword: `spin_split staggered|strang`.
 int g_spin_split = 1;
+
+// R22-NonHeat: versioned external-field energy/work ledger.
+// H(t) = U_NEP(r,S) + H_Z(t,S) + H_ME(r,S) + K(v),
+// H_Z  = -sum_i S_i . B_i(t),  H_ME = sum_{i<j} kappa (E x r_ij).(S_i x S_j).
+// The F16 work accumulators satisfy the EXACT discrete chain-rule identity
+//   W_rot + W_noise + W_ext = -sum_i B_det . dS_i = dU_spin,
+// while the explicit time dependence of B enters as the exact jump work
+//   W_drive = sum_steps -sum_i S_i(t_n).[B(t_{n+1/2}) - B(t_{n-1/2})].
+// Hence, for a complete (NVE, deterministic, no add_bfield, symmetric-split)
+// ledger,  Delta E_total - (W_drive + dU_spin)  is a genuine balance residual
+// that measures integrator drift.  It is NOT printed when any source/sink is
+// missing.  Columns that cannot be strictly defined are written as `NA` --
+// never as a fabricated zero.
+static const char* R22_LEDGER_HEADER =
+  "# R22-NonHeat external-field energy/work ledger, format_version 1\n"
+  "# units: energy eV, time fs, spin mu_B, field eV/mu_B, omega THz\n"
+  "# H_Z(t) = -sum_i S_i.B_i(t);  W_drive = cumulative -sum_i S_i.deltaB_i (midpoint-sampled, exact for the discrete scheme)\n"
+  "# W_spin_internal = W_rot+W_noise+W_ext = -sum_i B_det.dS_i = dU_spin (r21 F16 identity, UNCHANGED)\n"
+  "# W_damping_proxy = W_rot (deterministic-field work; dominated by Gilbert dissipation for alpha>0, O(dt^3) for alpha=0)\n"
+  "# UNAVAILABLE (never emitted as a fabricated zero):\n"
+  "#   E_spin_related : NEP spin-dependent energy cannot be isolated without a separate spin-free force evaluation\n"
+  "#   W_bath         : lattice-thermostat / stochastic-bath energy exchange is not instrumented\n"
+  "#   balance_residual : only defined for ledger_completeness=COMPLETE (NVE, T=0, no add_bfield, strang split)\n"
+  "# NA = not available; it is NOT a zero measurement.\n"
+  "# columns: step time_fs E_total_eV E_potential_eV E_zeeman_eV E_me_eV E_spin_related_eV "
+  "W_drive_eV W_damping_proxy_eV W_noise_eV W_ext_eV W_spin_internal_eV W_bath_eV "
+  "balance_residual_eV ledger_completeness\n";
+
+static void r22_append_ledger_row(
+  const int step, const double t_fs,
+  const double e_total, const double e_pot,
+  const double e_zeeman, const double e_me,
+  const double w_drive, const double w[3],
+  const bool residual_available, const double e_total_0,
+  const char* completeness)
+{
+  const double w_spin = w[0] + w[1] + w[2];
+  char residual[64];
+  if (residual_available) {
+    snprintf(residual, sizeof residual, "%.10e",
+             (e_total - e_total_0) - (w_drive + w_spin));
+  } else {
+    snprintf(residual, sizeof residual, "NA");
+  }
+  FILE* fid = fopen("spin_energy_ledger.out", "a");
+  if (!fid) return;
+  fprintf(
+    fid,
+    "%d %.10e %.10e %.10e %.10e %.10e NA %.10e %.10e %.10e %.10e %.10e NA %s %s\n",
+    step, t_fs, e_total, e_pot, e_zeeman, e_me,
+    w_drive, w[0], w[1], w[2], w_spin, residual, completeness);
+  fclose(fid);
+}
+
+// thermo[] = [T(K), U(eV), s_xx, s_yy, s_zz, s_xy, s_xz, s_yz] / volume.
+// For a frozen lattice T is 0/0 = NaN by construction; KE is then exactly 0.
+static void r22_energy_from_thermo(
+  GPU_Vector<double>& thermo, const int n_moving,
+  double& e_pot, double& e_total)
+{
+  double th[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  thermo.copy_to_host(th, 8);
+  e_pot = th[1];
+  const double e_kin = std::isfinite(th[0]) ? 1.5 * n_moving * K_B * th[0] : 0.0;
+  e_total = e_pot + e_kin;
+}
+
+static const char* r22_ledger_completeness(
+  Integrate& integrate, const Spin& spin, const bool strang_split)
+{
+  if (integrate.get_type() != EnsembleType::NVE)
+    return "INCOMPLETE:thermostat_bath_not_instrumented";
+  if (spin.temperature > 0.0)
+    return "INCOMPLETE:stochastic_bath_not_instrumented";
+  if (spin.has_external_field())
+    return "INCOMPLETE:add_bfield_zeeman_not_in_potential";
+  if (!strang_split)
+    return "INCOMPLETE:staggered_output_state";
+  return "COMPLETE";
+}
+
+// One ledger sample.  Called at the ~10 progress lines and once at the end of
+// a run block (NOT every step), so the extra find_thermo reduction and the
+// two host readbacks cost a few microseconds per run.
+static void r22_write_ledger_sample(
+  const int step, const double t_fs,
+  Integrate& integrate, Box& box, std::vector<Group>& group,
+  Atom& atom, GPU_Vector<double>& thermo,
+  Spin& spin, SpinExternal& spin_external,
+  const bool strang_split,
+  double& e0, bool& e0_set)
+{
+  const int fg = integrate.get_fixed_group();
+  const int fm = integrate.get_fixed_grouping_method();
+  int n_fixed = 0;
+  if (fg >= 0 && fm >= 0 && fm < static_cast<int>(group.size())) {
+    n_fixed = group[fm].cpu_size[fg];
+  }
+  const int n_moving = atom.number_of_atoms - n_fixed;
+  integrate.find_thermo(
+    box.get_volume(), group, atom.mass, atom.potential_per_atom,
+    atom.velocity_per_atom, atom.virial_per_atom, thermo);
+  double e_pot = 0.0, e_total = 0.0;
+  r22_energy_from_thermo(thermo, n_moving, e_pot, e_total);
+  if (!e0_set) {
+    e0 = e_total;
+    e0_set = true;
+  }
+  spin_external.read_energies();
+  double w[3] = {0.0, 0.0, 0.0};
+  spin.read_work(w);
+  const double w_drive = spin_external.read_drive_work();
+  const char* comp = r22_ledger_completeness(integrate, spin, strang_split);
+  const bool complete = (std::strcmp(comp, "COMPLETE") == 0);
+  r22_append_ledger_row(
+    step, t_fs, e_total, e_pot,
+    spin_external.energy_zeeman, spin_external.energy_magelec,
+    w_drive, w, complete, e0, comp);
+}
 
 // F23 / risk #13: the spin propagator uses a torque frozen over the whole
 // (sub)step, which for alpha = 0 is an exact rotation about a fixed axis.
@@ -192,6 +341,12 @@ Run::Run(const RunInput& run_input)
 
   allocate_memory_gpu(group, atom, thermo);
 
+  // V4: the external field / magneto-electric terms are applied inside
+  // Force::compute(), i.e. wherever the potential is evaluated.  Registering
+  // the object once here covers MD, minimisation and any later driver; the
+  // terms themselves stay inert until `magfield` / `magelec` is parsed.
+  force.set_spin_external(&spin_external);
+
   print_line_1();
   printf("Finished initializing positions and related parameters.\n");
   fflush(stdout);
@@ -269,12 +424,37 @@ void Run::compute_force()
 
 void Run::perform_a_run(const int number_of_steps)
 {
+  // F-09 (r21): a checkpoint can only be continued with the same drive, and
+  // its two clocks must be restored once, before the first run block.  Doing
+  // this here (rather than in the spin_llg parser) means magfield / add_bfield
+  // have already been parsed, so the comparison uses their FINAL values.
+  spin.validate_restart_external();
+  if (!restart_time_applied_ && spin.has_restored_state()) {
+    restart_time_applied_ = true;
+    global_time = spin.restored_global_time();
+    spin_external.set_time_fs(spin.restored_external_time_fs());
+    printf("F-09: restored external-field clocks from checkpoint: "
+           "global_time = %.9g, magfield time = %.9g fs, add_bfield time = "
+           "%.9g fs.\n",
+           global_time, spin_external.time_fs, spin.elapsed_time_fs);
+  }
+
   integrate.initialize(time_step, atom, box, group);
   measure.pre_run(number_of_steps, time_step, integrate, group, atom, box, force);
 
   // F16 / R12: start every run with an empty spin work budget.
   spin.reset_work();
+  // R22: versioned energy/work ledger.  `spin_work.out` keeps its original
+  // three columns byte-for-byte; the new file carries the extra fields.
+  double r22_ledger_e0 = 0.0;
+  bool r22_ledger_e0_set = false;
   if (spin.enabled) {
+    spin_external.reset_ledger();
+    FILE* lf = fopen("spin_energy_ledger.out", "w");
+    if (lf) {
+      fputs(R22_LEDGER_HEADER, lf);
+      fclose(lf);
+    }
     // suggestion #3: keep the budget in a file as well, so the
     // injection/dissipation ratio can be followed WHILE the run is going
     // (an online runaway criterion instead of a post-mortem).
@@ -379,6 +559,29 @@ void Run::perform_a_run(const int number_of_steps)
     calculate_time_step(
       max_distance_per_step, atom.velocity_per_atom, initial_time_step, time_step);
     global_time += time_step;
+    // F-09 (r21): evaluate the time-dependent Zeeman envelope at the MIDPOINT
+    // of the step, t_{n+1/2} = global_time - dt/2, so all force evaluations of
+    // this step see one second-order-consistent field.  r20 advanced a separate
+    // clock by dt at the start of the step, which sampled B at t_{n+1} for
+    // every sub-step (an O(dt) error in a scheme that claims second order),
+    // and it restarted that clock from zero after a checkpoint.  For a static
+    // field this is identical to the old behaviour.
+    spin_external.set_time_fs((global_time - 0.5 * time_step) *
+                              TIME_UNIT_CONVERSION);
+
+    // R22: exact explicit-time field work for the discrete scheme.  B is
+    // midpoint-sampled and piecewise constant over a step; S is continuous at
+    // the field jump, so -sum_i S_i(t_n).[B_{n+1/2}-B_{n-1/2}] is exact.
+    // Evaluated here, BEFORE the first spin half-step, so S is S_n.
+    if (spin.enabled && spin_external.zeeman_enabled && atom.has_spin) {
+      spin_external.compute_applied_b();
+      const int Ns = atom.number_of_atoms;
+      spin_external.record_drive_work(
+        atom.spin.data(),
+        atom.spin.data() + Ns,
+        atom.spin.data() + 2 * Ns,
+        Ns);
+    }
 
     // S05B: symmetric (Strang) spin-lattice splitting
     //     S(dt/2)  V(dt)  S(dt/2)
@@ -458,6 +661,13 @@ void Run::perform_a_run(const int number_of_steps)
     // otherwise `add_bfield` runs report a flux foreign to their trajectory.
     if (spin.enabled) {
       spin.get_applied_external_field(atom.spin_b_ext);
+    }
+    // V4: when `magfield` is the field in use (add_bfield is then forbidden),
+    // the heat current must see that field instead of the add_bfield zeros.
+    if (spin_external.zeeman_enabled) {
+      atom.spin_b_ext[0] = spin_external.applied_b[0];
+      atom.spin_b_ext[1] = spin_external.applied_b[1];
+      atom.spin_b_ext[2] = spin_external.applied_b[2];
     }
 
     atom.update_unwrapped_position(box);
@@ -561,10 +771,19 @@ void Run::perform_a_run(const int number_of_steps)
         atom.velocity_per_atom,
         atom.virial_per_atom,
         thermo);
-      // F26: find_thermo writes [T, KE, PE, virial ...]; the guard needs all
-      // three scalars, and it needs PE from slot 2.  It used to read slot 1,
-      // which is the kinetic energy, so the potential-energy signatures and the
-      // energy-conservation signature were all watching KE instead.
+      // R22-ISSUE-03: the r21 "F26" change misread the thermo layout.
+      // Thermo::compute() writes (src/integrate/thermo.cu:
+      // "g_thermo[0-7] = T, U, s_xx, s_yy, s_zz, s_xy, s_xz, s_yz"; the
+      // quantity==1 reduction accumulates g_potential, NOT kinetic energy).
+      // Dump_Thermo (src/measure/dump_thermo.cu) prints thermo[1] as the
+      // POTENTIAL energy column and reconstructs KE as 1.5*N*kB*thermo[0].
+      // r21 instead used thermo[2] (a STRESS component) as PE and
+      // thermo[1] (PE) as KE, so the runaway guard monitored stress changes,
+      // producing spurious "energy-conservation drift" stops in conservative
+      // NVE runs (observed: stop at step 8000, dt=0.05 fs, dE=0.0205 eV/atom
+      // while the actual PE drift was ~1e-5 eV/atom).  This is a definite
+      // slot-index error; it is fixed here with the SAME convention as
+      // Dump_Thermo.  No heat-current code is touched.
       double current_thermo[3] = {0.0, 0.0, 0.0};
       thermo.copy_to_host(current_thermo, 3);
       double w_guard[3];
@@ -572,12 +791,18 @@ void Run::perform_a_run(const int number_of_steps)
 
       const double n_inv = 1.0 / std::max(1, atom.number_of_atoms);
       const double w_net = w_guard[0] + w_guard[1] + w_guard[2];
-      // Total energy = PE + the kinetic energy reconstructed from the
-      // temperature exactly the way Dump_Thermo does it.  thermo[] layout is
-      // [0] = T, [1] = PE (eV), [2..7] = virial in Voigt order.
-      // F26: total energy is PE + KE, both already in thermo.  The old form
-      // added KE twice (thermo[1] + 3/2 N kB T = 2 KE for a classical system).
-      const double current_energy = current_thermo[2] + current_thermo[1];
+      int n_moving = atom.number_of_atoms;
+      {
+        const int fg = integrate.get_fixed_group();
+        const int fm = integrate.get_fixed_grouping_method();
+        if (fg >= 0 && fm >= 0 && fm < static_cast<int>(group.size())) {
+          n_moving -= group[fm].cpu_size[fg];
+        }
+      }
+      const double current_pe = current_thermo[1];             // eV
+      const double current_ke = std::isfinite(current_thermo[0])
+        ? 1.5 * n_moving * K_B * current_thermo[0] : 0.0;      // eV
+      const double current_energy = current_pe + current_ke;   // eV
 
       // F20 (round 12): detect the frozen-lattice case (see the declaration of
       // spin_guard_frozen_seen).  Every atom being fixed makes the lattice
@@ -609,8 +834,8 @@ void Run::perform_a_run(const int number_of_steps)
         // from the model minimum; the first ~1000 steps are then a legitimate
         // relaxation transient that used to be mis-reported as a
         // "potential-energy collapse" (reproduced on Fe, round 10).
-        spin_guard_initial_pe = current_thermo[2];
-        spin_guard_previous_pe = current_thermo[2];
+        spin_guard_initial_pe = current_pe;
+        spin_guard_previous_pe = current_pe;
         spin_guard_previous_work = w_net;
         spin_guard_reference_temperature = current_thermo[0];
         spin_guard_reference_energy = current_energy;
@@ -633,8 +858,8 @@ void Run::perform_a_run(const int number_of_steps)
       (void)injection_ratio;
       spin_guard_injection_streak = injection_bad ? spin_guard_injection_streak + 1 : 0;
 
-      const double pe_drop_total = (spin_guard_initial_pe - current_thermo[2]) * n_inv;
-      const double pe_drop_interval = (spin_guard_previous_pe - current_thermo[2]) * n_inv;
+      const double pe_drop_total = (spin_guard_initial_pe - current_pe) * n_inv;
+      const double pe_drop_interval = (spin_guard_previous_pe - current_pe) * n_inv;
       const double work_interval = (w_net - spin_guard_previous_work) * n_inv;
       const double energy_drift = (current_energy - spin_guard_reference_energy) * n_inv;
       const bool conservative_run = (integrate.get_type() == EnsembleType::NVE);
@@ -746,7 +971,7 @@ void Run::perform_a_run(const int number_of_steps)
         break;
       }
 
-      spin_guard_previous_pe = current_thermo[2];
+      spin_guard_previous_pe = current_pe;  // R22-ISSUE-03: PE is slot 1
       spin_guard_previous_work = w_net;
     }
 
@@ -767,6 +992,11 @@ void Run::perform_a_run(const int number_of_steps)
           fprintf(fid, "%d %.10g %.10g %.10g\n", step + 1, w[0], w[1], w[2]);
           fclose(fid);
         }
+        // R22: versioned energy/work ledger (new file; spin_work.out unchanged)
+        r22_write_ledger_sample(
+          step + 1, global_time * TIME_UNIT_CONVERSION,
+          integrate, box, group, atom, thermo, spin, spin_external,
+          symmetric_split, r22_ledger_e0, r22_ledger_e0_set);
       }
       fflush(stdout);
     }
@@ -781,6 +1011,18 @@ void Run::perform_a_run(const int number_of_steps)
       fprintf(fid, "%d %.10g %.10g %.10g\n", completed_steps, w[0], w[1], w[2]);
       fclose(fid);
     }
+    // R22: final energy/work ledger row.
+    r22_write_ledger_sample(
+      completed_steps, global_time * TIME_UNIT_CONVERSION,
+      integrate, box, group, atom, thermo, spin, spin_external,
+      g_spin_split == 1, r22_ledger_e0, r22_ledger_e0_set);
+  }
+
+  // F-03 (r21): the |S| constraint must be clean at the end of every run
+  // block.  A violation that the 64-step periodic check has not yet surfaced
+  // is caught here, so no run can exit 0 with an unnoticed anchor failure.
+  if (spin.enabled) {
+    spin.check_norm_violation(0, true);
   }
 
   print_line_1();
@@ -799,6 +1041,12 @@ void Run::perform_a_run(const int number_of_steps)
 
   measure.post_run(
     atom, box, integrate, completed_steps, time_step, integrate.get_temperature2());
+
+  // V4: one line per active external term, read from the device accumulator
+  // once per run block instead of once per force evaluation.
+  if (spin_external.any()) {
+    spin_external.report("end of run");
+  }
 
   integrate.finalize(atom, box);
   velocity.finalize();
@@ -826,6 +1074,20 @@ void Run::parse_one_keyword(
     force.parse_potential(tokens, box, atom.type.size(), run_input);
   } else if (tokens[0] == "minimize") {
     Minimize minimize;
+    // `spin=off` minimises the lattice with the 7-argument Force::compute, which
+    // never receives spin/torque, so magfield/magelec would be silently inert.
+    // Say so instead of producing a run that looks like it had a field.
+    // F-10: intentionally NOT covered by ScopedStaticSpinBinding; keeping the
+    // documented r21 lattice-only behaviour is a compatibility requirement.
+    for (size_t i = 0; i < tokens.size(); ++i) {
+      if (tokens[i] == "spin=off" && spin_external.any()) {
+        printf(
+          "WARNING: `minimize ... spin=off` does not relax the magnetic moments\n"
+          "         and therefore ignores magfield/magelec (they enter through\n"
+          "         atom.torque, which the lattice-only path never evaluates).\n"
+          "         Use spin=on or spin=auto if the field should act.\n");
+      }
+    }
     minimize.parse_minimize(
       tokens,
       integrate.get_fixed_group(),
@@ -833,21 +1095,41 @@ void Run::parse_one_keyword(
       force,
       box,
       atom,
-      group);
+      group,
+      &spin);
+    // V4: report what the external terms contributed at the converged state.
+    if (spin_external.any()) {
+      spin_external.report("after minimisation");
+    }
   } else if (tokens[0] == "compute_phonon") {
     Hessian hessian;
     hessian.parse(tokens);
     if (!has_replicate_) {
       PRINT_INPUT_ERROR("replicate keyword not found in run.in file.");
     }
+    ScopedStaticSpinBinding binding(
+      force,
+      atom.has_spin ? atom.spin.data() : nullptr,
+      atom.has_spin ? atom.torque.data() : nullptr);
+    r22_report_clamped_spin("compute_phonon", force.has_static_spin());
     hessian.compute(force, box, atom, group, replicate_size_);
   } else if (tokens[0] == "compute_cohesive") {
     Cohesive cohesive;
     cohesive.parse(tokens, 0);
+    ScopedStaticSpinBinding binding(
+      force,
+      atom.has_spin ? atom.spin.data() : nullptr,
+      atom.has_spin ? atom.torque.data() : nullptr);
+    r22_report_clamped_spin("compute_cohesive", force.has_static_spin());
     cohesive.compute(box, atom, group, force);
   } else if (tokens[0] == "compute_elastic") {
     Cohesive cohesive;
     cohesive.parse(tokens, 1);
+    ScopedStaticSpinBinding binding(
+      force,
+      atom.has_spin ? atom.spin.data() : nullptr,
+      atom.has_spin ? atom.torque.data() : nullptr);
+    r22_report_clamped_spin("compute_elastic", force.has_static_spin());
     cohesive.compute(box, atom, group, force);
   } else if (tokens[0] == "change_box") {
     parse_change_box(tokens);
@@ -881,6 +1163,33 @@ void Run::parse_one_keyword(
     // It is stored in natural units (1 natural = TIME_UNIT_CONVERSION fs),
     // the check wants femtoseconds.
     spin.check_discretisation(time_step * TIME_UNIT_CONVERSION);
+  } else if (tokens[0] == "spin_midpoint") {
+    // F-01/F-04 (r21): expose the implicit-midpoint convergence controls so
+    // tests can force a non-convergence and so a run states its tolerances.
+    //   spin_midpoint <atol_muB> <rtol> <max_iterations>
+    if (num_param != 4) {
+      PRINT_INPUT_ERROR("spin_midpoint should have 3 parameters: "
+                        "<atol> <rtol> <max_iterations>.\n");
+    }
+    double atol = 0.0, rtol = 0.0;
+    int maxit = 0;
+    if (!is_valid_real(tokens[1], &atol) || !is_valid_real(tokens[2], &rtol) ||
+        !is_valid_int(tokens[3], &maxit)) {
+      PRINT_INPUT_ERROR("spin_midpoint: atol, rtol and max_iterations must be "
+                        "real, real and integer.\n");
+    }
+    if (!std::isfinite(atol) || atol <= 0.0 ||
+        !std::isfinite(rtol) || rtol <= 0.0) {
+      PRINT_INPUT_ERROR("spin_midpoint: atol and rtol must be finite and > 0.\n");
+    }
+    if (maxit < 1 || maxit > 100000) {
+      PRINT_INPUT_ERROR("spin_midpoint: max_iterations must be in [1, 100000].\n");
+    }
+    spin.midpoint_tolerance = atol;
+    spin.midpoint_relative_tolerance = rtol;
+    spin.midpoint_max_iterations = maxit;
+    printf("Implicit midpoint: atol = %.3e mu_B, rtol = %.3e, "
+           "max_iterations = %d.\n", atol, rtol, maxit);
   } else if (tokens[0] == "spin_split") {
     // F22: choose how the spin update is interleaved with the lattice step.
     if (tokens.size() != 2) {
@@ -939,6 +1248,10 @@ void Run::parse_one_keyword(
     if (!spin.enabled) {
       PRINT_INPUT_ERROR("add_bfield requires `spin_llg` to be set first.");
     }
+    if (spin_external.zeeman_enabled) {
+      PRINT_INPUT_ERROR(
+        "add_bfield and magfield are two ways to apply a field; use only one.");
+    }
     double bx = 0.0, by = 0.0, bz = 0.0, omega = 0.0;
     if (!is_valid_real(tokens[1], &bx) || !is_valid_real(tokens[2], &by) ||
         !is_valid_real(tokens[3], &bz)) {
@@ -959,6 +1272,260 @@ void Run::parse_one_keyword(
       by,
       bz,
       (omega > 0.0) ? " (oscillating)" : " (static)");
+  } else if (tokens[0] == "magfield") {
+    // V4: LAMMPS-style Zeeman field.  `fix precession/spin zeeman H x y z`
+    //     magfield <H> <nx> <ny> <nz> [unit=tesla|ev] [wave=static|sin|cos]
+    //                                  [freq=<THz>] [phase=<rad>]
+    // With unit=tesla (the default) H is the magnitude and (nx,ny,nz) the
+    // direction, which is normalised as in LAMMPS.  The spin column carries the
+    // magnetic moment in mu_B, so B[eV/mu_B] = 5.7883818e-5 * H[T] with no
+    // extra Lande factor; g is already inside the gyromagnetic ratio.  `g=`
+    // rescales the field for inputs that carry an angular momentum instead.
+    // With unit=ev the three numbers are the field vector itself in eV/mu_B
+    // (same unit as `add_bfield`).
+    // The energy -sum_i S_i.B is added to the potential, so a minimizer and the
+    // energy-conservation check see it; `add_bfield` and `magfield` are
+    // mutually exclusive to keep that bookkeeping unambiguous.
+    if (num_param < 5) {
+      PRINT_INPUT_ERROR(
+        "magfield should have at least 4 parameters: <H> <nx> <ny> <nz>.");
+    }
+    if (!spin.enabled) {
+      PRINT_INPUT_ERROR("magfield requires `spin_llg` to be set first.");
+    }
+    if (spin.has_external_field()) {
+      PRINT_INPUT_ERROR(
+        "magfield and add_bfield are two ways to apply a field; use only one.");
+    }
+    double h = 0.0, nx = 0.0, ny = 0.0, nz = 0.0;
+    if (!is_valid_real(tokens[1], &h) || !is_valid_real(tokens[2], &nx) ||
+        !is_valid_real(tokens[3], &ny) || !is_valid_real(tokens[4], &nz)) {
+      PRINT_INPUT_ERROR("magfield: H and the direction must be real numbers.");
+    }
+    std::string unit = "tesla";
+    std::string wave = "static";
+    double freq = 0.0, phase = 0.0;
+    for (int i = 5; i < num_param; ++i) {
+      const std::string& t = tokens[i];
+      const size_t eq = t.find('=');
+      if (eq == std::string::npos) {
+        PRINT_INPUT_ERROR("magfield: options must be given as key=value.");
+      }
+      const std::string key = t.substr(0, eq);
+      const std::string val = t.substr(eq + 1);
+      if (key == "unit") {
+        unit = val;
+      } else if (key == "wave") {
+        wave = val;
+      } else if (key == "freq") {
+        if (!is_valid_real(val, &freq)) {
+          PRINT_INPUT_ERROR("magfield: freq= must be a real number (THz).");
+        }
+      } else if (key == "phase") {
+        if (!is_valid_real(val, &phase)) {
+          PRINT_INPUT_ERROR("magfield: phase= must be a real number (rad).");
+        }
+      } else if (key == "g") {
+        // validated in the conversion block below
+      } else {
+        PRINT_INPUT_ERROR(
+          "magfield: unknown option (unit, g, wave, freq, phase).");
+      }
+    }
+    double b[3] = {0.0, 0.0, 0.0};
+    if (unit == "tesla") {
+      const double norm = sqrt(nx * nx + ny * ny + nz * nz);
+      if (norm <= 0.0) {
+        PRINT_INPUT_ERROR("magfield: the direction vector must be non-zero.");
+      }
+      // 1 mu_B = 5.7883818066e-5 eV/T, and the spin column of the structure file
+      // holds the magnetic moment in mu_B (Fe = 2.0), so
+      //     E_Z = -sum_i S_i[mu_B] . B[T] * mu_B[eV/T]
+      // needs no further factor.
+      // The Lande g is *already* inside the gyromagnetic ratio the integrator
+      // uses: 3.0385 (fs^-1 per eV/mu_B) = 1.7588e11 rad/(s T) / 1.7276e4 T
+      // per (eV/mu_B) * 1e-15, i.e. exactly g = 2.  Multiplying the field by g
+      // as well counted it twice, which doubled every Zeeman energy and halved
+      // every field that the model actually felt.  `g=` is kept for users who
+      // carry a spin angular momentum instead of a moment (then |S| is in hbar
+      // and g = 2 restores the moment).
+      double g = 1.0;
+      for (int i = 5; i < num_param; ++i) {
+        const std::string& t = tokens[i];
+        const size_t eq = t.find('=');
+        if (eq != std::string::npos && t.substr(0, eq) == "g") {
+          if (!is_valid_real(t.substr(eq + 1), &g)) {
+            PRINT_INPUT_ERROR("magfield: g= must be a real number.");
+          }
+        }
+      }
+      const double conv = g * 5.7883818066e-5;
+      b[0] = conv * h * nx / norm;
+      b[1] = conv * h * ny / norm;
+      b[2] = conv * h * nz / norm;
+    } else if (unit == "ev") {
+      b[0] = h * nx;
+      b[1] = h * ny;
+      b[2] = h * nz;
+    } else {
+      PRINT_INPUT_ERROR("magfield: unit= must be tesla or ev.");
+    }
+    int wave_id = 0;
+    if (wave == "sin") {
+      wave_id = 1;
+    } else if (wave == "cos") {
+      wave_id = 2;
+    } else if (wave != "static") {
+      PRINT_INPUT_ERROR("magfield: wave= must be static, sin or cos.");
+    }
+    spin_external.allocate_types(number_of_types);
+    spin_external.set_zeeman(b, wave_id, freq, phase);
+    // F-09 (r21): mirror the magfield configuration into the spin object so
+    // the v2 checkpoint can serialise it and validate a restart against it.
+    // Without this, reloading a checkpoint silently restarted the drive at a
+    // different phase even though the run.in looked identical.
+    spin.ext_b_peak[0] = b[0];
+    spin.ext_b_peak[1] = b[1];
+    spin.ext_b_peak[2] = b[2];
+    spin.ext_zeeman_wave = wave_id;
+    spin.ext_zeeman_freq_thz = freq;
+    spin.ext_zeeman_phase_rad = phase;
+    spin.ext_has_magfield = true;
+    printf(
+      "Zeeman field (LAMMPS `fix precession/spin zeeman`): B = (%g, %g, %g) eV/mu_B",
+      b[0], b[1], b[2]);
+    if (unit == "tesla") {
+      printf(" [%g T, g = 1: the moment |S| is already in mu_B]", h);
+    }
+    printf("%s.\n", wave_id == 0 ? " (static)" : " (time-dependent)");
+    if (freq > 0.0) {
+      printf("    frequency = %g THz, phase = %g rad.\n", freq, phase);
+    }
+  } else if (tokens[0] == "magelec") {
+    // V4: LAMMPS `pair_style spin/magelec`.
+    //     magelec <cutoff_A> <kappa> <Ex> <Ey> <Ez>
+    // kappa in eV/(A mu_B^2); E is a screened dielectric polarisation in eV
+    // (the LAMMPS manual uses the same unit).  The interaction is
+    //     H = sum_{i<j} kappa (E x r_ij).(S_i x S_j)
+    // and it contributes energy, torque and force.
+    // R22: optional key=value tail, all with explicit defaults that reproduce
+    // the r21 Hamiltonian exactly.  `cutoff=smooth` selects the versioned C2
+    // `r_on=<A>` sets the inner switching radius directly in (0, r_c).
+    if (num_param < 6) {
+      PRINT_INPUT_ERROR(
+        "magelec should have at least 5 parameters: <cutoff> <kappa> <Ex> <Ey> <Ez>.");
+    }
+    if (!spin.enabled) {
+      PRINT_INPUT_ERROR("magelec requires `spin_llg` to be set first.");
+    }
+    double cutoff = 0.0, kappa = 0.0, e[3] = {0.0, 0.0, 0.0};
+    if (!is_valid_real(tokens[1], &cutoff) || cutoff <= 0.0) {
+      PRINT_INPUT_ERROR("magelec: cutoff must be a positive number (A).");
+    }
+    if (!is_valid_real(tokens[2], &kappa)) {
+      PRINT_INPUT_ERROR("magelec: kappa must be a real number.");
+    }
+    for (int i = 0; i < 3; ++i) {
+      if (!is_valid_real(tokens[3 + i], &e[i])) {
+        PRINT_INPUT_ERROR("magelec: E must be three real numbers (eV).");
+      }
+    }
+    spin_external.allocate_types(number_of_types);
+    spin_external.set_magelec(cutoff, kappa, e);
+
+    // ---- R22-COMPAT-01: versioned C2 smooth cutoff (opt-in) ---------------
+    int me_mode = 0;                       // r21 legacy hard cutoff by default
+    double me_width = spin_external.me_smooth_fraction;
+    double me_r_on = -1.0;                 // -1 = derive from smooth_width
+    bool saw_width = false, saw_ron = false;
+    for (int i = 6; i < num_param; ++i) {
+      const std::string& t = tokens[i];
+      const size_t eq = t.find('=');
+      if (eq == std::string::npos) {
+        PRINT_INPUT_ERROR("magelec: options must be given as key=value.");
+      }
+      const std::string key = t.substr(0, eq);
+      const std::string val = t.substr(eq + 1);
+      if (key == "cutoff") {
+        if (val == "smooth") me_mode = 1;
+        else if (val == "legacy") me_mode = 0;
+        else PRINT_INPUT_ERROR("magelec: cutoff= must be smooth or legacy.");
+      } else if (key == "smooth_width") {
+        double v = 0.0;
+        if (!is_valid_real(val, &v) || !(v > 0.0 && v <= 1.0)) {
+          PRINT_INPUT_ERROR("magelec: smooth_width must be in (0, 1].");
+        }
+        me_width = v;
+        saw_width = true;
+      } else if (key == "r_on") {
+        double v = 0.0;
+        if (!is_valid_real(val, &v) || !(v > 0.0 && v < cutoff)) {
+          PRINT_INPUT_ERROR("magelec: r_on must be in (0, cutoff).");
+        }
+        me_r_on = v;
+        saw_ron = true;
+      } else {
+        PRINT_INPUT_ERROR(
+          "magelec: unknown option (cutoff, smooth_width, r_on).");
+      }
+    }
+    if (saw_width && saw_ron) {
+      PRINT_INPUT_ERROR("magelec: give either smooth_width or r_on, not both.");
+    }
+    if (me_mode == 1) {
+      if (!saw_ron) me_r_on = cutoff * (1.0 - me_width);
+      if (!(me_r_on > 0.0 && me_r_on < cutoff)) {
+        PRINT_INPUT_ERROR("magelec: the switching interval must be non-empty.");
+      }
+      spin_external.me_smooth_fraction = me_width;
+      spin_external.set_magelec_switch(1, me_r_on);
+    } else {
+      spin_external.set_magelec_switch(0, cutoff);
+    }
+
+    printf(
+      "Magneto-electric coupling (LAMMPS `pair_style spin/magelec`):\n"
+      "    H = kappa sum_ij (E x r_ij).(S_i x S_j)\n"
+      "    kappa = %g eV/(A mu_B^2), E = (%g, %g, %g) dimensionless, "
+      "cutoff = %g A.\n",
+      kappa, e[0], e[1], e[2], cutoff);
+    if (me_mode == 1) {
+      printf(
+        "    R22 C2 SMOOTH cutoff ENABLED: r_on = %.6g A, width = %.6g A "
+        "(smooth_width = %.6g).\n"
+        "    f_c(x) = 1 - 10x^3 + 15x^4 - 6x^5, C2 at BOTH endpoints; "
+        "df_c/dr is included in force and all 9 virial components.\n"
+        "    This CHANGES the Hamiltonian in [r_on, r_c] relative to r21.\n",
+        me_r_on, cutoff - me_r_on, spin_external.me_smooth_fraction);
+    } else {
+      printf(
+        "    R22 NOTICE: r21 LEGACY hard cutoff is in use (r21 compatibility "
+        "default).\n"
+        "    It is DISCONTINUOUS in energy, force, spin gradient and virial at "
+        "r_c and is\n"
+        "    NOT reliable for long conservative dynamics.  Use "
+        "`cutoff=smooth` on the magelec line\n"
+        "    to select the validated C2 Hamiltonian.\n");
+    }
+  } else if (tokens[0] == "magelec_pair") {
+    //     magelec_pair <type_i> <type_j> <kappa>
+    // Per type-pair override of the kappa above (LAMMPS pair_coeff i j).
+    if (num_param != 4) {
+      PRINT_INPUT_ERROR("magelec_pair should have 3 parameters: <ti> <tj> <kappa>.");
+    }
+    int ti = 0, tj = 0;
+    double kappa = 0.0;
+    if (!is_valid_int(tokens[1], &ti) || !is_valid_int(tokens[2], &tj)) {
+      PRINT_INPUT_ERROR("magelec_pair: type indices must be integers.");
+    }
+    if (!is_valid_real(tokens[3], &kappa)) {
+      PRINT_INPUT_ERROR("magelec_pair: kappa must be a real number.");
+    }
+    if (!spin_external.magelec_enabled) {
+      PRINT_INPUT_ERROR("magelec_pair must come after a `magelec` line.");
+    }
+    spin_external.set_magelec_pair(ti, tj, kappa);
+    printf("Magneto-electric kappa[%d][%d] = %g eV/(A mu_B^2).\n", ti, tj, kappa);
   } else if (tokens[0] == "seed") {
     // Pin every random stream of this run.  Must appear before anything that
     // draws random numbers, i.e. before `run`.

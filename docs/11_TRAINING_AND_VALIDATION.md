@@ -46,7 +46,7 @@ $$
 R^2=1-\frac{\sum(y^{\rm pred}-y^{\rm ref})^2}{\sum(y^{\rm ref}-\bar y^{\rm ref})^2}.
 $$
 
-- 能量：meV/atom；力：eV/Å（逐分量）；磁梯度： $\mathrm{eV}/\mu_B$（逐分量）。
+- 能量：meV/atom；力：eV/Å（逐分量）；磁梯度：eV/ $\mu_B$（逐分量）。
 - **置信区间按帧分块**（不是按原子分量，那会把相关性当独立样本）。
 - 磁矩方向分解： $g_\parallel=\mathbf g \cdot \hat{\mathbf S}$、 $g_\perp=|\mathbf g-g_\parallel\hat{\mathbf S}|$；
   角力矩 $\boldsymbol\tau=\mathbf S\times\mathbf g$（eV）。
@@ -61,7 +61,7 @@ $$
 | m31 s2 | 2048 | 13.31 | 13.20 | 13.09 | 0.094 | 0.0240 |
 | m17 s1 | 8192 | 见 `phase_4` | — | — | — | — |
 
-（单位：E meV/atom，F eV/Å，g $\mathrm{eV}/\mu_B$。）
+（单位：E meV/atom，F eV/Å，g eV/ $\mu_B$。）
 
 ## 6. 禁止事项
 

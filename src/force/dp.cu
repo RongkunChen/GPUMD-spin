@@ -59,7 +59,7 @@ DP::DP(const char* filename_dp, int num_atoms)
   dp_nl.numneigh.resize(num_atoms);
   dp_nl.firstneigh.resize(num_atoms);
   dp_nl.neigh_storage.resize(num_atoms * MAX_NEIGH_NUM_DP);
-
+  
   // init ghost lists
   danger_list.resize(num_atoms);
   ghost_count.resize(num_atoms);

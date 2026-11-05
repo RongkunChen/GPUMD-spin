@@ -694,7 +694,7 @@ void LSQT::pre_run(
     return;
   }
 
-  const int number_of_neighbors_per_atom = 10;
+  const int number_of_neighbors_per_atom = 10; 
   const int number_of_neighbors_per_orbital =
     number_of_neighbors_per_atom * number_of_orbitals_per_atom;
 

@@ -240,7 +240,7 @@ public:
   std::vector<float> type_weight_cpu; // relative force weight for different atom types (CPU)
   std::vector<float> q_scaler_cpu;    // used to scale some descriptor components (CPU)
   std::vector<std::string> elements;  // atom symbols
-  std::vector<int> atomic_numbers;
+  std::vector<int> atomic_numbers;    
   std::vector<float> zbl_para;        // parameters of zbl potential
   std::vector<float> rc_radial;       // radial cutoff distance
   std::vector<float> rc_angular;      // angular cutoff distance

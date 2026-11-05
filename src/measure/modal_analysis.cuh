@@ -41,7 +41,7 @@ class MODAL_ANALYSIS : public Action
 public:
   // Bookkeeping variables
   int compute = 0;
-  int method = NO_METHOD;
+  int method = NO_METHOD; 
   int output_interval;    // number of times steps to output average heat current
   int sample_interval;    // steps per heat current computation
   int first_mode;         // first mode to consider

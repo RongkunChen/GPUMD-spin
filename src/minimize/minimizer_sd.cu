@@ -74,23 +74,40 @@ void Minimizer_SD::compute(
   GPU_Vector<double>& position_per_atom,
   std::vector<Group>& group)
 {
-  force.compute(
-    box, position_per_atom, atom.type, group, atom.potential_per_atom, atom.force_per_atom, atom.virial_per_atom);
-
-  int number_of_force_evaluations = 1;
+  int number_of_force_evaluations = 0;
   double position_step = 0.1;
   int base = (number_of_steps_ >= 10) ? (number_of_steps_ / 10) : 1;
 
   printf("\nEnergy minimization started.\n");
+  if (spin_minimization_) {
+    printf("    magnetic moments are minimized together with the positions\n"
+           "    (damped spin dynamics, torque tolerance %g eV/mu_B,\n"
+           "     alpha_damp = %g, discrete_factor = %g).\n",
+           spin_tolerance_, alpha_damp_, discrete_factor_);
+  }
 
   for (int step = 0; step < number_of_steps_; ++step) {
+    compute_force_at(force, box, atom, group, position_per_atom);
+    ++number_of_force_evaluations;
     calculate_force_square_max(atom.force_per_atom);
     const double force_max = sqrt(cpu_force_square_max_[0]);
+    // V4: the magnetic moments take part in the same loop and in the same
+    // convergence test.
+    const double torque_max = spin_torque_max(atom);
+    calculate_total_potential(atom.potential_per_atom);
+    update_spin_step_scale(cpu_total_potential_[0], force_max < force_tolerance_);
 
-    if (force_max < force_tolerance_) {
+    if (
+      force_max < force_tolerance_ &&
+      (!spin_minimization_ || torque_max <= spin_tolerance_)) {
       printf("    step %d: f_max = %g eV/A.\n", step, force_max);
       break;
     }
+
+    // V4: one damped-spin step with the torque that was just tested.  The spin
+    // move has its own trust region (see minimizer_spin.cuh), so it does not
+    // have to be tied to the position line search.
+    spin_relax_apply(atom, torque_max);
 
     const int size = number_of_atoms_ * 3;
 

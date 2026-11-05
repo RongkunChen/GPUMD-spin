@@ -119,24 +119,64 @@ void Minimizer_FIRE::compute(
   GPU_Vector<double> v(size, 0);
   GPU_Vector<double> temp1(size);
   GPU_Vector<double> temp2(size);
+  bool spin_warned = false;
 
   printf("\nEnergy minimization started.\n");
+  if (spin_minimization_) {
+    printf("    magnetic moments are minimized together with the positions\n"
+           "    (damped spin dynamics, torque tolerance %g eV/mu_B,\n"
+           "     alpha_damp = %g, discrete_factor = %g).\n",
+           spin_tolerance_, alpha_damp_, discrete_factor_);
+  }
 
   for (int step = 0; step < number_of_steps_; ++step) {
-    force.compute(
-      box, position_per_atom, atom.type, group, atom.potential_per_atom, atom.force_per_atom, atom.virial_per_atom);
+    compute_force_at(force, box, atom, group, position_per_atom);
     calculate_force_square_max(atom.force_per_atom);
     const double force_max = sqrt(cpu_force_square_max_[0]);
     calculate_total_potential(atom.potential_per_atom);
+    // V4: the same iteration also relaxes the magnetic moments; the convergence
+    // test below requires both criteria.
+    const double torque_max = spin_torque_max(atom);
+    const bool force_ok = force_max < force_tolerance_;
+    const bool torque_ok = !spin_minimization_ || torque_max <= spin_tolerance_;
+    update_spin_step_scale(cpu_total_potential_[0], force_ok);
 
-    if (step == 0 || (step + 1) % base == 0 || force_max < force_tolerance_) {
-      printf(
-        "    step %d: total_potential = %.10f eV, f_max = %.10f eV/A.\n",
-        step == 0 ? 0 : (step + 1),
-        cpu_total_potential_[0],
-        force_max);
-      if (force_max < force_tolerance_)
+    // The pre-V4 print condition is kept verbatim when the moments are not
+    // minimised, so that a lattice-only run stays byte-identical to r19.
+    if (step == 0 || (step + 1) % base == 0 || (force_ok && torque_ok)) {
+      if (spin_active(atom)) {
+        printf(
+          "    step %d: total_potential = %.10f eV, f_max = %.10f eV/A, "
+          "w_perp_max = %.10f eV/mu_B.\n",
+          step == 0 ? 0 : (step + 1),
+          cpu_total_potential_[0],
+          force_max,
+          torque_max);
+      } else {
+        printf(
+          "    step %d: total_potential = %.10f eV, f_max = %.10f eV/A.\n",
+          step == 0 ? 0 : (step + 1),
+          cpu_total_potential_[0],
+          force_max);
+      }
+      if (force_ok && torque_ok) {
+        if (spin_active(atom)) {
+          printf(
+            "  Converged at step %d: f_max = %.3e eV/A < %.1e AND "
+            "w_perp_max = %.3e eV/mu_B < %.1e, E = %.10f eV.\n",
+            step + 1, force_max, force_tolerance_, torque_max, spin_tolerance_,
+            cpu_total_potential_[0]);
+        }
         break;
+      }
+    }
+    if (spin_active(atom) && force_ok && !torque_ok && !spin_warned) {
+      printf(
+        "  NOTE: the forces have converged but the magnetic moments have not\n"
+        "        (w_perp_max = %.3e eV/mu_B > %.1e).  Continuing with the spin\n"
+        "        relaxation; the lattice will keep moving while it does.\n",
+        torque_max, spin_tolerance_);
+      spin_warned = true;
     }
 
     P = dot(v, atom.force_per_atom);
@@ -174,6 +214,11 @@ void Minimizer_FIRE::compute(
     // dx = v*dt
     scalar_multiply(dt, v, temp1);
     vector_sum(position_per_atom, temp1, position_per_atom);
+
+    // V4: one damped-spin step with the torque that was tested above.  It uses
+    // the same trust-region angle all minimizers use, so the spin and the
+    // lattice converge in one loop rather than in two nested ones.
+    spin_relax_apply(atom, torque_max);
   }
 
   printf("Energy minimization finished.\n");

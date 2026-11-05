@@ -257,11 +257,16 @@ void Minimizer_FIRE_Box_Change::compute(
   const double stress_tolerance_GPa = 1e-4;
 
   printf("\nEnergy minimization with changed box started.\n");
+  if (spin_minimization_) {
+    printf("    magnetic moments are minimized together with the positions and the box\n"
+           "    (damped spin dynamics, torque tolerance %g eV/mu_B,\n"
+           "     alpha_damp = %g, discrete_factor = %g).\n",
+           spin_tolerance_, alpha_damp_, discrete_factor_);
+  }
 
   for (int step = 0; step < number_of_steps_; ++step) {
 
-    force.compute(
-      box, position_per_atom, atom.type, group, atom.potential_per_atom, atom.force_per_atom, atom.virial_per_atom);
+    compute_force_at(force, box, atom, group, position_per_atom);
 
     gpu_sum_virial<<<9, 1024>>>(
       number_of_atoms_,
@@ -315,18 +320,32 @@ void Minimizer_FIRE_Box_Change::compute(
     calculate_force_square_max(atom.force_per_atom);
     const double force_max_atom = sqrt(cpu_force_square_max_[0]);
     calculate_total_potential(atom.potential_per_atom);
+    // V4: the same iteration relaxes the moments, and convergence needs both.
+    const double torque_max = spin_torque_max(atom);
+    update_spin_step_scale(
+      cpu_total_potential_[0],
+      force_max_atom < force_tolerance_ && max_stress_component < stress_tolerance_GPa);
+
+    const bool spin_converged =
+      (!spin_minimization_ || torque_max <= spin_tolerance_);
 
     if (
       step == 0 || (step + 1) % base == 0 ||
-      (force_max_atom < force_tolerance_ && max_stress_component < stress_tolerance_GPa)) {
+      (force_max_atom < force_tolerance_ && max_stress_component < stress_tolerance_GPa &&
+       spin_converged)) {
       printf(
         "    step %d: total_potential = %.10f eV, f_max_atom = %.10f eV/A, pressure = %.6f GPa.\n",
         step == 0 ? 0 : (step + 1),
         cpu_total_potential_[0],
         force_max_atom,
         pressure);
+      if (spin_active(atom)) {
+        printf("            w_perp_max = %.10f eV/mu_B.\n", torque_max);
+      }
 
-      if (force_max_atom < force_tolerance_ && max_stress_component < stress_tolerance_GPa) {
+      if (
+        force_max_atom < force_tolerance_ && max_stress_component < stress_tolerance_GPa &&
+        spin_converged) {
         printf(
           "  Converged! f_max_atom = %.2e < %.2e AND max_stress = %.2e GPa < %.2e GPa\n",
           force_max_atom,
@@ -400,6 +419,10 @@ void Minimizer_FIRE_Box_Change::compute(
       number_of_atoms_, position_per_atom.data(), v.data(), d_dEps, dt);
 
     gpuFree(d_dEps);
+
+    // V4: one damped-spin step with the torque tested at the start of this
+    // iteration (same ordering as the fixed-box FIRE loop).
+    spin_relax_apply(atom, torque_max);
   }
 
   printf("Energy minimization finished.\n\n");

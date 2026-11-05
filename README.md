@@ -5,7 +5,7 @@ molecular dynamics package that trains neuroevolution potentials (NEP) carrying
 magnetic spin degrees of freedom and runs finite-temperature spin dynamics with
 them.
 
-Two things are added on top of upstream GPUMD:
+Three things are added on top of upstream GPUMD:
 
 1. **Spin-aware NEP models.** The descriptor set is extended by five spin
    blocks (`Sex`, `San`, `Sdm`, `Sia`, `Smag`) and the trainer learns the
@@ -14,8 +14,11 @@ Two things are added on top of upstream GPUMD:
 2. **Spin-lattice dynamics in MD.** A stochastic Landau–Lifshitz–Gilbert
    (sLLG) integrator advances the spins while the lattice is integrated by
    velocity Verlet, coupled through a symmetric (Strang) split.
+3. **Fields and relaxation.** A LAMMPS-compatible Zeeman field and a
+   magneto-electric pair term enter the potential itself, and the energy
+   minimisers relax the magnetic moments together with the lattice.
 
-Version: see `VERSION`. Current release tag: `v3.1.0-r19`.
+Version: see `VERSION`. Current release tag: `v4.3.2-r22-nonheat`.
 
 ---
 
@@ -28,6 +31,12 @@ Version: see `VERSION`. Current release tag: `v3.1.0-r19`.
 * **Spin dynamics**: stochastic LLG with a fixed spin length, coupled to the
   lattice; deterministic conservative propagation when damping and temperature
   are both zero.
+* **External field and magneto-electric coupling**: `magfield` (Zeeman, static
+  or driven) and `magelec` (Katsura–Nagaosa–Balatsky), both contributing
+  energy, torque, force and virial.
+* **Spin relaxation**: `minimize ... spin=on` relaxes the moments together with
+  the lattice; `compute_phonon`, `compute_cohesive` and `compute_elastic`
+  evaluate the magnetic Hamiltonian at frozen moments.
 * **Replica-exchange MD** (`gpumd_replica` executable).
 * **Monte Carlo** (canonical, variance-constrained and semi-grand-canonical)
   mixed with MD, for NEP potentials.
@@ -164,7 +173,7 @@ which gives the five blocks of layout 3:
 | `San` | $q^{\mathrm{San}}_ {i,n}=\sum_j g_n f_c\ a\ b$ | anisotropic exchange |
 | `Sdm` | $q^{\mathrm{Sdm}}_ {i,n}=\sum_j g_n f_c\ \mathbf e_{ij}\cdot(\mathbf S_i\times\mathbf S_j)$ | Dzyaloshinskii–Moriya |
 | `Sia` | $q^{\mathrm{Sia}}_ {i,n}=\sum_j g_n f_c\ (\tfrac32 a^2-\tfrac12 s^2)$ | single-ion anisotropy |
-| `Smag` | $q^{\mathrm{Smag}}_ {i,n}=u^{\ n+1}$ | on-site moment magnitude |
+| `Smag` | $q^{\mathrm{Smag}}_{i,n}=u^{\ n+1}$ | on-site moment magnitude |
 
 `Smag` is a purely on-site term (no neighbour sum), built from $u=s\ m$ where
 $m$ is the scaling factor given by `spin_mag_scale`. The current model layout is
@@ -193,7 +202,35 @@ Conserved quantities: $\lVert \mathbf S_i\rVert$ always; total energy additional
 $\alpha = 0$ and $T = 0$ (the conservative branch). With $T>0$ the sLLG
 thermostat is a heat bath and the energy is not conserved.
 
-### 2.5 Other physics implemented
+### 2.5 External field and magneto-electric coupling
+
+Two LAMMPS-compatible terms are added to the potential, so the energy
+conservation check, the minimisers and the heat-current decomposition all see
+them:
+
+$$
+H_{\rm Z}=-\sum_i \mathbf S_i\cdot\mathbf B,\qquad
+H_{\rm ME}=\sum_{i<j}\kappa_{ij}
+\big(\mathbf E\times\mathbf r_{ij}\big)\cdot
+\big(\mathbf S_i\times\mathbf S_j\big)
+$$
+
+* `magfield` sets $\mathbf B$. With `unit=tesla` (the default) the four numbers
+  are the magnitude and the direction, and
+  $B\ [\mathrm{eV}/\mu_B]=5.7883818\times10^{-5}\ H\ [\mathrm{T}]$: the spin
+  column holds the magnetic moment in $\mu_B$ and $g=2$ is already inside
+  `gamma`, so no extra Lande factor is applied. `g=<f>` rescales the field for
+  inputs that carry an angular momentum instead of a moment. `unit=ev` takes the
+  field vector directly in $\mathrm{eV}/\mu_B$, which is the unit of
+  `add_bfield`; the two tags are mutually exclusive.
+* `magelec` sets the pair term with a hard cutoff by default, which is what
+  releases up to r21 did. `cutoff=smooth` selects a $C^2$ switching function
+  between $r_{\rm on}$ and $r_c$; `smooth_width` gives the fraction of $r_c$ at
+  which the switch starts, and `r_on` sets it directly. The radial
+  $\mathrm{d}f_c/\mathrm{d}r$ term is then added to the force, so energy and
+  force stay continuous when a pair crosses the cutoff.
+
+### 2.6 Other physics implemented
 
 * **Ensembles**: NVE, Berendsen/Nosé–Hoover/Langevin/BDP/BAOAB thermostats,
   Berendsen/SCR/MTK barostats, quantum thermal bath, path-integral and ring
@@ -230,7 +267,7 @@ to the dependencies noted below.
 | `move` | `<group_id> <vx> <vy> <vz>` | Impose a constant drift velocity (Å/fs) on a group |
 | `change_box` | `<dxx> [<dyy> <dzz> [<dyz> <dxz> <dxy>]]` | Change the box (lengths in Å, or shear strains) and remap coordinates affinely |
 | `deform` | `<rate> xx\|yy\|zz\|xy\|xz\|yz …` | Deform the box at a constant rate during the run |
-| `minimize` | `sd <force_tol> <n_steps>` or `fire <force_tol> <n_steps> [<box_change> [<hydrostatic>]]` | Energy minimisation |
+| `minimize` | `sd <force_tol> <n_steps>` or `fire <force_tol> <n_steps> [<box_change> [<hydrostatic>]]`, plus `[spin=<on\|off\|auto>] [spin_tol=<t>] [alpha_damp=<a>]` | Energy minimisation; `spin=on` relaxes the moments too, `spin=auto` does so when `spin_llg` was read |
 | `compute_phonon` | `<displacement>` | Force constants and phonon dispersion by finite displacement; requires `replicate` |
 | `compute_cohesive` | `<start_factor> <end_factor> <deform_dir 0-6>` | Cohesive-energy curve |
 | `compute_elastic` | `<strain>` | Elastic constants (strain ≤ 0.1) |
@@ -287,6 +324,10 @@ to the dependencies noted below.
 | `spin_substeps` | `<n>` | Spin sub-steps per MD step. Takes effect only in the `staggered` path |
 | `spin_torque_refresh` | `on` or `off` | Recompute the torque between sub-steps. Takes effect only in the `staggered` path |
 | `add_bfield` | `<Bx> <By> <Bz> [<omega_THz>]` | External field in $\mathrm{eV}/\mu_B$; `omega > 0` makes it sinusoidal (FMR / spin pumping). Requires `spin_llg` first |
+| `magfield` | `<H> <nx> <ny> <nz> [unit=tesla\|ev] [g=<f>] [wave=static\|sin\|cos] [freq=<THz>] [phase=<rad>]` | Zeeman field whose energy is added to the potential, so minimisers and the energy check see it. Mutually exclusive with `add_bfield` |
+| `magelec` | `<cutoff> <kappa> <Ex> <Ey> <Ez> [cutoff=hard\|smooth] [smooth_width=<frac>] [r_on=<A>]` | Magneto-electric pair term; contributes energy, torque, force and virial |
+| `magelec_pair` | `<type_i> <type_j> <kappa>` | Per-type-pair override of the `magelec` coupling |
+| `spin_midpoint` | `<atol_muB> <rtol> <max_iterations>` | Convergence controls of the implicit midpoint branch |
 | `dump_magnetization` | `<interval> [<file>] [warmup <n_samples>]` | Write $M_x, M_y, M_z, \lVert M\rVert$, variance, susceptibility and saturation, global and per type |
 
 ### 3.4 Output tags
@@ -488,18 +529,21 @@ src/
   main_nep/       nep entry point: training (SNES), fitness, dataset, NEP kernels
   main_replica/   replica-exchange MD
   main_gnep/      alternative NEP build
-  spin/           spin dynamics: Spin class, sLLG kernels, thermal field
+  spin/           spin dynamics: Spin class, sLLG kernels, thermal field,
+                  Zeeman and magneto-electric terms
   integrate/      velocity Verlet and every thermostat/barostat
   force/          potential implementations and neighbour lists
   measure/        dump_* and compute_* actions
   mc/             Monte Carlo (canonical, sgc, vcsgc)
-  minimize/       steepest descent and FIRE
+  minimize/       steepest descent, FIRE and damped spin relaxation
   model/          box, atoms, grouping
   phonon/         phonon post-processing
   utilities/      common definitions, descriptors, GPU helpers
   lib/            third-party sources
   makefile        build rules for gpumd / nep / gpumd_replica
-docs/             theory notes, installation and validation documents
+docs/             theory notes, installation and validation documents;
+                  the derivations and the r20-r22 audit are in
+                  PHYSICS_DERIVATION.md at the top of the repository
 examples/         ready-to-run inputs (see §7)
 models/           trained NEP models and training inputs
 tests/            smoke, acceptance and physics test drivers
@@ -566,7 +610,9 @@ Force::compute(...)
 
 Torques are accumulated in double precision and narrowed to `float` once per
 step. The effective field used by the integrator is
-$\mathbf w_i = -\partial E/\partial\mathbf S_i$.
+$\mathbf w_i = -\partial E/\partial\mathbf S_i$. The Zeeman and magneto-electric
+terms are added by `SpinExternal::apply()` at the end of `Force::compute`, so the
+MD loop, the minimisers and the `compute_*` drivers share one code path.
 
 ### 6.4 Training call chain
 
@@ -593,6 +639,7 @@ main_nep/main.cu : main()
 | `examples/fe_bcc_ground_state/` | Ground-state scan for bcc Fe | `python scan.py` (see the directory README) |
 | `examples/fe_curie_temperature/` | Curie-temperature scan | `python tc_scan.py` |
 | `examples/fe_nve_stability/` | NVE energy-drift check | `python nve_drift.py` |
+| `examples/spin_field_minimize/` | Field-driven relaxation of a FeGe skyrmion host: `magfield`, optional `magelec`, `minimize fire ... spin=on` | Copy `tests/data/fege.nep.txt` and `tests/data/fege_b20.xyz` into a scratch directory as `nep.txt` and `model.xyz`, then run `gpumd` |
 
 Minimal spin run:
 

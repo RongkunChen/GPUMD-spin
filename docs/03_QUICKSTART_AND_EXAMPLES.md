@@ -28,7 +28,7 @@ cd examples\synthetic
 
 - 输入：`nep.txt`（模型）、`model.xyz`（16 原子 + `spin:R:3`）。
 - 输出：`thermo.out`。第 1 行是表头，**第 3 列是 PE（eV，总量）**，第 2 列 KE。
-- 单位：时间 `time_step` 用 **fs**；能量 eV；磁矩 $\mu_B$；力 eV/Å；磁梯度 $\mathrm{eV}/\mu_B$。
+- 单位：时间 `time_step` 用 **fs**；能量 eV；磁矩 $\mu_B$；力 eV/Å；磁梯度 eV/ $\mu_B$。
 
 ## 2. 训练一个极小模型
 

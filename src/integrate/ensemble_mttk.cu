@@ -115,7 +115,7 @@ Ensemble_MTTK::Ensemble_MTTK(const std::vector<std::string>& tokens) : Ensemble_
       if (!is_valid_real(tokens[i + 1], &p_period[0][0]))
         PRINT_INPUT_ERROR("Wrong inputs for pperiod keyword.");
       if (p_period[0][0] < 200) {
-        PRINT_INPUT_ERROR("pperiod should >= 200 timestep.");
+        PRINT_INPUT_ERROR("pperiod should >= 200 timestep."); 
       }
       i += 2;
       for (int i = 0; i < 3; i++) {
@@ -717,7 +717,7 @@ void Ensemble_MTTK::nhc_temp_integrate(
 void Ensemble_MTTK::nhc_press_integrate(const Atom& atom)
 {
 
-  int cell_dof;
+  int cell_dof; 
   double expfac = 0;
   double kT;
   double ke_omega_current, ke_omega_target;

@@ -160,7 +160,11 @@ Lattice="..." Properties=species:S:1:pos:R:3:force:R:3:spin:R:3:spin_force:R:3 e
 |---|---|---|
 | `spin_llg` | `spin_llg gamma=3.0385 alpha=0.1 T=300 seed=1 scheme=geometric` | 启用 SLLG。`alpha=0 T=0` → 确定性保守分支 |
 | | 可选 `restart=spin_restart.bin` | 从检查点恢复（含 RNG） |
-| `add_bfield` | `add_bfield Bx By Bz [omega_THz]` | 外磁场（ $\mathrm{eV}/\mu_B$）；`omega>0` 时为正弦驱动（FMR） |
+| `add_bfield` | `add_bfield Bx By Bz [omega_THz]` | 外磁场（eV/ $\mu_B$）；`omega>0` 时为正弦驱动（FMR） |
+| `magfield` | `magfield <H> <nx> <ny> <nz> [unit=tesla\|ev] [g=<f>] [wave=static\|sin\|cos] [freq=THz] [phase=rad]` | **V4**。LAMMPS `fix precession/spin zeeman` 风格；能量 $-\sum_i \mathbf S_i\cdot\mathbf B$ 计入 `potential_per_atom`。默认 `g=1`（自旋列已是 $\mu_B$，`gamma` 已含 g=2），`B[\mathrm{eV}/\mu_B]=5.7883818\times10^{-5}H[\mathrm T]$。必须写在 `spin_llg` 之后 |
+| `magelec` | `magelec <cut_A> <kappa> <Ex> <Ey> <Ez>` | **V4**。LAMMPS `pair_style spin/magelec`： $H=\sum_{i<j}\kappa(\mathbf E\times\mathbf r_{ij})\cdot(\mathbf S_i\times\mathbf S_j)$， $\kappa$ 单位 eV/(Å· $\mu_B^2$) |
+| `magelec_pair` | `magelec_pair <ti> <tj> <kappa>` | **V4**。按元素对覆盖 $\kappa$（0-based 类型索引） |
+| `minimize` | `minimize <sd\|fire> <ftol> <steps> [box_change] [hydrostatic] [spin=on\|off\|auto] [spin_tol=] [alpha_damp=] [discrete_factor=]` | **V4**。`spin=auto`（默认）在读过 `spin_llg` 时把磁矩一并最小化；收敛需 **力** 与 **横向力矩** 同时达标 |
 | `spin_substeps` | `spin_substeps <n>` | 每个 MD 步内做 n 个自旋子步 |
 | `spin_torque_refresh` | `spin_torque_refresh on/off` | 子步之间是否只刷新力矩（省一次全力计算） |
 | `spin_split` | `spin_split strang` 等 | 分裂方式（默认对称 Strang） |
@@ -266,9 +270,9 @@ printf '...\nspin_llg gamma=3.0385 alpha=0 T=0 restart=spin_restart.bin\nrun 100
 | 能量 | eV | |
 | 力 | eV/Å | |
 | 速度（dump） | Å/fs | 内部是 Å/nat，要 ×10.1805 |
-| 自旋 $\vert \mathbf S\vert$ | $\mu_B$ | |
-| 磁梯度/力矩列 | $\mathrm{eV}/\mu_B$ | `torque` 列存的是 $-\partial E/\partial\mathbf S$，不是 $\mathbf S\times\mathbf g$ |
-| 外磁场 | $\mathrm{eV}/\mu_B$ | `add_bfield` |
+| 自旋 $\lVert \mathbf S\rVert$ | $\mu_B$ | |
+| 磁梯度/力矩列 | eV/ $\mu_B$ | `torque` 列存的是 $-\partial E/\partial\mathbf S$，不是 $\mathbf S\times\mathbf g$ |
+| 外磁场 | eV/ $\mu_B$ | `add_bfield` |
 | 动能 | — | $\frac12 m v^2\times1.0364269\times10^{-4}$（ $m$ 用 u， $v$ 用 Å/fs） |
 | 热流 | eV/(Å²·ps)？ | **归一化存疑**，见 §8 |
 

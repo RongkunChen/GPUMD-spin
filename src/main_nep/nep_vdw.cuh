@@ -23,7 +23,7 @@ class Parameters;
 class Dataset;
 
 struct NEP_VDW_Data {
-  GPU_Vector<float> descriptors;
+  GPU_Vector<float> descriptors; 
   GPU_Vector<float> Fp;          // gradient of descriptors
   GPU_Vector<float> C6;
   GPU_Vector<float> C6_derivative;

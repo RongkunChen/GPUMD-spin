@@ -56,7 +56,57 @@ public:
     GPU_Vector<double>& position_per_atom,
     std::vector<Group>& group) = 0;
 
+  // ---- V4: spin degrees of freedom -------------------------------------
+  // When enabled, every minimizer also relaxes the magnetic moments with the
+  // damped spin dynamics of LAMMPS `min_style spin` (see minimizer_spin.cuh),
+  // and a state counts as converged only when the atomic force criterion AND
+  // the transverse-torque criterion are both met.
+  void set_spin_minimization(
+    const bool enabled, const double tolerance, const double alpha_damp,
+    const double discrete_factor)
+  {
+    spin_minimization_ = enabled;
+    spin_tolerance_ = tolerance;
+    alpha_damp_ = alpha_damp;
+    discrete_factor_ = discrete_factor;
+  }
+  bool spin_minimization() const { return spin_minimization_; }
+  // True when this minimizer will actually move magnetic moments: the keyword
+  // asked for it and the run really carries spins.
+  bool spin_active(Atom& atom) const;
+
 protected:
+  // Max transverse torque |w - s_hat(s_hat.w)| over all atoms, eV/mu_B.  Also
+  // fills spin_w_perp_ so that spin_relax_apply() can move the spins without
+  // recomputing it.  Returns 0 when the run carries no spins.
+  double spin_torque_max(Atom& atom);
+  // One geodesic step along the stored spin_w_perp_, sized by `w_max`.
+  void spin_relax_apply(Atom& atom, const double w_max);
+  // The spin step has no line search.  The trust region is adapted from the
+  // total energy the caller has just evaluated: a step that raises the energy
+  // halves it, a step that lowers it grows it back towards 1.  Without this the
+  // LAMMPS default angle (2 pi/kappa = 0.63 rad) limit-cycles between two
+  // configurations when the exchange field is stiff.
+  void update_spin_step_scale(const double total_potential, const bool lattice_converged);
+  double spin_step_scale() const { return spin_step_scale_; }
+  // Forces (and, when spins are minimized, torques) at `position`.  The
+  // spin-aware overload is what makes the magnetic energy visible to the
+  // minimizer at all: the plain 7-argument Force::compute leaves the spin
+  // blocks out of the potential.
+  void compute_force_at(
+    Force& force, Box& box, Atom& atom, std::vector<Group>& group,
+    GPU_Vector<double>& position_per_atom);
+
+  bool spin_minimization_ = false;
+  double spin_tolerance_ = 1.0e-3; // eV/mu_B
+  double alpha_damp_ = 1.0;        // LAMMPS min_modify alpha_damp
+  double discrete_factor_ = 10.0;  // LAMMPS min_modify discrete_factor
+  GPU_Vector<float> spin_w_perp_;
+  GPU_Vector<double> spin_w_max_;
+  double spin_step_scale_ = 1.0;
+  double spin_last_energy_ = 0.0;
+  bool spin_have_last_energy_ = false;
+
   void calculate_total_potential(const GPU_Vector<double>& potential_per_atom);
 
   void calculate_force_square_max(const GPU_Vector<double>& force_per_atom);

@@ -42,8 +42,8 @@ public:
   int num_types;          // number of atom types
   int epoch;              // maximum number of epochs for training
   int num_neurons1;       // number of nuerons in the 1st hidden layer (only one hidden layer)
-  int basis_size_radial;
-  int basis_size_angular;
+  int basis_size_radial;  
+  int basis_size_angular; 
   int n_max_radial;       // maximum order of the radial Chebyshev polynomials
   int n_max_angular;      // maximum order of the angular Chebyshev polynomials
   int L_max;              // maximum order of the 3body spherical harmonics
@@ -70,10 +70,10 @@ public:
   // learning rate scheduler (cosine annealing with warmup restarts)
   int lr_restart_enable;                 // 0=off(use cosine), 1=on(use cosine with restarts)
   int lr_warmup_epochs;                  // warmup epochs before scheduler starts
-  int lr_restart_initial_period_epochs;
+  int lr_restart_initial_period_epochs;  
   float lr_restart_period_factor;        // factor to scale period length per cycle
   float lr_restart_decay_factor;         // factor to decay cycle max lr per cycle
-
+  
 
   // check if a parameter has been set:
   bool is_prediction_set;
@@ -113,7 +113,7 @@ public:
   std::vector<float> type_weight_cpu; // relative force weight for different atom types (CPU)
   std::vector<float> q_scaler_cpu;    // used to scale some descriptor components (CPU)
   std::vector<std::string> elements;  // atom symbols
-  std::vector<int> atomic_numbers;
+  std::vector<int> atomic_numbers;    
   std::vector<float> zbl_para;        // parameters of zbl potential
   std::vector<float> rc_radial;       // radial cutoff distance
   std::vector<float> rc_angular;      // angular cutoff distance

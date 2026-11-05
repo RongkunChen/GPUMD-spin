@@ -239,8 +239,16 @@ public:
   // with the NEP case: a 1e-7 tolerance stalls at exactly 1.19e-7.  Eight ulp
   // is still ~1e-6 of the spin length, i.e. far below any physical accuracy
   // this scheme is asked for.
-  double midpoint_tolerance = 1.0e-6;
+  double midpoint_tolerance = 1.0e-6;     // atol, mu_B, absolute residual
+  // F-01 (r21): a second, dimensionless tolerance.  An absolute-only test is
+  // meaningless for |S| != 1 (mu_B); r_rel = r_abs / max_{i,c}|S|.  Converged
+  // requires BOTH r_abs <= midpoint_tolerance AND r_rel <= this value.
+  double midpoint_relative_tolerance = 1.0e-6;
   int midpoint_max_iterations = 50;
+  // F-03 (r21): maximum permitted relative departure of |S| from its FIXED
+  // anchor BEFORE the projection.  Exceeding it is a hard failure, not a
+  // reason to move the anchor.
+  double norm_tolerance_ = 1.0e-4;
   // Diagnostics of what the solver actually did (read after the run).
   long long midpoint_steps = 0;              // conservative steps taken
   long long midpoint_field_evaluations = 0;  // field re-evaluations in total
@@ -329,9 +337,40 @@ public:
   bool save_restart_state(const char* path, const long long physics_step,
                           const double global_time);
   bool load_restart_state(const char* path);
+  // F-09: compare the checkpoint's field configuration with the final run.in
+  // state.  Call only after every keyword has been parsed.
+  void validate_restart_external() const;
+  // F-03: number of |S| violations accumulated since the last reset.
+  // fail_here=true exits with a non-zero status when any were recorded.
+  // Run::perform_a_run calls this at the end of every run block.
+  int check_norm_violation(gpuStream_t stream = 0, bool fail_here = true);
   long long restart_physics_step() const { return restart_physics_step_; }
   bool has_restart_digest() const { return !restart_digest_.empty(); }
   const std::string& restart_digest() const { return restart_digest_; }
+
+  // ---- F-09 (r21): external-field driver state in the checkpoint ---------
+  // `spin_restart.bin` v2 stores the two clocks and the two field
+  // configurations, so a segmented run continues exactly the same B(t).
+  // v1 files are still readable but carry no field state: a run that uses a
+  // time-dependent field must refuse them instead of silently restarting the
+  // phase at zero.
+  double ext_b_peak[3] = {0.0, 0.0, 0.0}; // magfield amplitude, eV/mu_B
+  int ext_zeeman_wave = 0;
+  double ext_zeeman_freq_thz = 0.0;
+  double ext_zeeman_phase_rad = 0.0;
+  bool ext_has_magfield = false;
+  double ext_time_fs = 0.0;               // magfield envelope clock
+  int restart_schema_version = 0;         // schema of the loaded checkpoint
+  bool restart_has_ext_state = false;     // v2 only
+
+  double restored_global_time() const { return restart_global_time_; }
+  double restored_external_time_fs() const { return restart_ext_time_fs_; }
+  bool has_restored_state() const { return has_restart_digest(); }
+  const double* restored_b_peak() const { return restart_ext_b_peak_; }
+  int restored_zeeman_wave() const { return restart_ext_wave_; }
+  double restored_zeeman_freq() const { return restart_ext_freq_; }
+  double restored_zeeman_phase() const { return restart_ext_phase_; }
+  bool restored_has_magfield() const { return restart_ext_has_magfield_; }
 
 private:
   int number_of_atoms = 0;
@@ -353,7 +392,8 @@ private:
   GPU_Vector<float> spin_mid_;      // (S_old + S_new)/2
   GPU_Vector<float> spin_prev_;     // previous iterate, for the residual
   GPU_Vector<float> field_mid_;     // deterministic field at spin_mid_
-  GPU_Vector<double> mid_residual_; // one element: max |S_new - S_prev|
+  GPU_Vector<double> mid_residual_; // [0] max|dS| (mu_B), [1] max|S| (mu_B)
+  GPU_Vector<int> mid_bad_;         // count of NaN / Inf / overflow lanes
 
   // S08A: stochastic implicit midpoint (finite T).  Needs the provider for the
   // same reason the conservative branch does: the deterministic field must be
@@ -367,15 +407,20 @@ private:
     SpinFieldProvider* provider,
     gpuStream_t stream);
 
-  // S08A: project every spin onto its own magnitude anchor and record the
-  // largest pre-projection relative error.  |S_i| is a conserved quantity of
-  // the equation, so the anchor is a constraint, not a correction of an
-  // integration error: the pre-projection number is what says whether the map
-  // preserves the norm.  The anchor is refreshed only when |S| changes by more
-  // than 1e-4 (a restart or a replicate with different moments).
+  // F-03 (r21): the anchor is a CONSTRAINT, not a correction of an integration
+  // error.  It is written only by the explicit gpu_init_norm_anchor() call
+  // (initialisation / legitimate state rebuild) or restored from a checkpoint.
+  // The pre-projection relative error is what says whether the map preserves
+  // |S|; exceeding norm_tolerance_ is a hard failure, never a reason to adopt
+  // the wrong modulus as the new anchor.
   void project_onto_norm_anchor(float* g_spin, const int N, gpuStream_t stream);
-  GPU_Vector<float> norm_anchor_;   // per-atom |S| anchor
+  GPU_Vector<float> norm_anchor_;   // per-atom |S| anchor (FIXED)
   GPU_Vector<double> sllg_scalar_;  // one element: max pre-projection error
+  GPU_Vector<int> norm_bad_;        // one element: count of |S| violations
+  bool norm_anchor_valid_ = false;
+  long long projection_checks_ = 0;
+  int* norm_bad_alloc();
+  void spin_norm_failure(const int bad);
 
   GPU_Vector<gpurandState> states_;
   GPU_Vector<float> noise_;
@@ -388,4 +433,12 @@ private:
   std::string restart_file_;         // from `spin_llg ... restart=<file>`
   std::string restart_digest_;       // hex digest of the loaded payload
   long long restart_physics_step_ = 0; // step index recorded in the checkpoint
+  double restart_global_time_ = 0.0;   // natural time units, restored by Run
+  double restart_ext_time_fs_ = 0.0;   // magfield clock, restored by Run
+  double restart_ext_b_peak_[3] = {0.0, 0.0, 0.0};
+  double restart_b_ext_[4] = {0.0, 0.0, 0.0, 0.0}; // add_bfield B + omega
+  int restart_ext_wave_ = 0;
+  double restart_ext_freq_ = 0.0;
+  double restart_ext_phase_ = 0.0;
+  bool restart_ext_has_magfield_ = false;
 };

@@ -27,6 +27,7 @@ class RunInput;
 #include "model/box.cuh"
 #include "model/group.cuh"
 #include "spin/spin.cuh"
+#include "spin/spin_external.cuh"
 #include "utilities/common.cuh"
 #include "utilities/gpu_vector.cuh"
 #include "velocity.cuh"
@@ -60,11 +61,15 @@ private:
   bool has_replicate_ = false;
   int replicate_size_[3] = {1, 1, 1};
   std::string first_potential_filename_;
-  double global_time = 0.0; // run time of entire simulation (fs)
+  double global_time = 0.0; // accumulated simulation time, NATURAL units
+  // (r20's comment said fs; the loop adds `time_step`, which is in natural
+  // units, and dump_heat_flux converts with TIME_UNIT_CONVERSION/1000 for ps.)
+  bool restart_time_applied_ = false; // F-09: apply the checkpoint clock once
   double time_step = 1.0 / TIME_UNIT_CONVERSION;
   double max_distance_per_step = -1.0;
   Atom atom;
   Spin spin;                 // spin Route B: LLG spin dynamics
+  SpinExternal spin_external; // V4: Zeeman field + magneto-electric coupling
   GPU_Vector<double> thermo; // some thermodynamic quantities
   Velocity velocity;
   Box box;

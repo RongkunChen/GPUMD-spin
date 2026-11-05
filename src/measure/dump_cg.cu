@@ -145,8 +145,8 @@ void Dump_CG::accumulate_force(const int num_beads, const int num_atoms_total, G
 }
 
 void Dump_CG::find_position_bead(
-  const int num_beads,
-  const int num_atoms_total,
+  const int num_beads, 
+  const int num_atoms_total, 
   const int max_bead_size,
   const Group& g,
   Box& box,
@@ -175,7 +175,7 @@ void Dump_CG::find_position_bead(
           xyz_bead[k + max_bead_size * d] = xyz_bead[0 + max_bead_size * d] + pos_diff[d];
         }
       }
-
+   
       double r_com[3] = {0.0, 0.0, 0.0};
       double m_com = 0;
       for (int k = 0; k < g.cpu_size[b]; ++k) {
@@ -225,7 +225,7 @@ void Dump_CG::find_rdf(const int num_beads, Box& box)
 }
 
 void Dump_CG::find_energy_and_virial(
-  GPU_Vector<double>& virial_per_atom,
+  GPU_Vector<double>& virial_per_atom, 
   GPU_Vector<double>& gpu_thermo)
 {
   // energy and virial (symmetric tensor) in eV
@@ -318,8 +318,8 @@ void Dump_CG::end_of_step(
   std::vector<double> mass_bead(max_bead_size);
 
   find_position_bead(
-    num_beads,
-    num_atoms_total,
+    num_beads, 
+    num_atoms_total, 
     max_bead_size,
     g,
     box,

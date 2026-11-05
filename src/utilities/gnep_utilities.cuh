@@ -15,7 +15,7 @@
 
 /*----------------------------------------------------------------------------80
 1. The Gradient-optimized Neuroevolution Potential (GNEP)
-Ref: Hongfu Huang, Junhao Peng, Kaiqi Li, Jian Zhou, Zhimei Sun,
+Ref: Hongfu Huang, Junhao Peng, Kaiqi Li, Jian Zhou, Zhimei Sun, 
 Efficient GPU-Accelerated Training of a Neuroevolution Potential with Analytical Gradients,
 Computer Physics Communications. 320, 109994 (2026).
 2. The neuroevolution potential (NEP)
@@ -246,7 +246,7 @@ static __device__ void apply_ann_one_layer_w2nd(
     energy += w1j * x1;
     for (int n = 0; n < N_des; ++n) {
       const int idx_w0 = j_N_des + n;
-      const float w0jn = w0[idx_w0];
+      const float w0jn = w0[idx_w0]; 
       float tmp1 = tanh_der * w0jn; // derivative of tanh w.r.t. q[n]
       float tmp2 = w1j * tanh_der2;
       energy_derivative[n] += w1j * tmp1;
@@ -260,7 +260,7 @@ static __device__ void apply_ann_one_layer_w2nd(
         const float tmp3 = tanh_der2 * w0jn * w0jm;
         energy_derivative2[(n * N_des + m) * N] += w1j * tmp3;
         ep_wb[idx_w0 * N_des + m] = tmp2_qn * w0jm; // derivative of e_wb_grad[w0] w.r.t. q[n]
-        ep_wb[idx_w0 * N_des + m] += (m == n) ? delta_1 : 0.0f;
+        ep_wb[idx_w0 * N_des + m] += (m == n) ? delta_1 : 0.0f; 
       }
       e_wb_grad[idx_w0] += delta_1 * q[n]; // energy w.r.t. w0
     }
@@ -1037,7 +1037,7 @@ static __device__ __forceinline__ void accumulate_f12_one(
         int index = N * (d + abc + N_ABC);
         int index123 = N * (d + abc123 + N_ABC123);
         int d1 = (d + 2) % 3; // 0 -> 2, 1 -> 0, 2 -> 1
-        int index123_off = N * ((d1 + 3) + abc123 + N_ABC123);
+        int index123_off = N * ((d1 + 3) + abc123 + N_ABC123); 
         complex_product(real_part_n1, imag_part_n1, real_part_dx, imag_part_dy);
         f12[d] += (s[2 * n1 - 1] * real_part_dx + s[2 * n1 - 0] * imag_part_dy) * z_factor_fn;
         sf[index] += real_part_dx * z_factor_fn;
@@ -1055,7 +1055,7 @@ static __device__ __forceinline__ void accumulate_f12_one(
         int index = N * (d + abc + N_ABC);
         int index123 = N * (d + abc123 + N_ABC123);
         int d1 = (d + 2) % 3; // 0 -> 2, 1 -> 0, 2 -> 1
-        int index123_off = N * ((d1 + 3) + abc123 + N_ABC123);
+        int index123_off = N * ((d1 + 3) + abc123 + N_ABC123); 
         f12[d] += xy_temp * (factor1 * r12[d] + factor2 * dz[d]);
         sf[index] += real_part * (factor1 * r12[d] + factor2 * dz[d]);
         sf[index + 3 * N] += imag_part * (factor1 * r12[d] + factor2 * dz[d]);
@@ -1763,10 +1763,10 @@ static __device__ __forceinline__ float find_q_one(const T* s)
 
 static __device__ __forceinline__ void
 find_q(
-  const int L_max,
-  const int n_max_angular_plus_1,
-  const int n,
-  const float* s,
+  const int L_max, 
+  const int n_max_angular_plus_1, 
+  const int n, 
+  const float* s, 
   float* q)
 {
   if (L_max >= 1) {

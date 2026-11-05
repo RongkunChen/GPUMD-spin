@@ -21,10 +21,14 @@ class Force;
 class Box;
 class Group;
 class Atom;
+class Spin;
 
 class Minimize
 {
 public:
+  // The trailing `Spin*` is optional and defaulted, so every existing caller
+  // keeps compiling; pass it to let the minimizer move the magnetic moments as
+  // well (see `<spin>=on` below).
   void parse_minimize(
     const std::vector<std::string>& tokens,
     int fixed_group,
@@ -32,5 +36,6 @@ public:
     Force& force,
     Box& box,
     Atom& atom,
-    std::vector<Group>& group);
+    std::vector<Group>& group,
+    Spin* spin = nullptr);
 };

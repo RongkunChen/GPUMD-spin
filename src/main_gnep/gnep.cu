@@ -15,7 +15,7 @@
 
 /*----------------------------------------------------------------------------80
 1. The Gradient-optimized Neuroevolution Potential (GNEP)
-Ref: Hongfu Huang, Junhao Peng, Kaiqi Li, Jian Zhou, Zhimei Sun,
+Ref: Hongfu Huang, Junhao Peng, Kaiqi Li, Jian Zhou, Zhimei Sun, 
 Efficient GPU-Accelerated Training of a Neuroevolution Potential with Analytical Gradients,
 Computer Physics Communications. 320, 109994 (2026).
 2. The neuroevolution potential (NEP)
@@ -395,7 +395,7 @@ static __global__ void apply_ann(
     }
     // get energy and energy gradient
     float F = 0.0f, Fp[MAX_DIM] = {0.0f};
-
+    
     if (IsTraining) {
       const int type_offset =
         n1 * annmb.num_ann + type * ((annmb.dim + 2) * annmb.num_neurons1 + 1);
@@ -412,7 +412,7 @@ static __global__ void apply_ann(
         annmb.b0[type],
         annmb.w1[type],
         N,
-        q,
+        q,  
         F,
         Fp,
         &g_Fp2[n1],
@@ -461,9 +461,9 @@ static __global__ void gpu_sum_pe_error(
 {
   int tid = threadIdx.x;
   int bid = blockIdx.x;
-  int Na = g_Na[bid];
-  int N1 = g_Na_sum[bid];
-  int N2 = N1 + Na;
+  int Na = g_Na[bid];  
+  int N1 = g_Na_sum[bid]; 
+  int N2 = N1 + Na;     
   extern __shared__ float s_pe[];
   s_pe[tid] = 0.0f;
 
@@ -665,7 +665,7 @@ static __global__ void compute_grad_radial_NM(
   // Nc is global across all shards, while Na is configuration-specific.
   const float per_Nc_e =
     g_diff_gpu_e[batch_idx] * squared_weight * 2.0f * lambda_e / Nc / Na;
-
+  
   int t1_net_index = t1 * ((annmb.dim + 2) * annmb.num_neurons1 + 1);
   int n1_net_index = n1 * annmb.num_ann + t1_net_index;
   const size_t n1_net_index_wb =
@@ -715,7 +715,7 @@ static __global__ void compute_grad_radial_NM(
     dx_n1 *= type_weight;
     dy_n1 *= type_weight;
     dz_n1 *= type_weight;
-
+    
     const float diff[6] = {
       g_diff_gpu_v[batch_idx * 6 + 0] * per_Nc_v,
       g_diff_gpu_v[batch_idx * 6 + 1] * per_Nc_v,
@@ -987,11 +987,11 @@ static __global__ void compute_grad_radial_NM(
         grad_w1_sum += e_wb_grad[b0_index + j] * per_Nc_e;
         grad_b0_sum += e_wb_grad[w0_index + j] * per_Nc_e;
       }
-      grad_w1_sum -= sum_dfeat_w1b0_v[0] * diff[0] + sum_dfeat_w1b0_v[1] * diff[1]
-        + sum_dfeat_w1b0_v[2] * diff[2] + sum_dfeat_w1b0_v[3] * diff[3]
+      grad_w1_sum -= sum_dfeat_w1b0_v[0] * diff[0] + sum_dfeat_w1b0_v[1] * diff[1] 
+        + sum_dfeat_w1b0_v[2] * diff[2] + sum_dfeat_w1b0_v[3] * diff[3] 
         + sum_dfeat_w1b0_v[4] * diff[4] + sum_dfeat_w1b0_v[5] * diff[5];
-      grad_b0_sum -= sum_dfeat_w1b0_v[6] * diff[0] + sum_dfeat_w1b0_v[7] * diff[1]
-        + sum_dfeat_w1b0_v[8] * diff[2] + sum_dfeat_w1b0_v[9] * diff[3]
+      grad_b0_sum -= sum_dfeat_w1b0_v[6] * diff[0] + sum_dfeat_w1b0_v[7] * diff[1] 
+        + sum_dfeat_w1b0_v[8] * diff[2] + sum_dfeat_w1b0_v[9] * diff[3] 
         + sum_dfeat_w1b0_v[10] * diff[4] + sum_dfeat_w1b0_v[11] * diff[5];
       atomicAdd(&g_grad_sum[t1_net_index + b0_index + j], grad_w1_sum);
       atomicAdd(&g_grad_sum[t1_net_index + w0_index + j], grad_b0_sum);
@@ -1099,7 +1099,7 @@ static __global__ void compute_grad_angular_NM(
     static_cast<size_t>(n1) * static_cast<size_t>(annmb.num_ann) *
       static_cast<size_t>(annmb.dim) +
     static_cast<size_t>(t1_net_index) * static_cast<size_t>(annmb.dim);
-
+  
   float diff[6] = {
     g_diff_gpu_v[batch_idx * 6 + 0] * per_Nc_v,
     g_diff_gpu_v[batch_idx * 6 + 1] * per_Nc_v,
@@ -1312,11 +1312,11 @@ static __global__ void compute_grad_angular_NM(
         float feat_y_d = feat_y[d];
         float feat_z_d = feat_z[d];
         float dfeat_scaler[3] = {feat_x_d * scale, feat_y_d * scale, feat_z_d * scale};
-        float dfeat_scaler_v[6] = {feat_x_d * r12_i1[0] * scale,
-                                  feat_y_d * r12_i1[1] * scale,
-                                  feat_z_d * r12_i1[2] * scale,
-                                  feat_y_d * r12_i1[0] * scale,
-                                  feat_z_d * r12_i1[1] * scale,
+        float dfeat_scaler_v[6] = {feat_x_d * r12_i1[0] * scale, 
+                                  feat_y_d * r12_i1[1] * scale, 
+                                  feat_z_d * r12_i1[2] * scale, 
+                                  feat_y_d * r12_i1[0] * scale, 
+                                  feat_z_d * r12_i1[1] * scale, 
                                   feat_x_d * r12_i1[2] * scale};
         w1_index_dim = n1_net_index_wb + (b0_index + j) * annmb.dim + index_dim;//(N_neu * N_des + N_neu + j) * N_des + n
         b0_index_dim = n1_net_index_wb + (w0_index + j) * annmb.dim + index_dim;//(N_neu * N_des + j) * N_des + n
@@ -1361,19 +1361,19 @@ static __global__ void compute_grad_angular_NM(
         sum_dfeat_w0_v[5] += feat_x_m * r12_i1[2] * scale_g_ep;
       }
       grad_w0_sum = sum_dfeat_w0[0] * dx_diff + sum_dfeat_w0[1] * dy_diff + sum_dfeat_w0[2] * dz_diff;
-      grad_w0_sum -= sum_dfeat_w0_v[0] * diff[0] + sum_dfeat_w0_v[1] * diff[1]
-                    + sum_dfeat_w0_v[2] * diff[2] + sum_dfeat_w0_v[3] * diff[3]
+      grad_w0_sum -= sum_dfeat_w0_v[0] * diff[0] + sum_dfeat_w0_v[1] * diff[1] 
+                    + sum_dfeat_w0_v[2] * diff[2] + sum_dfeat_w0_v[3] * diff[3] 
                     + sum_dfeat_w0_v[4] * diff[4] + sum_dfeat_w0_v[5] * diff[5];
       atomicAdd(&g_grad_sum[t1_net_index + j * annmb.dim + d], grad_w0_sum);
     }
     grad_w1_sum = sum_dfeat_w1b0[0] * dx_diff + sum_dfeat_w1b0[1] * dy_diff + sum_dfeat_w1b0[2] * dz_diff;
     grad_b0_sum = sum_dfeat_w1b0[3] * dx_diff + sum_dfeat_w1b0[4] * dy_diff + sum_dfeat_w1b0[5] * dz_diff;
-    grad_w1_sum -= sum_dfeat_w1b0_v[0] * diff[0] + sum_dfeat_w1b0_v[1] * diff[1]
-                  + sum_dfeat_w1b0_v[2] * diff[2] + sum_dfeat_w1b0_v[3] * diff[3]
+    grad_w1_sum -= sum_dfeat_w1b0_v[0] * diff[0] + sum_dfeat_w1b0_v[1] * diff[1] 
+                  + sum_dfeat_w1b0_v[2] * diff[2] + sum_dfeat_w1b0_v[3] * diff[3] 
                   + sum_dfeat_w1b0_v[4] * diff[4] + sum_dfeat_w1b0_v[5] * diff[5];
-    grad_b0_sum -= sum_dfeat_w1b0_v[6] * diff[0] + sum_dfeat_w1b0_v[7] * diff[1]
-                  + sum_dfeat_w1b0_v[8] * diff[2] + sum_dfeat_w1b0_v[9] * diff[3]
-                  + sum_dfeat_w1b0_v[10] * diff[4] + sum_dfeat_w1b0_v[11] * diff[5];
+    grad_b0_sum -= sum_dfeat_w1b0_v[6] * diff[0] + sum_dfeat_w1b0_v[7] * diff[1] 
+                  + sum_dfeat_w1b0_v[8] * diff[2] + sum_dfeat_w1b0_v[9] * diff[3] 
+                  + sum_dfeat_w1b0_v[10] * diff[4] + sum_dfeat_w1b0_v[11] * diff[5]; 
     atomicAdd(&g_grad_sum[t1_net_index + b0_index + j], grad_w1_sum);
     atomicAdd(&g_grad_sum[t1_net_index + w0_index + j], grad_b0_sum);
   }
@@ -1519,7 +1519,7 @@ static __global__ void find_force_angular(
           c_index += t1 * paramb.num_types + t2 + paramb.num_c_radial;
           gn12 += fn12[k] * annmb.c[c_index];
           gnp12 += fnp12[k] * annmb.c[c_index];
-        }
+        }          
         accumulate_f12(N, requires_grad, paramb.L_max, n, paramb.n_max_angular + 1, d12, r12, gn12, gnp12, Fp, &g_sum_fxyz[n1], &g_sum_s2xyz[n1], &g_sum_s2xyz123[n1], f12);
       } // end of loop over n_max_ang
 
@@ -1857,7 +1857,7 @@ void GNEP::find_force(
         dataset[device_id].virial.data(),
         dataset[device_id].energy.data());
       GPU_CHECK_KERNEL
-    }
+    } 
 
     gpu_sum_pe_error<<<dataset[device_id].Nc, 256, sizeof(float) * 256>>>(
       dataset[device_id].Na.data(),

@@ -749,7 +749,7 @@ static __global__ void find_force_angular(
     }
     for (int n = 0; n < paramb.n_max_angular + 1; ++n) {
       for (int abc = 0; abc < (paramb.L_max + 1) * (paramb.L_max + 1) - 1; ++abc) {
-        sum_fxyz[n * NUM_OF_ABC + abc] =
+        sum_fxyz[n * NUM_OF_ABC + abc] = 
           g_sum_fxyz[(n * ((paramb.L_max + 1) * (paramb.L_max + 1) - 1) + abc) * N + n1];
       }
     }
@@ -789,7 +789,7 @@ static __global__ void find_force_angular(
           gn12 += fn12[k] * annmb.c[c_index];
           gnp12 += fnp12[k] * annmb.c[c_index];
         }
-        accumulate_f12(paramb.L_max, paramb.has_q_222, paramb.has_q_1111, paramb.has_q_112, paramb.has_q_123, paramb.has_q_233, paramb.has_q_134,
+        accumulate_f12(paramb.L_max, paramb.has_q_222, paramb.has_q_1111, paramb.has_q_112, paramb.has_q_123, paramb.has_q_233, paramb.has_q_134, 
           paramb.num_L, n, paramb.n_max_angular + 1, d12, r12, gn12, gnp12, Fp, sum_fxyz, f12);
       }
 

@@ -29,6 +29,10 @@
 
 class RunInput;
 
+// Forward declaration: force.cu is the only place that needs the definition,
+// and this keeps the spin headers out of every file that includes force.cuh.
+class SpinExternal;
+
 class Force
 {
 public:
@@ -65,6 +69,33 @@ public:
 
   // Zeroes the given arrays and evaluates one potential alone into them. The positions and the
   // float box are read as they are.
+  // V4: external magnetic field / magneto-electric coupling.  The pointer is
+  // owned by Run; a null pointer (the default) reproduces the pre-V4 behaviour
+  // exactly.  The terms are added at the end of compute(), i.e. at the same
+  // place the potential is evaluated, so MD, both minimizers and the replica
+  // build all see them without further plumbing.
+  void set_spin_external(SpinExternal* external) { spin_external_ = external; }
+
+  // F-10 (spin-aware non-MD drivers).  compute_phonon (Hessian::find_H12) and
+  // compute_cohesive / compute_elastic (Cohesive -> Minimizer_SD) go through
+  // the short 7-argument compute() overload, which cannot carry spin/torque as
+  // arguments.  Before this registration that overload left NEP::spin_ ==
+  // nullptr, so a nep4_spin potential silently evaluated its NON-MAGNETIC
+  // Hamiltonian, and neither magfield nor magelec contributed to the
+  // energy/force/virial.  Run binds the (already replicated) device buffers
+  // with a scoped guard around each of those three commands only; the long MD
+  // overload still overrides them explicitly on every call.  Both pointers
+  // null (no binding) keeps the old behaviour, including `minimize spin=off`.
+  void set_static_spin(const float* spin, float* torque)
+  {
+    static_spin_ = spin;
+    static_torque_ = torque;
+  }
+  bool has_static_spin() const
+  {
+    return static_spin_ != nullptr && static_torque_ != nullptr;
+  }
+
   void compute_one_potential(
     const int potential_index,
     Box& box,
@@ -114,6 +145,9 @@ private:
 
   double temperature = 0;
   double delta_T;
+  SpinExternal* spin_external_ = nullptr; // V4, see set_spin_external()
+  const float* static_spin_ = nullptr;    // F-10, see set_static_spin()
+  float* static_torque_ = nullptr;        // F-10, see set_static_spin()
   std::vector<std::unique_ptr<Potential>> potentials;
   bool is_fcp = false;
   bool has_non_nep = false;

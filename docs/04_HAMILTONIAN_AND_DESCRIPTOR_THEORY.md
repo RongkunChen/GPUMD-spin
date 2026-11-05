@@ -40,7 +40,7 @@ $$
 | **San** | $q^{\rm an}_ {i,n,l}=\sum_{j<k} g_n g_n\ P_l(\hat{\mathbf r}_ {ij} \cdot \hat{\mathbf r}_ {ik})\ (\mathbf u_i \cdot \hat{\mathbf r}_ {ij})(\mathbf u_i \cdot \hat{\mathbf r}_ {ik})$ | $l$ 通道 | 旋转不变、P-even |
 | **Sdm** | $q^{\rm dm}_ {i,n}=\sum_{j\in n(i)} g_n(r_{ij})\ \hat{\mathbf r}_ {ij} \cdot (\mathbf u_i\times\mathbf u_j)$ | 1 | **P-odd**、T-even、仅联合旋转不变 |
 | **Sia** | $q^{\rm sia}_ {i,n,(ab)}=\sum_{j\in n(i)} g_n(r_{ij})\left(u_{i,a}u_{i,b}-\tfrac13\delta_{ab}\right)$ | 5（对称无迹） | 旋转不变、P-even、 $l=2$ |
-| **Smag** | $q^{\rm mag}_ {i,n}=\big(s\vert \mathbf S_i\vert \big)^{n+1}$ | $n=0..$ | 旋转不变、P-even、原点不可微 |
+| **Smag** | $q^{\rm mag}_ {i,n}=\big(s\lVert \mathbf S_i\rVert \big)^{n+1}$ | $n=0..$ | 旋转不变、P-even、原点不可微 |
 
 旧布局的 **Senv** 占据 slot 4，是 T-odd 通道；无外场/无破 T 物理时不应无条件启用，v3 已被 `Sia` 取代（`spin_layout 3`）。
 
@@ -88,7 +88,7 @@ spin_mag_scale 0.25
 
 | 变换 | mask17 | mask31 | 检验方式 | 本版本结果 |
 |---|---|---|---|---|
-| 整体自旋旋转（无 SOC） | 必须不变 | 不应不变（Sia/Sdm 破各向同性） | 旋转所有 $\mathbf S$ 比较 $E$ | mask17： $\Delta E=0.0$ eV（`VALIDATION_REPORT.md`） |
+| 整体自旋旋转（无 SOC） | 必须不变 | 不应不变（Sia/Sdm 破各向同性） | 旋转所有 $\mathbf S$ 比较 $E$ | mask17： $\Delta E=0.0$ eV（`docs/13`） |
 | 空间反演 | $E$ 不变（无 DMI） | 视权重而定 | 反演 $\mathbf r$、保持 $\mathbf S$ | NOT_VALIDATED |
 | 时间反演 | $E$ 偶 | $E$ 偶（Senv 除外） | $\mathbf S\to-\mathbf S$ 后 $E$ 比较 | NOT_VALIDATED |
 

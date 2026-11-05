@@ -85,19 +85,30 @@ def max_spin_diff(a, b, offset):
 
 
 def read_ckpt(path):
-    """spin_restart.bin: 16s magic, u32 ver, u32 N, u64 model, 4 doubles,
-    3 i32, 2 i64, double, then anchor[N], rng[N*48], u64 payload."""
+    """spin_restart.bin.  v1: 16s magic, u32 ver, u32 N, u64 model,
+    4 doubles (gamma/alpha/T/dt), 3 i32 (scheme/has_rng/has_anchor),
+    2 i64 (steps/physics_step), double global_time = 100 B header.
+    r21 v2 APPENDS a 92 B external-field block (i32 has_ext, 5 doubles
+    add_bfield Bx,By,Bz,omega,elapsed, 3 doubles magfield peak, i32 wave,
+    2 doubles freq/phase, i32 has_magfield) before anchor[N]/rng[N*48].
+    Both schemas are readable so a v1 checkpoint can still be inspected."""
     raw = open(path, "rb").read()
     hdr = struct.unpack("<16sIIQddddiiiqqd", raw[:100])
-    n, has_rng = hdr[2], hdr[9]
+    version, n, has_rng = hdr[1], hdr[2], hdr[9]
     off = 100
+    if version == 2:
+        ext = struct.unpack("<i5d3di2di", raw[off:off + 92])
+        assert ext[0] == 1, "v2 checkpoint missing the external-field block"
+        off += 92
+    elif version != 1:
+        raise ValueError("unsupported spin_restart.bin schema %d" % version)
     anchor = struct.unpack("<%df" % n, raw[off:off + 4 * n])
     off += 4 * n
     rng = raw[off:off + (48 * n if has_rng else 0)]
-    return {"magic": hdr[0].split(b"\0")[0].decode(), "version": hdr[1], "n": n,
+    return {"magic": hdr[0].split(b"\0")[0].decode(), "version": version, "n": n,
             "has_rng": bool(has_rng), "anchor": anchor,
             "rng_sha": hashlib.sha256(rng).hexdigest() if has_rng else None,
-            "steps": hdr[11]}
+            "steps": hdr[11], "external_state": version == 2}
 
 
 def main():

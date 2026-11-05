@@ -72,7 +72,7 @@ static jboolean initJVM_(JNIEnv **rEnv) {
   tVMArgs.nOptions = 4;
   tVMArgs.options = tOptions;
   tVMArgs.ignoreUnrecognized = JNI_TRUE;
-
+  
   jint tOut = JNI_CreateJavaVM(&tJVM, (void**)rEnv, &tVMArgs);
   return tOut==JNI_OK ? JNI_TRUE : JNI_FALSE;
 }
@@ -110,7 +110,7 @@ static jmethodID sComputeGPUMD = 0;
 
 static jobject newJObject_(JNIEnv *aEnv, const char* filename) {
   jobject rOut = NULL;
-
+  
   jstring tJFileName = aEnv->NewStringUTF(filename);
   jstring tArchStr = aEnv->NewStringUTF("cuda");
   if (sInit || (sInit = aEnv->GetMethodID(NNAP_CLAZZ, "<init>", "(Ljava/lang/String;Ljava/lang/String;)V"))) {
@@ -118,7 +118,7 @@ static jobject newJObject_(JNIEnv *aEnv, const char* filename) {
   }
   aEnv->DeleteLocalRef(tJFileName);
   aEnv->DeleteLocalRef(tArchStr);
-
+  
   return rOut;
 }
 static double rcutMax_(JNIEnv *aEnv, jobject aSelf) {
@@ -295,7 +295,7 @@ NNAP::NNAP(const char* setting_file, const char* nnap_file, int num_atoms)
   if (mCore != NULL) mEnv->DeleteGlobalRef(mCore);
   mCore = mEnv->NewGlobalRef(tObj);
   mEnv->DeleteLocalRef(tObj);
-
+  
   rc = rcutMax_(mEnv, mCore);
   if (exceptionCheck_(mEnv)) PRINT_INPUT_ERROR("Fail to get rcutMax");
   neighbor.initialize(rc, num_atoms, nn_max);
@@ -303,7 +303,7 @@ NNAP::NNAP(const char* setting_file, const char* nnap_file, int num_atoms)
     PRINT_INPUT_ERROR("Invalid NNAP cutoff returned by rcutMax()");
   }
   printf("    max cutoff = %g A.\n", rc);
-
+  
   // init nl cache
   nl_dx.resize(num_atoms * nn_max);
   nl_dy.resize(num_atoms * nn_max);
@@ -316,7 +316,7 @@ NNAP::~NNAP(void)
     close_(mEnv, mCore);
     // only check, no error on destructor
     exceptionCheck_(mEnv);
-
+    
     mEnv->DeleteGlobalRef(mCore);
     mCore = NULL;
     uncacheJClass_(mEnv);
@@ -351,7 +351,7 @@ static __global__ void valid_nl_(
       float y12 = (float)g_y[n2] - y1;
       float z12 = (float)g_z[n2] - z1;
       apply_mic(box, x12, y12, z12);
-
+      
       nl_dx[n1 + number_of_particles * i1] = x12;
       nl_dy[n1 + number_of_particles * i1] = y12;
       nl_dz[n1 + number_of_particles * i1] = z12;
@@ -459,12 +459,12 @@ void NNAP::compute(
   }
 
   const int number_of_atoms = type.size();
-
+  
   // build neighbor list here
   neighbor.find_neighbor_global(
     rc,
-    box,
-    type,
+    box, 
+    type, 
     position
   );
   int grid_size = (N2 - N1 - 1) / BLOCK_SIZE_NNAP + 1;

@@ -1,0 +1,32 @@
+# Relaxation of the magnetic moments under a Zeeman field and a
+# magneto-electric term.
+#
+# System: B20 FeGe, 2x2x4 conventional cells (256 atoms), a = 4.8 A.
+# Every block below can be commented out independently.
+#
+# magfield / magelec must follow spin_llg: the parser checks that spin
+# dynamics is enabled before it accepts them.
+
+potential nep.txt
+
+# gamma = 3.0385 is the gyromagnetic ratio for g = 2, in fs^-1 per eV/mu_B.
+spin_llg gamma=3.04 alpha=0.1 T=0
+
+# 5 T along +z. The spin column holds the magnetic moment in mu_B, so
+# B[eV/mu_B] = 5.788e-5 * H. Write g=2 to recover the numbers of the releases
+# that multiplied the field by g a second time.
+magfield 5.0 0.0 0.0 1.0
+
+# Magneto-electric coupling: H = sum_ij kappa (E x r_ij).(S_i x S_j),
+# kappa in eV/(A muB^2), E a dimensionless screened-polarisation vector.
+# Delete the line if the term is not needed.
+# magelec 4.5 1.0e-3 1.0 0.0 0.0
+
+# The minimiser stops only when both the force and the transverse torque are
+# below their tolerances. spin=auto includes the moments when spin_llg was read.
+minimize fire 1e-3 3000 spin=on spin_tol=1e-3
+
+# Write the final state with spin columns, for a topology analysis.
+ensemble nve
+dump_xyz 1 final.xyz spin potential precision double
+run 1

@@ -211,6 +211,22 @@ void HAC::post_run(
     return;
   print_line_1();
   printf("Start to calculate HAC and related quantities.\n");
+  // F-12 (r21): cross-correlation is ALREADY implemented in gpu_find_hac --
+  // both J_in(t)J_out(t+tau) and J_out(t)J_in(t+tau) are accumulated for x and
+  // y.  The old documentation complaint ("HAC lacks the in/out cross term") is
+  // NOT a defect of this version; see AUDIT_AND_FIX_REPORT.md, excluded clue.
+  // The Green-Kubo prefactor below is derived from
+  //   kappa_ab = V/(kB T^2) int_0^inf <J_a(0) J_b(t)> dt  with j = J/V,
+  // and is NOT tuned to match any material (no empirical /98 rescaling).
+  if (atom.has_spin) {
+    printf(
+      "WARNING [BLOCKED]: compute_hac on a spin system uses an UNVALIDATED\n"
+      "  spin-resolved heat current (see PHYSICS_DERIVATION.md section 4).\n"
+      "  hac.out / the running kappa are DIAGNOSTIC ONLY.  In particular\n"
+      "  kappa_pm = kappa_mp does NOT follow from both channels being T-odd:\n"
+      "  Onsager-Casimir requires a field-odd transformation and holds only at\n"
+      "  B = 0 (or with the appropriate B -> -B exchange).\n");
+  }
   printf(
     "    using T = %.4f K and V = %.4f A^3 for the Green-Kubo prefactor.\n",
     temperature,

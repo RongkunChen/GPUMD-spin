@@ -55,7 +55,7 @@ LJ::LJ(FILE* fid, int num_types, int num_atoms)
     }
   }
 
-  neighbor_manager.initialize(rc, num_atoms, 700);
+  neighbor_manager.initialize(rc, num_atoms, 700); 
 }
 
 LJ::~LJ(void)
