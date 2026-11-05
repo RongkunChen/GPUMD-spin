@@ -33,7 +33,7 @@ $$
 +\underbrace{\sum_i \mathbf r_i\ (-\mathbf g_i \cdot \dot{\mathbf S}_i)}_{\mathbf J_S},
 $$
 
-- $\mathbf J_L$ 的可用形式： $\sum_i \dot{\mathbf r}_ i\ \epsilon_i+\sum_{i<j}\mathbf r_{ij}(\mathbf F_{ij} \cdot \dot{\mathbf r}_ i)$（依能量分配约定）。
+- $\mathbf J_L$ 的可用形式： $\sum_i \dot{\mathbf r}_ i\ \epsilon_i+\sum_{i\lt j}\mathbf r_{ij}(\mathbf F_{ij} \cdot \dot{\mathbf r}_ i)$（依能量分配约定）。
 - $\mathbf J_S=-\sum_i \mathbf g_i\ (\dot{\mathbf S}_ i \cdot \mathbf r_i)$ 的**非局域**部分来自 $\mathbf g_i$ 依赖邻居 $\mathbf S_j$，
   必须按键拆分，不能只写 $-\mathbf g_i \cdot \dot{\mathbf S}_ i$（后者散度不为零）。
 - **规范非唯一**：能量零点、 $\mathbf r_i$ 的原点、是否包含 $\mathbf J_S$ 的“对流项”都会改变分解；

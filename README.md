@@ -210,7 +210,7 @@ them:
 
 $$
 H_{\rm Z}=-\sum_i \mathbf S_i\cdot\mathbf B,\qquad
-H_{\rm ME}=\sum_{i<j}\kappa_{ij}
+H_{\rm ME}=\sum_{i\lt j}\kappa_{ij}
 \big(\mathbf E\times\mathbf r_{ij}\big)\cdot
 \big(\mathbf S_i\times\mathbf S_j\big)
 $$

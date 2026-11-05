@@ -92,7 +92,7 @@ $\max|\sum_i\mathbf F_i|=7.8\times10^{-18}$ eV/Å。
 GPUMD 的 per-atom virial 约定（见 `force/lj.cu`）是
 
 $$
-W_{ab}=-\sum_{i<j} r_{ij,a}\ F^{(ij)}_{i,b},
+W_{ab}=-\sum_{i\lt j} r_{ij,a}\ F^{(ij)}_{i,b},
 $$
 
 即每个有序 visit 累加 $-\tfrac12 r_{ij,a}F_{i,b}$，两个 visit 合计
@@ -105,8 +105,8 @@ $-r_{ij,a}F_{i,b}$，能量却用 $\tfrac12 H_{ij}$，于是总 virial 是正确
 因为 $H_{ij}$ 对 $\mathbf r_{ij}$ 是齐次一次，
 
 $$
-\operatorname{tr}W=-\sum_{i<j}\mathbf r_{ij}\cdot\mathbf F_i
-=-\sum_{i<j} H_{ij}=-E_{\rm ME},
+\operatorname{tr}W=-\sum_{i\lt j}\mathbf r_{ij}\cdot\mathbf F_i
+=-\sum_{i\lt j} H_{ij}=-E_{\rm ME},
 $$
 
 （**不是** $-2E_{\rm ME}$）。实测 `CPU.ME.TRACE_VIRIAL_EQUALS_MINUS_ENERGY`
@@ -327,7 +327,7 @@ $$
 \quad(\text{加上速度/virial 项}),
 $$
 
-该关系只对**二次齐次 Heisenberg** $U=-\sum_{i<j}J_{ij}\mathbf S_i\cdot\mathbf S_j$
+该关系只对**二次齐次 Heisenberg** $U=-\sum_{i\lt j}J_{ij}\mathbf S_i\cdot\mathbf S_j$
 （Euler 齐次性 $-\tfrac12\sum_i\mathbf S_i\cdot\mathbf B_i=U$）成立：
 
 * `CPU.LOCAL_ENERGY.HEISENBERG`： $U=0.310977561763$ eV，

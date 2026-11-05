@@ -162,7 +162,7 @@ Lattice="..." Properties=species:S:1:pos:R:3:force:R:3:spin:R:3:spin_force:R:3 e
 | | 可选 `restart=spin_restart.bin` | 从检查点恢复（含 RNG） |
 | `add_bfield` | `add_bfield Bx By Bz [omega_THz]` | 外磁场（eV/ $\mu_B$）；`omega>0` 时为正弦驱动（FMR） |
 | `magfield` | `magfield <H> <nx> <ny> <nz> [unit=tesla\|ev] [g=<f>] [wave=static\|sin\|cos] [freq=THz] [phase=rad]` | **V4**。LAMMPS `fix precession/spin zeeman` 风格；能量 $-\sum_i \mathbf S_i\cdot\mathbf B$ 计入 `potential_per_atom`。默认 `g=1`（自旋列已是 $\mu_B$，`gamma` 已含 g=2）， $B[\mathrm{eV}/\mu_B]=5.7883818\times10^{-5}H[\mathrm T]$。必须写在 `spin_llg` 之后 |
-| `magelec` | `magelec <cut_A> <kappa> <Ex> <Ey> <Ez>` | **V4**。LAMMPS `pair_style spin/magelec`： $H=\sum_{i<j}\kappa(\mathbf E\times\mathbf r_{ij})\cdot(\mathbf S_i\times\mathbf S_j)$， $\kappa$ 单位 eV/(Å· $\mu_B^2$) |
+| `magelec` | `magelec <cut_A> <kappa> <Ex> <Ey> <Ez>` | **V4**。LAMMPS `pair_style spin/magelec`： $H=\sum_{i\lt j}\kappa(\mathbf E\times\mathbf r_{ij})\cdot(\mathbf S_i\times\mathbf S_j)$， $\kappa$ 单位 eV/(Å· $\mu_B^2$) |
 | `magelec_pair` | `magelec_pair <ti> <tj> <kappa>` | **V4**。按元素对覆盖 $\kappa$（0-based 类型索引） |
 | `minimize` | `minimize <sd\|fire> <ftol> <steps> [box_change] [hydrostatic] [spin=on\|off\|auto] [spin_tol=] [alpha_damp=] [discrete_factor=]` | **V4**。`spin=auto`（默认）在读过 `spin_llg` 时把磁矩一并最小化；收敛需 **力** 与 **横向力矩** 同时达标 |
 | `spin_substeps` | `spin_substeps <n>` | 每个 MD 步内做 n 个自旋子步 |

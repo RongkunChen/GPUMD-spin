@@ -27,7 +27,7 @@ $$
 角度（三体，Chebyshev 型）：
 
 $$
-q^{3}_{i,n,l}=\sum_{j<k\in n(i)} g_n(r_{ij})\ g_n(r_{ik})\ P_l(\cos\theta_{ijk}).
+q^{3}_{i,n,l}=\sum_{j\lt k\in n(i)} g_n(r_{ij})\ g_n(r_{ik})\ P_l(\cos\theta_{ijk}).
 $$
 
 ## 3. 五个自旋块
@@ -37,7 +37,7 @@ $$
 | 块 | 定义 | 变量 | 对称性 |
 |---|---|---|---|
 | **Sex** | $q^{\rm ex}_ {i,n}=\sum_{j\in n(i)} g_n(r_{ij})\ (\mathbf u_i \cdot \mathbf u_j)$ | 1 | 旋转不变（联合/自旋单独均可）、P-even、T-even |
-| **San** | $q^{\rm an}_ {i,n,l}=\sum_{j<k} g_n g_n\ P_l(\hat{\mathbf r}_ {ij} \cdot \hat{\mathbf r}_ {ik})\ (\mathbf u_i \cdot \hat{\mathbf r}_ {ij})(\mathbf u_i \cdot \hat{\mathbf r}_ {ik})$ | $l$ 通道 | 旋转不变、P-even |
+| **San** | $q^{\rm an}_ {i,n,l}=\sum_{j\lt k} g_n g_n\ P_l(\hat{\mathbf r}_ {ij} \cdot \hat{\mathbf r}_ {ik})\ (\mathbf u_i \cdot \hat{\mathbf r}_ {ij})(\mathbf u_i \cdot \hat{\mathbf r}_ {ik})$ | $l$ 通道 | 旋转不变、P-even |
 | **Sdm** | $q^{\rm dm}_ {i,n}=\sum_{j\in n(i)} g_n(r_{ij})\ \hat{\mathbf r}_ {ij} \cdot (\mathbf u_i\times\mathbf u_j)$ | 1 | **P-odd**、T-even、仅联合旋转不变 |
 | **Sia** | $q^{\rm sia}_ {i,n,(ab)}=\sum_{j\in n(i)} g_n(r_{ij})\left(u_{i,a}u_{i,b}-\tfrac13\delta_{ab}\right)$ | 5（对称无迹） | 旋转不变、P-even、 $l=2$ |
 | **Smag** | $q^{\rm mag}_ {i,n}=\big(s\lVert \mathbf S_i\rVert \big)^{n+1}$ | $n=0..$ | 旋转不变、P-even、原点不可微 |
